@@ -3,9 +3,15 @@ import gradio as gr
 from gradio_annotatedaudio import AnnotatedAudio
 
 
-with gr.Blocks() as demo:
-    gr.Markdown("# Change the value (keep it JSON) and the front-end will update automatically.")
-    AnnotatedAudio(value={"message": "Hello from Gradio!"}, label="Static")
+example = AnnotatedAudio().example_inputs()
+
+demo = gr.Interface(
+    lambda x:x,
+    AnnotatedAudio(),  # interactive version of your component
+    AnnotatedAudio(),  # static version of your component
+    # examples=[[example]],  # uncomment this line to view the "example version" of your component
+)
 
 
-demo.launch()
+if __name__ == "__main__":
+    demo.launch()
