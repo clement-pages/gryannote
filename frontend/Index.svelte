@@ -2,22 +2,22 @@
 
 <script lang="ts">
 	import type { Gradio, ShareData } from "@gradio/utils";
-
-	import type { FileData } from "@gradio/client";
+	import type { FileData} from "@gradio/client";
 	import type { LoadingStatus } from "@gradio/statustracker";
+	import type { WaveformOptions, AudioData} from "./shared/types";
 
 	import StaticAudio from "./static/StaticAudio.svelte";
 	import InteractiveAudio from "./interactive/InteractiveAudio.svelte";
 	import { StatusTracker } from "@gradio/statustracker";
 	import { Block, UploadText } from "@gradio/atoms";
-	import type { WaveformOptions } from "./shared/types";
 	import { normalise_file } from "@gradio/client";
+	import trimRegion from "./shared/WaveformControls.svelte"
 
 	export let elem_id = "";
 	export let elem_classes: string[] = [];
 	export let visible = true;
 	export let interactive: boolean;
-	export let value: null | FileData = null;
+	export let value: null | FileData | AudioData = null;
 	export let sources:
 		| ["microphone"]
 		| ["upload"]
@@ -56,13 +56,25 @@
 		share: ShareData;
 	}>;
 
-	let old_value: null | FileData | string = null;
-	let _value: null | FileData;
-	$: _value = normalise_file(value, root, proxy_url);
+	let old_value: null | FileData | AudioData | string = null;
+	let _value: null | FileData | AudioData;
+	$: _value = process_audio_data(value)
+
+	function process_audio_data(audio_data: FileData | AudioData | null): FileData | AudioData | null{
+		if (audio_data === null){
+			return audio_data;
+		}
+
+		if ("file_data" in audio_data){
+			audio_data.file_data = normalise_file(audio_data.file_data, root, proxy_url)
+			return audio_data;
+		}
+		return normalise_file(audio_data, root, proxy_url);
+	}
 
 	let active_source: "microphone" | "upload";
 
-	let initial_value: null | FileData = value;
+	let initial_value: null | FileData | AudioData = value;
 
 	$: if (value && initial_value === null) {
 		initial_value = value;

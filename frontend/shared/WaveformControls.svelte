@@ -30,7 +30,7 @@
 	let playbackSpeeds = [0.5, 1, 1.5, 2];
 	let playbackSpeed = playbackSpeeds[1];
 
-	let trimRegion: RegionsPlugin;
+	export let trimRegion: RegionsPlugin;
 	let activeRegion: Region | null = null;
 
 	let leftRegionHandle: HTMLDivElement | null;

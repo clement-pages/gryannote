@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import dataclasses
 from pathlib import Path
-from typing import Any, Callable, Literal
+from random import randint
+from typing import Any, Callable, ClassVar, Dict, List, Literal, Optional, Text
 
 import httpx
 import numpy as np
@@ -13,7 +14,7 @@ from gradio_client.documentation import document, set_documentation_group
 
 from gradio import processing_utils, utils
 from gradio.components.base import Component, StreamingInput, StreamingOutput
-from gradio.data_classes import FileData
+from gradio.data_classes import FileData, GradioModel
 from gradio.events import Events
 from gradio.exceptions import Error
 
@@ -38,6 +39,47 @@ class WaveformOptions:
     show_controls: bool = False
     skip_length: int | float = 5
 
+"""
+class Region:
+
+    speaker_color = {}
+
+    def __init__(self, start: float, end: float, speaker: str) -> None:
+
+        self.start = start
+        self.end = end
+        self.speaker = speaker
+        self.color = self.get_speaker_color(speaker)
+
+    @classmethod
+    def get_speaker_color(cls, speaker: str):
+        if speaker not in cls.speaker_color:
+            cls.speaker_color[speaker] = f"rgb({randint(0, 255)}, {0, 255}, {0, 255})"
+        return cls.speaker_color[speaker]
+"""
+
+class Region(GradioModel):
+    speaker_color: ClassVar[Dict] = {}
+
+    start: float
+    end: float
+    speaker: Text
+    color: Text
+
+    def __init__(self, start:float, end:float, speaker: Text, **kwargs):
+        color = self.get_speaker_color(speaker)
+        super().__init__(start=start, end=end, speaker=speaker, color=color)
+
+    @classmethod
+    def get_speaker_color(cls, speaker: Text):
+        if speaker not in Region.speaker_color:
+            Region.speaker_color[speaker] = f"rgb({randint(0, 255)}, {randint(0, 255)}, {randint(0, 255)})"
+        return Region.speaker_color[speaker]
+
+
+class AudioData(GradioModel):
+    file_data: FileData
+    regions: Optional[List[Region]] = None
 
 @document()
 class AnnotatedAudio(
@@ -68,11 +110,11 @@ class AnnotatedAudio(
         Events.upload,
     ]
 
-    data_model = FileData
+    data_model = AudioData
 
     def __init__(
         self,
-        value: str | Path | tuple[int, np.ndarray] | Callable | None = None,
+        value: str | Path | tuple[int, np.ndarray] | Callable | tuple[str | Path, list[Region]] | None = None,
         *,
         sources: list[Literal["upload", "microphone"]] | None = None,
         type: Literal["numpy", "filepath"] = "numpy",
@@ -168,6 +210,13 @@ class AnnotatedAudio(
         )
         self.min_length = min_length
         self.max_length = max_length
+
+        if isinstance(value, tuple) and isinstance(value[1], list):
+            self.speech_turns = value[1]
+            value = value[0]
+        else:
+            self.speech_turns = None
+
         super().__init__(
             label=label,
             every=every,
@@ -187,10 +236,13 @@ class AnnotatedAudio(
         return "https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav"
 
     def preprocess(
-        self, payload: FileData | None
+        self, payload: AudioData | FileData | None
     ) -> tuple[int, np.ndarray] | str | None:
         if payload is None:
             return payload
+
+        if isinstance(payload, AudioData):
+            payload = payload.file_data
 
         assert payload.path
         # Need a unique name for the file to avoid re-using the same audio file if
@@ -228,8 +280,8 @@ class AnnotatedAudio(
             )
 
     def postprocess(
-        self, value: tuple[int, np.ndarray] | str | Path | bytes | None
-    ) -> FileData | bytes | None:
+        self, value: tuple[str, list[Region]]
+    ) -> AudioData | None:
         """
         Parameters:
             value: audio data in either of the following formats: a tuple of (sample_rate, data), or a string filepath or URL to an audio file, or None.
@@ -239,25 +291,27 @@ class AnnotatedAudio(
         orig_name = None
         if value is None:
             return None
-        if isinstance(value, bytes):
+        audio, regions = value
+        if isinstance(audio, bytes):
             if self.streaming:
                 return value
             file_path = processing_utils.save_bytes_to_cache(
-                value, "audio", cache_dir=self.GRADIO_CACHE
+                audio, "audio", cache_dir=self.GRADIO_CACHE
             )
             orig_name = Path(file_path).name
-        elif isinstance(value, tuple):
+        elif isinstance(audio, tuple):
             sample_rate, data = value
             file_path = processing_utils.save_audio_to_cache(
                 data, sample_rate, format=self.format, cache_dir=self.GRADIO_CACHE
             )
             orig_name = Path(file_path).name
         else:
-            if not isinstance(value, (str, Path)):
-                raise ValueError(f"Cannot process {value} as AnnotatedAudio")
-            file_path = str(value)
+            if not isinstance(audio, (str, Path)):
+                raise ValueError(f"Cannot process {audio} as AnnotatedAudio")
+            file_path = str(audio)
             orig_name = Path(file_path).name if Path(file_path).exists() else None
-        return FileData(path=file_path, orig_name=orig_name)
+        file_data = FileData(path=file_path, orig_name=orig_name)
+        return AudioData(file_data=file_data, regions=regions)
 
     def stream_output(
         self, value, output_id: str, first_chunk: bool
