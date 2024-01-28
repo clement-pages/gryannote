@@ -23,7 +23,7 @@ def get_diarization(filepath: str):
 demo = gr.Interface(
     get_diarization,
     Audio(type="filepath"),  # interactive version of your component
-    AnnotatedAudio(),  # static version of your component
+    AnnotatedAudio(interactive=False),  # static version of your component
     # examples=[[example]],  # uncomment this line to view the "example version" of your component
 )
 

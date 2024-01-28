@@ -73,7 +73,7 @@ class Region(GradioModel):
     @classmethod
     def get_speaker_color(cls, speaker: Text):
         if speaker not in Region.speaker_color:
-            Region.speaker_color[speaker] = f"rgb({randint(0, 255)}, {randint(0, 255)}, {randint(0, 255)})"
+            Region.speaker_color[speaker] = f"rgba({randint(0, 255)}, {randint(0, 255)}, {randint(0, 255)}, 0.5)"
         return Region.speaker_color[speaker]
 
 

@@ -9,14 +9,14 @@ export type WaveformOptions = {
 	show_recording_waveform?: boolean;
 };
 
-export type Region = {
-	start: Number
-	end: Number
+export type SpeechTurn = {
+	start: number
+	end: number
 	speaker: string
 	color: string
 }
 
 export type AudioData = {
     file_data: FileData
-    regions?: Region[]
+    regions?: SpeechTurn[]
 }

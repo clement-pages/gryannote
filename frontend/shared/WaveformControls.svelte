@@ -7,9 +7,11 @@
 		type Region
 	} from "wavesurfer.js/dist/plugins/regions.js";
 	import type { WaveformOptions } from "./types";
+	import type {AudioData} from "./types"
 	import VolumeLevels from "./VolumeLevels.svelte";
 	import VolumeControl from "./VolumeControl.svelte";
 
+	export let value: AudioData | null = null;
 	export let waveform: WaveSurfer;
 	export let audio_duration: number;
 	export let i18n: I18nFormatter;
@@ -54,6 +56,20 @@
 		activeRegion = region;
 		region.play();
 	});
+
+	const  addSpeechTurns = (value: AudioData): void =>{
+		var speechTurns = value.regions
+		speechTurns.forEach(speechTurn => {
+			trimRegion.addRegion({
+				start: speechTurn.start,
+				end: speechTurn.end,
+				content: speechTurn.speaker,
+				color: speechTurn.color,
+				drag: false,
+				resize: false,
+			})
+		});
+	}
 
 	const addTrimRegion = (): void => {
 		activeRegion = trimRegion.addRegion({
@@ -114,7 +130,7 @@
 			mode = "";
 		} else {
 			mode = "edit";
-			addTrimRegion();
+			addSpeechTurns(value);
 		}
 	};
 
@@ -264,8 +280,7 @@
 				</button>
 			{:else}
 				<button class="text-button" on:click={trimAudio}>Trim</button>
-				<button class="text-button" on:click={toggleTrimmingMode}>Cancel</button
-				>
+				<button class="text-button" on:click={toggleTrimmingMode}>Cancel</button>
 			{/if}
 		{/if}
 	</div>
