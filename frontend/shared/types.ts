@@ -9,7 +9,7 @@ export type WaveformOptions = {
 	show_recording_waveform?: boolean;
 };
 
-export type SpeechTurn = {
+export type Annotation = {
 	start: number
 	end: number
 	speaker: string
@@ -18,5 +18,5 @@ export type SpeechTurn = {
 
 export type AudioData = {
     file_data: FileData
-    regions?: SpeechTurn[]
+    annotations?: Annotation[]
 }

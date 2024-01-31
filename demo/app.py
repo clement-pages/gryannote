@@ -1,8 +1,9 @@
 import os
 
 import gradio as gr
-from gradio_annotatedaudio import AnnotatedAudio, Region
 from gradio.components import Audio
+from gradio_annotatedaudio import AnnotatedAudio, Annotation
+
 from pyannote.audio import Pipeline
 
 example = AnnotatedAudio().example_inputs()
@@ -11,19 +12,21 @@ def get_diarization(filepath: str):
     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=os.environ["HG_TOKEN"])
     print("filepath", filepath)
     dia_outputs = pipeline(filepath)
-    speech_turns = []
+    annotations = []
     for speech_turn, _, speaker in dia_outputs.itertracks(yield_label=True):
-        speech_turns.append(Region(
+        annotations.append(Annotation(
             start=speech_turn.start,
             end=speech_turn.end,
             speaker=speaker,
         ))
-    return (filepath, speech_turns)
+    return (filepath, annotations)
+
+annotated_audio = AnnotatedAudio(interactive=False)
 
 demo = gr.Interface(
     get_diarization,
-    Audio(type="filepath"),  # interactive version of your component
-    AnnotatedAudio(interactive=False),  # static version of your component
+    inputs=Audio(type="filepath"),
+    outputs=annotated_audio,
     # examples=[[example]],  # uncomment this line to view the "example version" of your component
 )
 

@@ -57,14 +57,14 @@
 		region.play();
 	});
 
-	const  addSpeechTurns = (value: AudioData): void =>{
-		var speechTurns = value.regions
-		speechTurns.forEach(speechTurn => {
+	const  addAnnotations = (value: AudioData): void =>{
+		var annotations = value.annotations
+		annotations.forEach(annotation => {
 			trimRegion.addRegion({
-				start: speechTurn.start,
-				end: speechTurn.end,
-				content: speechTurn.speaker,
-				color: speechTurn.color,
+				start: annotation.start,
+				end: annotation.end,
+				content: annotation.speaker,
+				color: annotation.color,
 				drag: false,
 				resize: false,
 			})
@@ -130,7 +130,7 @@
 			mode = "";
 		} else {
 			mode = "edit";
-			addSpeechTurns(value);
+			addAnnotations(value);
 		}
 	};
 

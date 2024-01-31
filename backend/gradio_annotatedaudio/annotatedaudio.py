@@ -5,18 +5,17 @@ from __future__ import annotations
 import dataclasses
 from pathlib import Path
 from random import randint
-from typing import Any, Callable, ClassVar, Dict, List, Literal, Optional, Text
+from typing import Any, Callable, ClassVar, Dict, List, Literal, Optional, Text, Tuple
 
 import httpx
 import numpy as np
-from gradio_client import utils as client_utils
-from gradio_client.documentation import document, set_documentation_group
-
 from gradio import processing_utils, utils
 from gradio.components.base import Component, StreamingInput, StreamingOutput
 from gradio.data_classes import FileData, GradioModel
 from gradio.events import Events
 from gradio.exceptions import Error
+from gradio_client import utils as client_utils
+from gradio_client.documentation import document, set_documentation_group
 
 set_documentation_group("component")
 
@@ -24,7 +23,7 @@ set_documentation_group("component")
 @dataclasses.dataclass
 class WaveformOptions:
     """
-    A dataclass for specifying options for the waveform display in the AnnotatedAudio component. An instance of this class can be passed into the `waveform_options` parameter of `gr.Audio`.
+    A dataclass for specifying options for the waveform display in the AnnotatedAudio component. An instance of this class can be passed into the `waveform_options` parameter of `AnnotatedAudio`.
     Parameters:
         waveform_color: The color (as a hex string or valid CSS color) of the full waveform representing the amplitude of the audio. Defaults to a light gray color.
         waveform_progress_color: The color (as a hex string or valid CSS color) that the waveform fills with to as the audio plays. Defaults to an orange color.
@@ -39,47 +38,37 @@ class WaveformOptions:
     show_controls: bool = False
     skip_length: int | float = 5
 
-"""
-class Region:
 
-    speaker_color = {}
+class Annotation(GradioModel):
+    # each speaker is assigned a color
+    speakers_color: ClassVar[Dict] = {}
 
-    def __init__(self, start: float, end: float, speaker: str) -> None:
-
-        self.start = start
-        self.end = end
-        self.speaker = speaker
-        self.color = self.get_speaker_color(speaker)
-
-    @classmethod
-    def get_speaker_color(cls, speaker: str):
-        if speaker not in cls.speaker_color:
-            cls.speaker_color[speaker] = f"rgb({randint(0, 255)}, {0, 255}, {0, 255})"
-        return cls.speaker_color[speaker]
-"""
-
-class Region(GradioModel):
-    speaker_color: ClassVar[Dict] = {}
-
+    # beginning of the annotation, in seconds
     start: float
+    # end of the annotation, in seconds
     end: float
+    # annotation speaker label
     speaker: Text
+    # annotation speaker color
     color: Text
 
-    def __init__(self, start:float, end:float, speaker: Text, **kwargs):
-        color = self.get_speaker_color(speaker)
+    def __init__(self, start: float, end: float, speaker: Text, **kwargs):
+        color = self.get_annotation_color(speaker)
         super().__init__(start=start, end=end, speaker=speaker, color=color)
 
     @classmethod
-    def get_speaker_color(cls, speaker: Text):
-        if speaker not in Region.speaker_color:
-            Region.speaker_color[speaker] = f"rgba({randint(0, 255)}, {randint(0, 255)}, {randint(0, 255)}, 0.5)"
-        return Region.speaker_color[speaker]
+    def get_annotation_color(cls, speaker: Text):
+        if speaker not in Annotation.speakers_color:
+            Annotation.speakers_color[speaker] = (
+                f"rgba({randint(0, 255)}, {randint(0, 255)}, {randint(0, 255)}, 0.5)"
+            )
+        return Annotation.speakers_color[speaker]
 
 
 class AudioData(GradioModel):
     file_data: FileData
-    regions: Optional[List[Region]] = None
+    annotations: Optional[List[Annotation]] = None
+
 
 @document()
 class AnnotatedAudio(
@@ -114,7 +103,7 @@ class AnnotatedAudio(
 
     def __init__(
         self,
-        value: str | Path | tuple[int, np.ndarray] | Callable | tuple[str | Path, list[Region]] | None = None,
+        value: str | Path | Tuple[int, np.ndarray] | Callable | None = None,
         *,
         sources: list[Literal["upload", "microphone"]] | None = None,
         type: Literal["numpy", "filepath"] = "numpy",
@@ -211,7 +200,7 @@ class AnnotatedAudio(
         self.min_length = min_length
         self.max_length = max_length
 
-        if isinstance(value, tuple) and isinstance(value[1], list):
+        if isinstance(value, Tuple) and isinstance(value[1], list):
             self.speech_turns = value[1]
             value = value[0]
         else:
@@ -237,7 +226,7 @@ class AnnotatedAudio(
 
     def preprocess(
         self, payload: AudioData | FileData | None
-    ) -> tuple[int, np.ndarray] | str | None:
+    ) -> Tuple[int, np.ndarray] | str | None:
         if payload is None:
             return payload
 
@@ -257,11 +246,11 @@ class AnnotatedAudio(
         duration = len(data) / sample_rate
         if self.min_length is not None and duration < self.min_length:
             raise Error(
-                f"AnnotatedAudio is too short, and must be at least {self.min_length} seconds"
+                f"Audio is too short, and must be at least {self.min_length} seconds"
             )
         if self.max_length is not None and duration > self.max_length:
             raise Error(
-                f"AnnotatedAudio is too long, and must be at most {self.max_length} seconds"
+                f"Audio is too long, and must be at most {self.max_length} seconds"
             )
 
         if self.type == "numpy":
@@ -280,18 +269,23 @@ class AnnotatedAudio(
             )
 
     def postprocess(
-        self, value: tuple[str, list[Region]]
+        self, value: Tuple[str | Path | Tuple[int, np.ndarray], List[Annotation]]
     ) -> AudioData | None:
         """
         Parameters:
-            value: audio data in either of the following formats: a tuple of (sample_rate, data), or a string filepath or URL to an audio file, or None.
+            value: a tuble containing an audio file and the annotations resulting from
+            the application of the diarization pipeline to this audio file. The audio file
+            can be a file path (Path or str) or a tuple of (sample_rate, data).
         Returns:
-            base64 url data
+            an audio data object. This object contains file data and a list of
+            diarization annotations
         """
         orig_name = None
         if value is None:
             return None
-        audio, regions = value
+
+        audio, annotations = value
+
         if isinstance(audio, bytes):
             if self.streaming:
                 return value
@@ -299,23 +293,26 @@ class AnnotatedAudio(
                 audio, "audio", cache_dir=self.GRADIO_CACHE
             )
             orig_name = Path(file_path).name
-        elif isinstance(audio, tuple):
-            sample_rate, data = value
+
+        elif isinstance(audio, Tuple):
+            sample_rate, data = audio
             file_path = processing_utils.save_audio_to_cache(
                 data, sample_rate, format=self.format, cache_dir=self.GRADIO_CACHE
             )
             orig_name = Path(file_path).name
+
         else:
             if not isinstance(audio, (str, Path)):
                 raise ValueError(f"Cannot process {audio} as AnnotatedAudio")
             file_path = str(audio)
             orig_name = Path(file_path).name if Path(file_path).exists() else None
+
         file_data = FileData(path=file_path, orig_name=orig_name)
-        return AudioData(file_data=file_data, regions=regions)
+        return AudioData(file_data=file_data, annotations=annotations)
 
     def stream_output(
         self, value, output_id: str, first_chunk: bool
-    ) -> tuple[bytes | None, Any]:
+    ) -> Tuple[bytes | None, Any]:
         output_file = {
             "path": output_id,
             "is_stream": True,
@@ -347,7 +344,7 @@ class AnnotatedAudio(
         return binary_data, output_file
 
     def process_example(
-        self, value: tuple[int, np.ndarray] | str | Path | bytes | None
+        self, value: Tuple[int, np.ndarray] | str | Path | bytes | None
     ) -> str:
         if value is None:
             return ""
