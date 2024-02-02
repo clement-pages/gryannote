@@ -18,5 +18,6 @@ export type Annotation = {
 
 export type AudioData = {
     file_data: FileData
+	rttm_file: FileData
     annotations?: Annotation[]
 }

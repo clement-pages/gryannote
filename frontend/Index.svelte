@@ -60,12 +60,13 @@
 	$: _value = process_audio_data(value)
 
 	function process_audio_data(audio_data: AudioData | null): AudioData | null{
+		console.log(audio_data)
 		if (audio_data === null){
 			return audio_data;
 		}
-
 		if ("file_data" in audio_data){
-			audio_data.file_data = normalise_file(audio_data.file_data, root, proxy_url)
+			audio_data.file_data = normalise_file(audio_data.file_data, root, proxy_url);
+			audio_data.rttm_file = normalise_file(audio_data.rttm_file, root, proxy_url);
 			return audio_data;
 		}
 	}

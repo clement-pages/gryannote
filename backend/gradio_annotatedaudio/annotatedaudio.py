@@ -67,6 +67,7 @@ class Annotation(GradioModel):
 
 class AudioData(GradioModel):
     file_data: FileData
+    rttm_file: Optional[FileData] = None
     annotations: Optional[List[Annotation]] = None
 
 
@@ -269,22 +270,24 @@ class AnnotatedAudio(
             )
 
     def postprocess(
-        self, value: Tuple[str | Path | Tuple[int, np.ndarray], List[Annotation]]
+        self,value: Tuple[str | Path | Tuple[int, np.ndarray], str | Path, List[Annotation]]
     ) -> AudioData | None:
         """
         Parameters:
-            value: a tuble containing an audio file and the annotations resulting from
-            the application of the diarization pipeline to this audio file. The audio file
-            can be a file path (Path or str) or a tuple of (sample_rate, data).
+            value: a tuble containing three elements :
+                - an audio file representing the audio downloaded by the user. The audio file can
+                be a file path (Path or str) or a tuple of (sample_rate, data).
+                - a rttm file containing annotations produced by a diarization pipeline
+                -a the corresponding annotations list
         Returns:
-            an audio data object. This object contains file data and a list of
+            an audio data object. This object contains file data, file containing rttms and a list of
             diarization annotations
         """
         orig_name = None
         if value is None:
             return None
 
-        audio, annotations = value
+        audio, rttms, annotations = value
 
         if isinstance(audio, bytes):
             if self.streaming:
@@ -303,12 +306,19 @@ class AnnotatedAudio(
 
         else:
             if not isinstance(audio, (str, Path)):
-                raise ValueError(f"Cannot process {audio} as AnnotatedAudio")
+                raise ValueError(f"Cannot process {audio} as FileData")
             file_path = str(audio)
             orig_name = Path(file_path).name if Path(file_path).exists() else None
 
+        # postprocess rttms file
+        if not isinstance(rttms, (str, Path)):
+            raise ValueError(f"Cannot process {rttms} as FileData")
+        rttms_path = str(rttms)
+        orig_rttms_name = Path(rttms_path).name if Path(rttms_path).exists() else None
+
         file_data = FileData(path=file_path, orig_name=orig_name)
-        return AudioData(file_data=file_data, annotations=annotations)
+        rttms_file = FileData(path=rttms_path, orig_name=orig_rttms_name)
+        return AudioData(file_data=file_data, rttm_file=rttms_file, annotations=annotations)
 
     def stream_output(
         self, value, output_id: str, first_chunk: bool
