@@ -8,10 +8,11 @@
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
 	import type { FileData } from "@gradio/client";
-	import type { WaveformOptions, AudioData } from "../shared/types";
+	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
+	import type { WaveformOptions } from "../shared/types";
 	import { createEventDispatcher } from "svelte";
 
-	export let value: null | AudioData = null;
+	export let value: null | AnnotatedAudioData = null;
 	$: url = value.file_data?.url;
 	export let label: string;
 	export let i18n: I18nFormatter;

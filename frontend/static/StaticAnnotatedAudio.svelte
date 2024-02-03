@@ -38,8 +38,8 @@
 
 {#if value !== null}
 	<div class="icon-buttons">
-		{#if show_download_button}
-			<DownloadLink href={value.rttm_file.url} download={value.rttm_file.orig_name || value.rttm_file.path}>
+		{#if show_download_button && value.rttm !== null}
+			<DownloadLink href={value.rttm.url} download={value.rttm.orig_name || value.rttm.path}>
 				<IconButton Icon={Download} label={i18n("common.download")} />
 			</DownloadLink>
 		{/if}

@@ -65,7 +65,7 @@ class Annotation(GradioModel):
         return Annotation.speakers_color[speaker]
 
 
-class AudioData(GradioModel):
+class AnnotadedAudioData(GradioModel):
     file_data: FileData
     rttm_file: Optional[FileData] = None
     annotations: Optional[List[Annotation]] = None
@@ -100,7 +100,7 @@ class AnnotatedAudio(
         Events.upload,
     ]
 
-    data_model = AudioData
+    data_model = AnnotadedAudioData
 
     def __init__(
         self,
@@ -226,18 +226,17 @@ class AnnotatedAudio(
         return "https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav"
 
     def preprocess(
-        self, payload: AudioData | FileData | None
+        self, payload: AnnotadedAudioData |  None
     ) -> Tuple[int, np.ndarray] | str | None:
         if payload is None:
             return payload
 
-        if isinstance(payload, AudioData):
-            payload = payload.file_data
+        file_data = payload.file_data
 
-        assert payload.path
+        assert file_data.path
         # Need a unique name for the file to avoid re-using the same audio file if
         # a user submits the same audio file twice
-        temp_file_path = Path(payload.path)
+        temp_file_path = Path(file_data.path)
         output_file_name = str(
             temp_file_path.with_name(f"{temp_file_path.stem}{temp_file_path.suffix}")
         )
@@ -271,7 +270,7 @@ class AnnotatedAudio(
 
     def postprocess(
         self,value: Tuple[str | Path | Tuple[int, np.ndarray], str | Path, List[Annotation]]
-    ) -> AudioData | None:
+    ) -> AnnotadedAudioData | None:
         """
         Parameters:
             value: a tuble containing three elements :
@@ -318,7 +317,7 @@ class AnnotatedAudio(
 
         file_data = FileData(path=file_path, orig_name=orig_name)
         rttms_file = FileData(path=rttms_path, orig_name=orig_rttms_name)
-        return AudioData(file_data=file_data, rttm_file=rttms_file, annotations=annotations)
+        return AnnotadedAudioData(file_data=file_data, rttm_file=rttms_file, annotations=annotations)
 
     def stream_output(
         self, value, output_id: str, first_chunk: bool

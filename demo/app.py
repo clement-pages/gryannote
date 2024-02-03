@@ -27,11 +27,11 @@ def get_diarization(filepath: str):
         ))
     return (filepath, rttm_path, annotations)
 
-annotated_audio = AnnotatedAudio(interactive=False)
+annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
 
 demo = gr.Interface(
     get_diarization,
-    inputs=Audio(type="filepath"),
+    inputs=annotated_audio,
     outputs=annotated_audio,
     # examples=[[example]],  # uncomment this line to view the "example version" of your component
 )

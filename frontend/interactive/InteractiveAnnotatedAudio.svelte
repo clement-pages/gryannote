@@ -9,16 +9,16 @@
 	} from "@gradio/client";
 	import { BlockLabel } from "@gradio/atoms";
 	import { Music } from "@gradio/icons";
-	import AudioPlayer from "../player/AudioPlayer.svelte";
-
+	import AnnotatedAudioData from "../shared/AnnotatedAudioData" 
 	import type { IBlobEvent, IMediaRecorder } from "extendable-media-recorder";
 	import type { I18nFormatter } from "js/app/src/gradio_helper";
 	import AudioRecorder from "../recorder/AudioRecorder.svelte";
 	import StreamAudio from "../streaming/StreamAudio.svelte";
 	import { SelectSource } from "@gradio/atoms";
 	import type { WaveformOptions } from "../shared/types";
+    import AudioPlayerWithAnnotation from "../player/AudioPlayerWithAnnotation.svelte";
 
-	export let value: null | FileData = null;
+	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
 	export let root: string;
 	export let show_label = true;
@@ -73,8 +73,8 @@
 	}
 
 	const dispatch = createEventDispatcher<{
-		change: FileData | null;
-		stream: FileData;
+		change: AnnotatedAudioData | null;
+		stream: AnnotatedAudioData;
 		edit: never;
 		play: never;
 		pause: never;
@@ -95,7 +95,7 @@
 	): Promise<void> => {
 		let _audio_blob = new File(blobs, "audio.wav");
 		const val = await prepare_files([_audio_blob], event === "stream");
-		value = (
+		value.file_data = (
 			(await upload(val, root, undefined, upload_fn))?.filter(
 				Boolean
 			) as FileData[]
@@ -192,8 +192,8 @@
 	}
 
 	function handle_load({ detail }: { detail: FileData }): void {
-		value = detail;
-		dispatch("change", detail);
+		value = new AnnotatedAudioData(detail);
+		dispatch("change", value);
 		dispatch("upload", detail);
 	}
 
@@ -261,7 +261,7 @@
 		absolute={true}
 	/>
 
-	<AudioPlayer
+	<AudioPlayerWithAnnotation
 		bind:mode
 		{value}
 		{label}

@@ -2,12 +2,11 @@
 
 <script lang="ts">
 	import type { Gradio, ShareData } from "@gradio/utils";
-	import type { FileData} from "@gradio/client";
 	import type { LoadingStatus } from "@gradio/statustracker";
-	import type { WaveformOptions, AudioData} from "./shared/types";
-
+	import type { WaveformOptions} from "./shared/types";
+	import AnnotatedAudioData from "./shared/AnnotatedAudioData"
 	import StaticAnnotatedAudio from "./static/StaticAnnotatedAudio.svelte";
-	import InteractiveAudio from "./interactive/InteractiveAudio.svelte";
+	import InteractiveAnnotatedAudio from "./interactive/InteractiveAnnotatedAudio.svelte";
 	import { StatusTracker } from "@gradio/statustracker";
 	import { Block, UploadText } from "@gradio/atoms";
 	import { normalise_file } from "@gradio/client";
@@ -16,7 +15,7 @@
 	export let elem_classes: string[] = [];
 	export let visible = true;
 	export let interactive: boolean;
-	export let value: null | AudioData = null;
+	export let value: AnnotatedAudioData | null = null;
 	export let sources:
 		| ["microphone"]
 		| ["upload"]
@@ -55,25 +54,23 @@
 		share: ShareData;
 	}>;
 
-	let old_value: null | AudioData | string = null;
-	let _value: null | AudioData;
+	let old_value: null | AnnotatedAudioData | string = null;
+	let _value: null | AnnotatedAudioData;
 	$: _value = process_audio_data(value)
 
-	function process_audio_data(audio_data: AudioData | null): AudioData | null{
-		console.log(audio_data)
+	function process_audio_data(audio_data: AnnotatedAudioData | null): AnnotatedAudioData | null{
 		if (audio_data === null){
 			return audio_data;
 		}
-		if ("file_data" in audio_data){
-			audio_data.file_data = normalise_file(audio_data.file_data, root, proxy_url);
-			audio_data.rttm_file = normalise_file(audio_data.rttm_file, root, proxy_url);
-			return audio_data;
-		}
+
+		audio_data.file_data = normalise_file(audio_data.file_data, root, proxy_url);
+		audio_data.rttm = normalise_file(audio_data.rttm, root, proxy_url);
+		return audio_data;
 	}
 
 	let active_source: "microphone" | "upload";
 
-	let initial_value: null | AudioData = value;
+	let initial_value: AnnotatedAudioData | null = value;
 
 	$: if (value && initial_value === null) {
 		initial_value = value;
@@ -186,7 +183,7 @@
 			i18n={gradio.i18n}
 			{...loading_status}
 		/>
-		<InteractiveAudio
+		<InteractiveAnnotatedAudio
 			{label}
 			{show_label}
 			value={_value}
@@ -220,6 +217,6 @@
 			{trim_region_settings}
 		>
 			<UploadText i18n={gradio.i18n} type="audio" />
-		</InteractiveAudio>
+		</InteractiveAnnotatedAudio>
 	</Block>
 {/if}

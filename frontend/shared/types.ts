@@ -15,9 +15,3 @@ export type Annotation = {
 	speaker: string
 	color: string
 }
-
-export type AudioData = {
-    file_data: FileData
-	rttm_file: FileData
-    annotations?: Annotation[]
-}
