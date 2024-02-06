@@ -1,5 +1,3 @@
-import type { FileData } from "@gradio/client";
-
 export type WaveformOptions = {
 	waveform_color?: string;
 	waveform_progress_color?: string;
@@ -14,4 +12,6 @@ export type Annotation = {
 	end: number
 	speaker: string
 	color: string
+	level: number
+	num_levels: number
 }

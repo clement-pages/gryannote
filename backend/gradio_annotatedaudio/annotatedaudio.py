@@ -8,6 +8,7 @@ from random import randint
 from typing import Any, Callable, ClassVar, Dict, List, Literal, Optional, Text, Tuple
 
 import httpx
+import networkx as nx
 import numpy as np
 from gradio import processing_utils, utils
 from gradio.components.base import Component, StreamingInput, StreamingOutput
@@ -16,6 +17,7 @@ from gradio.events import Events
 from gradio.exceptions import Error
 from gradio_client import utils as client_utils
 from gradio_client.documentation import document, set_documentation_group
+from pyannote.core import Annotation as PyannoteAnnotation
 
 set_documentation_group("component")
 
@@ -51,10 +53,29 @@ class Annotation(GradioModel):
     speaker: Text
     # annotation speaker color
     color: Text
+    # css style level of the annotation
+    level: int
+    # total num level
+    num_levels: int
 
-    def __init__(self, start: float, end: float, speaker: Text, **kwargs):
+    def __init__(
+        self,
+        start: float,
+        end: float,
+        speaker: Text,
+        level: int,
+        num_levels: int,
+        **kwargs,
+    ):
         color = self.get_annotation_color(speaker)
-        super().__init__(start=start, end=end, speaker=speaker, color=color)
+        super().__init__(
+            start=start,
+            end=end,
+            speaker=speaker,
+            color=color,
+            level=level,
+            num_levels=num_levels,
+        )
 
     @classmethod
     def get_annotation_color(cls, speaker: Text):
@@ -226,7 +247,7 @@ class AnnotatedAudio(
         return "https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav"
 
     def preprocess(
-        self, payload: AnnotadedAudioData |  None
+        self, payload: AnnotadedAudioData | None
     ) -> Tuple[int, np.ndarray] | str | None:
         if payload is None:
             return payload
@@ -269,7 +290,7 @@ class AnnotatedAudio(
             )
 
     def postprocess(
-        self,value: Tuple[str | Path | Tuple[int, np.ndarray], str | Path, List[Annotation]]
+        self, value: Tuple[str | Path | Tuple[int, np.ndarray], PyannoteAnnotation]
     ) -> AnnotadedAudioData | None:
         """
         Parameters:
@@ -286,38 +307,82 @@ class AnnotatedAudio(
         if value is None:
             return None
 
-        audio, rttms, annotations = value
+        audio, annotations = value
 
+        # postprocess audio
         if isinstance(audio, bytes):
             if self.streaming:
                 return value
-            file_path = processing_utils.save_bytes_to_cache(
-                audio, "audio", cache_dir=self.GRADIO_CACHE
+            audio_path = Path(
+                processing_utils.save_bytes_to_cache(
+                    audio, "audio", cache_dir=self.GRADIO_CACHE
+                )
             )
-            orig_name = Path(file_path).name
+            orig_name = audio_path.name
 
         elif isinstance(audio, Tuple):
             sample_rate, data = audio
-            file_path = processing_utils.save_audio_to_cache(
-                data, sample_rate, format=self.format, cache_dir=self.GRADIO_CACHE
+            audio_path = Path(
+                processing_utils.save_audio_to_cache(
+                    data, sample_rate, format=self.format, cache_dir=self.GRADIO_CACHE
+                )
             )
-            orig_name = Path(file_path).name
+            orig_name = audio_path.name
 
         else:
             if not isinstance(audio, (str, Path)):
                 raise ValueError(f"Cannot process {audio} as FileData")
-            file_path = str(audio)
-            orig_name = Path(file_path).name if Path(file_path).exists() else None
+            audio_path = Path(audio)
+            orig_name = audio_path.name if audio_path.exists() else None
 
-        # postprocess rttms file
-        if not isinstance(rttms, (str, Path)):
-            raise ValueError(f"Cannot process {rttms} as FileData")
-        rttms_path = str(rttms)
-        orig_rttms_name = Path(rttms_path).name if Path(rttms_path).exists() else None
+        # postprocess annotations
+        prepared_annotations = self.prepare_annotations(annotations)
 
-        file_data = FileData(path=file_path, orig_name=orig_name)
-        rttms_file = FileData(path=rttms_path, orig_name=orig_rttms_name)
-        return AnnotadedAudioData(file_data=file_data, rttm_file=rttms_file, annotations=annotations)
+        # write rttm into same repo as audio file:
+        rttm_path = Path(audio_path).parent.absolute() / Path("results.rttm")
+        with open(rttm_path, "w") as rttm_file:
+            annotations.write_rttm(rttm_file)
+
+        orig_rttms_name = rttm_path.name if rttm_path.exists() else None
+
+        file_data = FileData(path=str(audio_path), orig_name=orig_name)
+        rttms_file = FileData(path=str(rttm_path), orig_name=orig_rttms_name)
+        return AnnotadedAudioData(
+            file_data=file_data, rttm_file=rttms_file, annotations=prepared_annotations
+        )
+
+    def prepare_annotations(self, annotations) -> List[Annotation]:
+
+        prepared_annotations: List[Annotation] = []
+
+        # compute overlap graph (one node per annotation, edges between overlapping regions)
+        overlap_graph = nx.Graph()
+        for (s1, t1), (s2, t2) in annotations.co_iter(annotations):
+            overlap_graph.add_edge((s1, t1), (s2, t2))
+
+        # solve the graph coloring problem for each connected subgraph and
+        # use the solution for annotations layout
+        for sub_graph in nx.connected_components(overlap_graph):
+            sub_coloring = nx.coloring.greedy_color(
+                overlap_graph.subgraph(sorted(sub_graph))
+            )
+
+            num_colors = max(sub_coloring.values()) + 1
+            for (segment, annotation_id), color in sub_coloring.items():
+                # assumes that no more than 4 annotations can overlap at any given time
+                level = (color % 4 if num_colors > 4 else color) + 1
+                num_levels = 4 if num_colors > 4 else num_colors
+
+                prepared_annotations.append(
+                    Annotation(
+                        start=segment.start,
+                        end=segment.end,
+                        speaker=annotations[segment, annotation_id],
+                        level=level,
+                        num_levels=num_levels,
+                    )
+                )
+        return prepared_annotations
 
     def stream_output(
         self, value, output_id: str, first_chunk: bool
