@@ -6,12 +6,12 @@
 	import RegionsPlugin, {
 		type Region
 	} from "wavesurfer.js/dist/plugins/regions.js";
-	import type { WaveformOptions } from "./types";
-	import type {AudioData} from "./types"
+	import type {WaveformOptions } from "./types";
+	import AnnotatedAudioData from "./AnnotatedAudioData";
 	import VolumeLevels from "./VolumeLevels.svelte";
 	import VolumeControl from "./VolumeControl.svelte";
 
-	export let value: AudioData | null = null;
+	export let value: AnnotatedAudioData | null = null;
 	export let waveform: WaveSurfer;
 	export let audio_duration: number;
 	export let i18n: I18nFormatter;
@@ -32,7 +32,7 @@
 	let playbackSpeeds = [0.5, 1, 1.5, 2];
 	let playbackSpeed = playbackSpeeds[1];
 
-	export let trimRegion: RegionsPlugin;
+	export let wsRegions: RegionsPlugin;
 	let activeRegion: Region | null = null;
 
 	let leftRegionHandle: HTMLDivElement | null;
@@ -41,45 +41,21 @@
 
 	let currentVolume = 1;
 
-	$: trimRegion = waveform.registerPlugin(RegionsPlugin.create());
+	$: wsRegions = waveform.registerPlugin(RegionsPlugin.create());
 
-	$: trimRegion?.on("region-out", (region) => {
+	$: wsRegions?.on("region-out", (region) => {
 		region.play();
 	});
 
-	$: trimRegion?.on("region-updated", (region) => {
+	$: wsRegions?.on("region-updated", (region) => {
 		trimDuration = region.end - region.start;
 	});
 
-	$: trimRegion?.on("region-clicked", (region, e) => {
+	$: wsRegions?.on("region-clicked", (region, e) => {
 		e.stopPropagation(); // prevent triggering a click on the waveform
 		activeRegion = region;
 		region.play();
 	});
-
-	const  addAnnotations = (value: AudioData): void =>{
-		var annotations = value.annotations
-		annotations.forEach(annotation => {
-			trimRegion.addRegion({
-				start: annotation.start,
-				end: annotation.end,
-				content: annotation.speaker,
-				color: annotation.color,
-				drag: false,
-				resize: false,
-			})
-		});
-	}
-
-	const addTrimRegion = (): void => {
-		activeRegion = trimRegion.addRegion({
-			start: audio_duration / 4,
-			end: audio_duration / 2,
-			...trim_region_settings
-		});
-
-		trimDuration = activeRegion.end - activeRegion.start;
-	};
 
 	$: if (activeRegion) {
 		const shadowRoot = container.children[0]!.shadowRoot!;
@@ -96,17 +72,30 @@
 			rightRegionHandle?.setAttribute("tabindex", "0");
 
 			leftRegionHandle.addEventListener("focus", () => {
-				if (trimRegion) activeHandle = "left";
+				if (wsRegions) activeHandle = "left";
 			});
 
 			rightRegionHandle.addEventListener("focus", () => {
-				if (trimRegion) activeHandle = "right";
+				if (wsRegions) activeHandle = "right";
 			});
 		}
 	}
 
+	const  addAnnotations = (): void =>{
+		value.annotations.forEach(annotation => {
+			wsRegions.addRegion({
+				start: annotation.start,
+				end: annotation.end,
+				content: annotation.speaker,
+				color: annotation.color,
+				drag: true,
+				resize: true,
+			})
+		});
+	}
+
 	const trimAudio = (): void => {
-		if (waveform && trimRegion) {
+		if (waveform && wsRegions) {
 			if (activeRegion) {
 				const start = activeRegion.start;
 				const end = activeRegion.end;
@@ -118,10 +107,10 @@
 	};
 
 	const clearRegions = (): void => {
-		trimRegion?.getRegions().forEach((region) => {
+		wsRegions?.getRegions().forEach((region) => {
 			region.remove();
 		});
-		trimRegion?.clearRegions();
+		wsRegions?.clearRegions();
 	};
 
 	const toggleTrimmingMode = (): void => {
@@ -130,7 +119,6 @@
 			mode = "";
 		} else {
 			mode = "edit";
-			addAnnotations(value);
 		}
 	};
 
@@ -165,7 +153,7 @@
 		trimDuration = activeRegion.end - activeRegion.start;
 	};
 
-	$: trimRegion &&
+	$: wsRegions &&
 		window.addEventListener("keydown", (e) => {
 			if (e.key === "ArrowLeft") {
 				adjustRegionHandles(activeHandle, "ArrowLeft");
@@ -173,6 +161,14 @@
 				adjustRegionHandles(activeHandle, "ArrowRight");
 			}
 		});
+
+	waveform?.on("ready", function(){
+		wsRegions.clearRegions();
+		if(value && value.annotations){
+			addAnnotations();
+		}
+	});
+
 </script>
 
 <div class="controls" data-testid="waveform-controls">
