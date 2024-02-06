@@ -91,9 +91,8 @@
 				drag: true,
 				resize: true,
 			})
-			region.element.classList.add(
-				'wavesurfer-region-overlapping-' + annotation.level + '-' + annotation.num_levels
-			)
+			region.element.style.top = (annotation.level * 10).toString() + "%";
+			region.element.style.height = (100 - (annotation.num_levels + 1) * 10 ).toString() + "%";
 		});
 	}
 
@@ -399,53 +398,4 @@
 		margin-right: var(--spacing-xl);
 	}
 
-	:global(.wavesurfer-region-overlapping-1-1) {
-		top: 10% !important;
-		height: 80% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-1-2) {
-		top: 10% !important;
-		height: 70% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-2-2) {
-		top: 20% !important;
-		height: 70% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-1-3) {
-		top: 10% !important;
-		height: 60% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-2-3) {
-		top: 20% !important;
-		height: 60% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-3-3) {
-		top: 30% !important;
-		height: 60% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-1-4) {
-		top: 10% !important;
-		height: 50% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-2-4){
-		top: 20% !important;
-		height: 50% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-3-4) {
-		top: 30% !important;
-		height: 50% !important;
-	}
-
-	:global(.wavesurfer-region-overlapping-4-4) {
-		top: 40% !important;
-		height: 50% !important;
-	}
 </style>
