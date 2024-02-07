@@ -88,7 +88,7 @@ class Annotation(GradioModel):
 
 class AnnotadedAudioData(GradioModel):
     file_data: FileData
-    rttm_file: Optional[FileData] = None
+    rttm: Optional[FileData] = None
     annotations: Optional[List[Annotation]] = None
 
 
@@ -346,9 +346,9 @@ class AnnotatedAudio(
         orig_rttms_name = rttm_path.name if rttm_path.exists() else None
 
         file_data = FileData(path=str(audio_path), orig_name=orig_name)
-        rttms_file = FileData(path=str(rttm_path), orig_name=orig_rttms_name)
+        rttm = FileData(path=str(rttm_path), orig_name=orig_rttms_name)
         return AnnotadedAudioData(
-            file_data=file_data, rttm_file=rttms_file, annotations=prepared_annotations
+            file_data=file_data, rttm=rttm, annotations=prepared_annotations
         )
 
     def prepare_annotations(self, annotations) -> List[Annotation]:

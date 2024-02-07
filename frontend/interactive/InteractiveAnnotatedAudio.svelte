@@ -7,9 +7,10 @@
 		type FileData,
 		type upload_files
 	} from "@gradio/client";
-	import { BlockLabel } from "@gradio/atoms";
-	import { Music } from "@gradio/icons";
-	import AnnotatedAudioData from "../shared/AnnotatedAudioData" 
+	import { BlockLabel, IconButton} from "@gradio/atoms";
+	import { Music, Download } from "@gradio/icons";
+	import { DownloadLink } from "@gradio/wasm/svelte";
+	import AnnotatedAudioData from "../shared/AnnotatedAudioData"
 	import type { IBlobEvent, IMediaRecorder } from "extendable-media-recorder";
 	import type { I18nFormatter } from "js/app/src/gradio_helper";
 	import AudioRecorder from "../recorder/AudioRecorder.svelte";
@@ -37,6 +38,7 @@
 	export let active_source: "microphone" | "upload";
 	export let handle_reset_value: () => void = () => {};
 	export let editable = true;
+	export let enable_download_button: boolean = true;
 
 	// Needed for wasm support
 	const upload_fn = getContext<typeof upload_files>("upload_files");
@@ -52,6 +54,9 @@
 	let pending_stream: Uint8Array[] = [];
 	let submit_pending_stream_on_pending_end = false;
 	let inited = false;
+	let show_download_button: boolean = false;
+
+	$: show_download_button = ((value?.rttm !== null) && enable_download_button);
 
 	const STREAM_TIMESLICE = 500;
 	const NUM_HEADER_BYTES = 44;
@@ -254,6 +259,13 @@
 		</Upload>
 	{/if}
 {:else}
+	<div class="icon-buttons">
+		{#if show_download_button}
+			<DownloadLink href={value.rttm.url} download={value.rttm.orig_name || value.rttm.path}>
+				<IconButton Icon={Download} label={i18n("common.download")} />
+			</DownloadLink>
+		{/if}
+	</div>
 	<ModifyUpload
 		{i18n}
 		on:clear={clear}
@@ -281,3 +293,13 @@
 {/if}
 
 <SelectSource {sources} bind:active_source handle_clear={clear} />
+
+<style>
+	.icon-buttons {
+		display: flex;
+		position: absolute;
+		top: 8px;
+		right: 35px;
+		gap: var(--size-1);
+	}
+</style>

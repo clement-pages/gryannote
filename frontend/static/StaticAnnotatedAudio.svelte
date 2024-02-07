@@ -7,19 +7,26 @@
 	import AudioPlayerWithAnnotation from "../player/AudioPlayerWithAnnotation.svelte";
 	import { createEventDispatcher } from "svelte";
 	import { DownloadLink } from "@gradio/wasm/svelte";
-	import type { WaveformOptions, AudioData} from "../shared/types";
+	import type { WaveformOptions} from "../shared/types";
+	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
 
-	export let value: null | AudioData = null;
+	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
 	export let show_label = true;
-	export let show_download_button = true;
-	export let show_share_button = false;
+	export let enable_download_button: boolean = true;
+	export let enable_share_button: boolean = true;
 	export let i18n: I18nFormatter;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 
+	let show_download_button: boolean = true;
+	let show_share_button: boolean = false;
+
+	$: show_download_button = ((value?.rttm !== null) && enable_download_button);
+	$: show_share_button = ((value?.rttm !== null) && enable_share_button)
+
 	const dispatch = createEventDispatcher<{
-		change: AudioData;
+		change: typeof value;
 		play: undefined;
 		pause: undefined;
 		end: undefined;
@@ -38,7 +45,7 @@
 
 {#if value !== null}
 	<div class="icon-buttons">
-		{#if show_download_button && value.rttm !== null}
+		{#if show_download_button}
 			<DownloadLink href={value.rttm.url} download={value.rttm.orig_name || value.rttm.path}>
 				<IconButton Icon={Download} label={i18n("common.download")} />
 			</DownloadLink>
