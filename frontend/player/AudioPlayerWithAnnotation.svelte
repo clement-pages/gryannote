@@ -1,16 +1,17 @@
 <script lang="ts">
+	import type { WaveformOptions } from "../shared/types";
+	import type { I18nFormatter } from "@gradio/utils";
+
 	import { onMount } from "svelte";
 	import { Music } from "@gradio/icons";
-	import type { I18nFormatter } from "@gradio/utils";
 	import WaveSurfer from "wavesurfer.js";
 	import { skip_audio, process_audio } from "../shared/utils";
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
-	import type { FileData } from "@gradio/client";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
-	import type { WaveformOptions } from "../shared/types";
 	import { createEventDispatcher } from "svelte";
+	import Caption from "../shared/Caption.svelte"
 
 	export let value: null | AnnotatedAudioData = null;
 	$: url = value.file_data?.url;
@@ -39,6 +40,8 @@
 	let trimDuration = 0;
 
 	let show_volume_slider = false;
+
+	let captionList = [];
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
@@ -193,6 +196,11 @@
 				{trim_region_settings}
 				{editable}
 			/>
+			{#if value?.annotations}
+				<Caption
+					value={value.annotations}
+				/>
+			{/if}
 		{/if}
 	</div>
 {/if}

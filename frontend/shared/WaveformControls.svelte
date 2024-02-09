@@ -86,7 +86,6 @@
 			var region = wsRegions.addRegion({
 				start: annotation.start,
 				end: annotation.end,
-				content: annotation.speaker,
 				color: annotation.color,
 				drag: true,
 				resize: true,
