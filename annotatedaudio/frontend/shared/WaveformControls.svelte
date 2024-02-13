@@ -87,11 +87,14 @@
 				start: annotation.start,
 				end: annotation.end,
 				color: annotation.color,
-				drag: true,
-				resize: true,
+				drag: false,
+				resize: false,
 			})
 			region.element.style.top = (annotation.level * 10).toString() + "%";
 			region.element.style.height = (100 - (annotation.num_levels + 1) * 10 ).toString() + "%";
+			region['handleStyle'] = {left: {backgroundColor: "red"},
+                        right: {backgroundColor: "red"},
+                         }
 		});
 	}
 
@@ -397,4 +400,8 @@
 		margin-right: var(--spacing-xl);
 	}
 
+	::part(region-handle-left){
+		border-right-width: 4px !important;
+        border-right-color: #fff000 !important;
+	}
 </style>

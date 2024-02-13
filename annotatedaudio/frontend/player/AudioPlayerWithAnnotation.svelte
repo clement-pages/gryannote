@@ -207,7 +207,7 @@
 
 <style>
 	.component-wrapper {
-		padding: var(--size-3);
+		padding: 4em;
 	}
 
 	:global(::part(wrapper)) {
