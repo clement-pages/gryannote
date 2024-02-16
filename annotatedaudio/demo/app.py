@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from typing import List
 
 import gradio as gr
@@ -35,7 +34,6 @@ with gr.Blocks() as demo:
     gr.Markdown(
         "Welcome to the [pyannote.audio](https://github.com/pyannote/pyannote-audio) app !"
     )
-
     pipelines = get_available_pipelines()
     pipelines_choice = gr.Dropdown(
         choices=pipelines,

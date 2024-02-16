@@ -13,17 +13,12 @@
 	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
 	export let show_label = true;
-	export let enable_download_button: boolean = true;
 	export let enable_share_button: boolean = true;
 	export let i18n: I18nFormatter;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 
-	let show_download_button: boolean = true;
 	let show_share_button: boolean = false;
-
-	$: show_download_button = ((value?.rttm !== null) && enable_download_button);
-	$: show_share_button = ((value?.rttm !== null) && enable_share_button)
 
 	const dispatch = createEventDispatcher<{
 		change: typeof value;
@@ -45,11 +40,6 @@
 
 {#if value !== null}
 	<div class="icon-buttons">
-		{#if show_download_button}
-			<DownloadLink href={value.rttm.url} download={value.rttm.orig_name || value.rttm.path}>
-				<IconButton Icon={Download} label={i18n("common.download")} />
-			</DownloadLink>
-		{/if}
 		{#if show_share_button}
 			<ShareButton
 				{i18n}

@@ -56,8 +56,6 @@
 	let inited = false;
 	let show_download_button: boolean = false;
 
-	$: show_download_button = ((value?.rttm !== null) && enable_download_button);
-
 	const STREAM_TIMESLICE = 500;
 	const NUM_HEADER_BYTES = 44;
 	let audio_chunks: Blob[] = [];
@@ -259,13 +257,6 @@
 		</Upload>
 	{/if}
 {:else}
-	<div class="icon-buttons">
-		{#if show_download_button}
-			<DownloadLink href={value.rttm.url} download={value.rttm.orig_name || value.rttm.path}>
-				<IconButton Icon={Download} label={i18n("common.download")} />
-			</DownloadLink>
-		{/if}
-	</div>
 	<ModifyUpload
 		{i18n}
 		on:clear={clear}

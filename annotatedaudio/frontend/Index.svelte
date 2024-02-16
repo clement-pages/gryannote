@@ -64,7 +64,6 @@
 		}
 
 		audio_data.file_data = normalise_file(audio_data.file_data, root, proxy_url);
-		audio_data.rttm = normalise_file(audio_data.rttm, root, proxy_url);
 		return audio_data;
 	}
 

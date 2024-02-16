@@ -1,4 +1,5 @@
 
-from .annotatedaudio import AnnotatedAudio, Annotation
+from .annotatedaudio import AnnotatedAudio
+from .core import AnnotadedAudioData, Annotation
 
-__all__ = ['AnnotatedAudio', 'Annotation']
+__all__ = ['AnnotatedAudio', 'AnnotadedAudioData', 'Annotation']

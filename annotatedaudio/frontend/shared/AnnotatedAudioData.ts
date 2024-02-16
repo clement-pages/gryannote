@@ -4,7 +4,6 @@ import type {Annotation} from "./types.ts"
 
 export default class AnnotatedAudioData {
 	file_data: FileData;
-	rttm?: FileData | null;
 	annotations?: Annotation[] | null;
 
 
@@ -28,7 +27,6 @@ export default class AnnotatedAudioData {
 		alt_text?: string;
 	}) {
 		this.file_data = new FileData({path, url, orig_name, size, blob, is_stream, mime_type, alt_text})
-		this.rttm = null;
 		this.annotations = null;
 	}
 }
