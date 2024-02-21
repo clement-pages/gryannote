@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, Tuple
+import numpy as np
 
 from gradio.components.base import Component
 from gradio.data_classes import FileData, ListFiles
@@ -12,6 +13,7 @@ from gradio.events import Events
 from gradio.utils import NamedString
 from gradio_client.documentation import document, set_documentation_group
 from gradio_annotatedaudio.core import AnnotadedAudioData, Annotation
+from pyannote.core import Annotation as PyannoteAnnotation
 
 set_documentation_group("component")
 
@@ -115,16 +117,30 @@ class RTTMHandler(Component):
                 + ". Please choose from: 'filepath', 'binary'."
             )
 
-    def _process_rttms(self, annotationsdata: AnnotadedAudioData) -> Path:
-        audioname = annotationsdata.file_data.orig_name.split(".")[0]
-        annotations = annotationsdata.annotations
-        rttm_file = tempfile.NamedTemporaryFile(delete=False, dir=self.GRADIO_CACHE)
-        for annotation in annotations:
-            rttm_file.write(f"SPEAKER {audioname} 1 {annotation.start} {annotation.end - annotation.start} <NA> <NA> {annotation.speaker} <NA> <NA>\n")
-        rttm_file.name = f"{audioname}.rttm"
-        rttm_path = f"{self.GRADIO_CACHE}/{rttm_file.name}"
-        rttm_file.close()
-        return Path(rttm_path)
+    def _process_rttm(self, audio: str | Path, annotations: PyannoteAnnotation) -> Path:
+        """ Dump pipeline's annotations to file using RTTM format
+
+        Parameters
+        ----------
+        audio: str | Path
+            audio on which the pipeline has been applied
+        annotations: Annotation
+            pipeline provided annotations
+        
+        Returns
+        -------
+        rttm_file: Path
+            path to rttm file
+        """
+
+        audio = Path(audio)
+        audioname = audio.name.split(".")[0]
+
+        rttm = tempfile.NamedTemporaryFile(delete=False, dir=self.GRADIO_CACHE, mode="w")
+        rttm.name = f"{self.GRADIO_CACHE}/{audioname}.rttm"
+        annotations.write_rttm(rttm)
+
+        return Path(rttm.name)
 
     def preprocess(
         self, payload: ListFiles | FileData | None | AnnotadedAudioData
@@ -144,17 +160,17 @@ class RTTMHandler(Component):
             else:
                 return [self._process_single_file(payload)]
 
-    def postprocess(self, value: str | list[str] | AnnotadedAudioData | None) -> ListFiles | FileData | None:
-        print(value)
+    def postprocess(self, value: str | list[str] | Tuple[str | Path, PyannoteAnnotation] | None) -> ListFiles | FileData | None:
         if value is None:
             return None
-        if isinstance(value, AnnotadedAudioData):
-            rttm_path = self._process_rttms(value)
+
+        if isinstance(value, tuple):
+            rttm = self._process_rttm(*value)
             return FileData(
-                path=rttm_path,
-                orig_name=rttm_path.name,
-                size=rttm_path.stat().st_size,
-            ) 
+                path=str(rttm),
+                orig_name=rttm.name,
+                size=rttm.stat().st_size,
+            )
         elif isinstance(value, list):
             return ListFiles(
                 root=[
