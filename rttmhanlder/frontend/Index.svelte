@@ -13,18 +13,14 @@
 	import FileUpload from "./shared/FileUpload.svelte";
 	import { normalise_file, type FileData } from "@gradio/client";
 	import { Block, UploadText } from "@gradio/atoms";
-	import { Download } from "@gradio/icons";
-	import type { I18nFormatter } from "@gradio/utils";
-	import { DownloadLink } from "@gradio/wasm/svelte";
 
 	import { StatusTracker } from "@gradio/statustracker";
 	import type { LoadingStatus } from "@gradio/statustracker";
-    import IconButton from "@gradio/atoms/src/IconButton.svelte";
 
 	export let elem_id = "";
 	export let elem_classes: string[] = [];
 	export let visible = true;
-	export let value: null | FileData;
+	export let value: null | FileData | FileData[];
 
 	export let interactive: boolean;
 	export let root: string;
@@ -32,7 +28,6 @@
 	export let show_label: boolean;
 	export let height: number | undefined = undefined;
 
-	export let i18n: I18nFormatter;
 	export let proxy_url: null | string;
 	export let _selectable = false;
 	export let loading_status: LoadingStatus;
@@ -90,11 +85,6 @@
 			{height}
 			i18n={gradio.i18n}
 		/>
-		{#if value}
-			<DownloadLink href={value?.url} download={value?.orig_name || value?.path}>
-				<IconButton Icon={Download} label={i18n("common.download")}/>
-			</DownloadLink>
-		{/if}
 	{:else}
 		<FileUpload
 			{label}

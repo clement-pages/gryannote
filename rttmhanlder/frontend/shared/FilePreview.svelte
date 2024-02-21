@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { FileData } from "@gradio/client";
-	import { prettyBytes } from "./utils";
 	import { createEventDispatcher } from "svelte";
 	import type { I18nFormatter, SelectData } from "@gradio/utils";
-	import { DownloadLink } from "@gradio/wasm/svelte";
+	import IconButton from "@gradio/atoms/src/IconButton.svelte";
+	import { Download } from "@gradio/icons";
 
 	const dispatch = createEventDispatcher<{
 		select: SelectData;
@@ -13,7 +13,7 @@
 	export let height: number | undefined = undefined;
 	export let i18n: I18nFormatter;
 
-	function split_filename(filename: string): [string, string] {
+	function splitFilename(filename: string): [string, string] {
 		const last_dot = filename.lastIndexOf(".");
 		if (last_dot === -1) {
 			return [filename, ""];
@@ -21,8 +21,17 @@
 		return [filename.slice(0, last_dot), filename.slice(last_dot)];
 	}
 
+	function getFileContent(fileUrl: string, id: string) {
+		fetch(fileUrl)
+			.then(response => response.text())
+			.then(content => {
+				document.getElementById(id).innerText = content;
+			})
+			.catch(error => console.error("Error while fetching file:", error))
+	}
+
 	$: normalized_files = (Array.isArray(value) ? value : [value]).map((file) => {
-		const [filename_stem, filename_ext] = split_filename(file.orig_name ?? "");
+		const [filename_stem, filename_ext] = splitFilename(file.orig_name ?? "");
 		return {
 			...file,
 			filename_stem,
@@ -38,6 +47,7 @@
 	<table class="file-preview">
 		<tbody>
 			{#each normalized_files as file, i}
+			<!--File head (name and download button)-->
 				<tr
 					class="file"
 					class:selectable
@@ -54,16 +64,22 @@
 
 					<td class="download">
 						{#if file.url}
-							<DownloadLink
-								href={file.url}
-								download={window.__is_colab__ ? null : file.orig_name}
-							>
-								{@html file.size != null
-									? prettyBytes(file.size)
-									: "(size unknown)"}&nbsp;&#8675;
-							</DownloadLink>
+							<button>
+								<a href={file.url} target="_blank" download={file.orig_name}>
+									<IconButton Icon={Download}/>
+								</a>
+							</button>
 						{:else}
 							{i18n("file.uploading")}
+						{/if}
+					</td>
+				</tr>
+				<!-- File content -->
+				<tr class="file-content" id="file-content-{i}">
+					<td>
+						{#if file.url}
+							{console.log("Passing here")}
+							{getFileContent(file.url, "file-content-" + i.toString())}
 						{/if}
 					</td>
 				</tr>
@@ -111,25 +127,12 @@
 		white-space: nowrap;
 		text-align: right;
 	}
-	.download:hover {
-		text-decoration: underline;
-	}
-	.download > :global(a) {
-		color: var(--link-text-color);
-	}
 
-	.download > :global(a:hover) {
-		color: var(--link-text-color-hover);
-	}
-	.download > :global(a:visited) {
-		color: var(--link-text-color-visited);
-	}
-	.download > :global(a:active) {
-		color: var(--link-text-color-active);
-	}
 	.selectable {
 		cursor: pointer;
 	}
+
+
 
 	tbody > tr:nth-child(even) {
 		background: var(--block-background-fill);
