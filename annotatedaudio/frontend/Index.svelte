@@ -30,7 +30,6 @@
 	export let min_width: number | undefined = undefined;
 	export let loading_status: LoadingStatus;
 	export let autoplay = false;
-	export let enable_download_button = true;
 	export let enable_share_button = false;
 	export let editable = true;
 	export let waveform_options: WaveformOptions = {};
@@ -152,7 +151,6 @@
 		<StaticAnnotatedAudio
 			i18n={gradio.i18n}
 			{show_label}
-			enable_download_button={enable_download_button}
 			enable_share_button={enable_share_button}
 			value={_value}
 			{label}
@@ -185,7 +183,6 @@
 		<InteractiveAnnotatedAudio
 			{label}
 			{show_label}
-			enable_download_button={enable_download_button}
 			value={_value}
 			on:change={({ detail }) => (value = detail)}
 			on:stream={({ detail }) => {

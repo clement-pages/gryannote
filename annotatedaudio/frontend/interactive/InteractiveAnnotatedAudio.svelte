@@ -38,7 +38,6 @@
 	export let active_source: "microphone" | "upload";
 	export let handle_reset_value: () => void = () => {};
 	export let editable = true;
-	export let enable_download_button: boolean = true;
 
 	// Needed for wasm support
 	const upload_fn = getContext<typeof upload_files>("upload_files");
