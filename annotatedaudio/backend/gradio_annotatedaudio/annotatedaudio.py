@@ -68,6 +68,7 @@ class AnnotatedAudio(
         Events.pause_recording,
         Events.stop_recording,
         Events.upload,
+        Events.edit
     ]
 
     data_model = AnnotadedAudioData
@@ -202,6 +203,7 @@ class AnnotatedAudio(
             return payload
 
         file_data = payload.file_data
+        annotations = payload.annotations
 
         assert file_data.path
         # Need a unique name for the file to avoid re-using the same audio file if
@@ -224,13 +226,13 @@ class AnnotatedAudio(
             )
 
         if self.type == "numpy":
-            return sample_rate, data
+            return (sample_rate, data), annotations
         elif self.type == "filepath":
             output_file = str(Path(output_file_name).with_suffix(f".{self.format}"))
             processing_utils.audio_to_file(
                 sample_rate, data, output_file, format=self.format
             )
-            return output_file
+            return output_file, annotations
         else:
             raise ValueError(
                 "Unknown type: "

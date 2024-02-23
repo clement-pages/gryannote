@@ -54,9 +54,9 @@ class AnnotadedAudioData(GradioModel):
     file_data: FileData
     annotations: Optional[List[Annotation]] = None
 
-    def __init__(self, file_data : FileData, annotations: Optional[PyannoteAnnotation]=None, **kwargs):
+    def __init__(self, file_data : FileData, annotations: Optional[PyannoteAnnotation | List[Annotation]]=None, **kwargs):
 
-        if annotations:
+        if isinstance(annotations, PyannoteAnnotation):
             annotations = self._prepare_annotations(annotations)
         
         super().__init__(

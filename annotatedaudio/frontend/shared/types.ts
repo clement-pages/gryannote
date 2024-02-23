@@ -13,5 +13,5 @@ export type Annotation = {
 	speaker: string
 	color: string
 	level: number
-	num_levels: number
+	numLevels: number
 }

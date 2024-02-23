@@ -20,14 +20,19 @@ def get_available_pipelines() -> List[str]:
     return list(filter(lambda p: p.startswith("pyannote/"), available_pipelines))
 
 
-def apply_pipeline(pipeline_name: str, filepath: str):
+def apply_pipeline(pipeline_name: str, data: AnnotatedAudio):
     """ Apply specified pipeline on the indicated file"""
+    filepath, _ = data
     pipeline = Pipeline.from_pretrained(
         pipeline_name, use_auth_token=os.environ["HG_TOKEN"]
     )
     annotations = pipeline(filepath)
 
     return (filepath, annotations)
+
+
+def update_annotations(data: AnnotatedAudio):
+    print(data)
 
 
 with gr.Blocks() as demo:
@@ -46,6 +51,7 @@ with gr.Blocks() as demo:
         type="filepath",
         interactive=True,
     )
+    annotated_audio.edit(fn=update_annotations, inputs=annotated_audio)
 
     run_btn = gr.Button("Run pipeline")
     run_btn.click(

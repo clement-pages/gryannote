@@ -2,6 +2,7 @@
 	import { Play, Pause, Forward, Backward, Undo, Trim } from "@gradio/icons";
 	import { get_skip_rewind_amount } from "../shared/utils";
 	import type { I18nFormatter } from "@gradio/utils";
+	import type { Annotation } from "./types";
 	import WaveSurfer from "wavesurfer.js";
 	import RegionsPlugin, {
 		type Region
@@ -10,6 +11,7 @@
 	import AnnotatedAudioData from "./AnnotatedAudioData";
 	import VolumeLevels from "./VolumeLevels.svelte";
 	import VolumeControl from "./VolumeControl.svelte";
+	import { createEventDispatcher } from "svelte";
 
 	export let value: AnnotatedAudioData | null = null;
 	export let waveform: WaveSurfer;
@@ -32,23 +34,28 @@
 	let playbackSpeeds = [0.5, 1, 1.5, 2];
 	let playbackSpeed = playbackSpeeds[1];
 
-	export let wsRegions: RegionsPlugin;
+	let wsRegions: RegionsPlugin;
 	let activeRegion: Region | null = null;
 
 	let leftRegionHandle: HTMLDivElement | null;
 	let rightRegionHandle: HTMLDivElement | null;
 	let activeHandle = "";
 
+	// correspondance between a SingleRegion and an Annotation
+	let regionsMap : Map<string, Annotation> = new Map();
+
 	let currentVolume = 1;
+
+	const dispatch = createEventDispatcher<{
+		edit: typeof value;
+	}>();
 
 	$: wsRegions = waveform.registerPlugin(RegionsPlugin.create());
 
-	$: wsRegions?.on("region-out", (region) => {
-		region.play();
-	});
-
 	$: wsRegions?.on("region-updated", (region) => {
-		trimDuration = region.end - region.start;
+		var updatedAnnotation = regionsMap.get(region.id);
+		updatedAnnotation.start = region.start
+		updatedAnnotation.end = region.end
 	});
 
 	$: wsRegions?.on("region-clicked", (region, e) => {
@@ -87,15 +94,22 @@
 				start: annotation.start,
 				end: annotation.end,
 				color: annotation.color,
-				drag: false,
-				resize: false,
+				drag: true,
+				resize: true,
 			})
 			region.element.style.top = (annotation.level * 10).toString() + "%";
-			region.element.style.height = (100 - (annotation.num_levels + 1) * 10 ).toString() + "%";
-			region['handleStyle'] = {left: {backgroundColor: "red"},
-                        right: {backgroundColor: "red"},
-                         }
+			region.element.style.height = (100 - (annotation.numLevels + 1) * 10 ).toString() + "%";
+
+			// link annotation to region
+			regionsMap.set(region.id, annotation);
+
 		});
+	}
+
+	const editAnnotations = (): void => {
+		value.annotations = Array.from(regionsMap.values());
+		console.log("passing here");
+		dispatch("edit", value);
 	}
 
 	const trimAudio = (): void => {
@@ -115,6 +129,7 @@
 			region.remove();
 		});
 		wsRegions?.clearRegions();
+		regionsMap.clear()
 	};
 
 	const toggleTrimmingMode = (): void => {
@@ -169,6 +184,7 @@
 	waveform?.on("ready", function(){
 		wsRegions.clearRegions();
 		if(value && value.annotations){
+			regionsMap.clear()
 			addAnnotations();
 		}
 	});
@@ -278,6 +294,10 @@
 				>
 					<Trim />
 				</button>
+				<button
+					class="text-button"
+					on:click={editAnnotations}
+					> Send annotations</button>
 			{:else}
 				<button class="text-button" on:click={trimAudio}>Trim</button>
 				<button class="text-button" on:click={toggleTrimmingMode}>Cancel</button>

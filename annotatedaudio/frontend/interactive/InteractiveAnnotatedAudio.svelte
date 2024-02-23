@@ -7,9 +7,8 @@
 		type FileData,
 		type upload_files
 	} from "@gradio/client";
-	import { BlockLabel, IconButton} from "@gradio/atoms";
-	import { Music, Download } from "@gradio/icons";
-	import { DownloadLink } from "@gradio/wasm/svelte";
+	import { BlockLabel} from "@gradio/atoms";
+	import { Music } from "@gradio/icons";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData"
 	import type { IBlobEvent, IMediaRecorder } from "extendable-media-recorder";
 	import type { I18nFormatter } from "js/app/src/gradio_helper";
@@ -77,7 +76,7 @@
 	const dispatch = createEventDispatcher<{
 		change: AnnotatedAudioData | null;
 		stream: AnnotatedAudioData;
-		edit: never;
+		edit: typeof value;
 		play: never;
 		pause: never;
 		stop: never;
@@ -278,7 +277,7 @@
 		on:stop
 		on:play
 		on:pause
-		on:edit
+		on:edit={(e) => dispatch("edit", e.detail)}
 	/>
 {/if}
 

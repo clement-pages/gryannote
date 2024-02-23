@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { uploadToHuggingFace } from "@gradio/utils";
 	import { Empty } from "@gradio/atoms";
-	import { ShareButton, IconButton, BlockLabel } from "@gradio/atoms";
-	import { Download, Music } from "@gradio/icons";
+	import { ShareButton, BlockLabel } from "@gradio/atoms";
+	import { Music } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
 	import AudioPlayerWithAnnotation from "../player/AudioPlayerWithAnnotation.svelte";
 	import { createEventDispatcher } from "svelte";
-	import { DownloadLink } from "@gradio/wasm/svelte";
 	import type { WaveformOptions} from "../shared/types";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
 

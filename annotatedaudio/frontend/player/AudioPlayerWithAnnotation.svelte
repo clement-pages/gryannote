@@ -47,7 +47,7 @@
 		stop: undefined;
 		play: undefined;
 		pause: undefined;
-		edit: undefined;
+		edit: typeof value;
 		end: undefined;
 	}>();
 
@@ -195,6 +195,7 @@
 				{waveform_options}
 				{trim_region_settings}
 				{editable}
+				on:edit={(e) => dispatch("edit", e.detail)}
 			/>
 			{#if value?.annotations}
 				<Caption

@@ -38,9 +38,9 @@
 	export let gradio: Gradio<{
 		change: typeof value;
 		stream: typeof value;
+		edit: typeof value;
 		error: string;
 		warning: string;
-		edit: never;
 		play: never;
 		pause: never;
 		stop: never;
@@ -198,7 +198,7 @@
 			{handle_reset_value}
 			{editable}
 			bind:dragging
-			on:edit={() => gradio.dispatch("edit")}
+			on:edit={(e) => gradio.dispatch("edit", e.detail)}
 			on:play={() => gradio.dispatch("play")}
 			on:pause={() => gradio.dispatch("pause")}
 			on:stop={() => gradio.dispatch("stop")}
