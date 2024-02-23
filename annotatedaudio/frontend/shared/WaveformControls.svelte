@@ -23,13 +23,14 @@
 	export let handle_trim_audio: (start: number, end: number) => void;
 	export let mode = "";
 	export let container: HTMLDivElement;
-	export let handle_reset_value: () => void;
 	export let waveform_options: WaveformOptions = {};
 	export let trim_region_settings: WaveformOptions = {};
 	export let show_volume_slider = false;
 	export let editable = true;
 
 	export let trimDuration = 0;
+
+	let initialAnnotations: Annotation[]  = [];
 
 	let playbackSpeeds = [0.5, 1, 1.5, 2];
 	let playbackSpeed = playbackSpeeds[1];
@@ -89,6 +90,16 @@
 	}
 
 	const  addAnnotations = (): void =>{
+
+		var annotations = value.annotations;
+
+		// keep initial annotations in memory, for future retrieval
+		if (initialAnnotations.length == 0){
+			annotations.forEach(
+				annotation => initialAnnotations.push(Object.assign({}, annotation))
+			);
+		}
+
 		value.annotations.forEach(annotation => {
 			var region = wsRegions.addRegion({
 				start: annotation.start,
@@ -106,9 +117,16 @@
 		});
 	}
 
+	const resetAnnotations = (): void  => {
+		clearAnnotations();
+		initialAnnotations.forEach(
+				annotation => value.annotations.push(Object.assign({}, annotation))
+		);
+		addAnnotations();
+	}
+
 	const editAnnotations = (): void => {
 		value.annotations = Array.from(regionsMap.values());
-		console.log("passing here");
 		dispatch("edit", value);
 	}
 
@@ -124,16 +142,18 @@
 		}
 	};
 
-	const clearRegions = (): void => {
+	const clearAnnotations = (): void => {
 		wsRegions?.getRegions().forEach((region) => {
 			region.remove();
 		});
 		wsRegions?.clearRegions();
+
+		value.annotations = []
 		regionsMap.clear()
 	};
 
 	const toggleTrimmingMode = (): void => {
-		clearRegions();
+		clearAnnotations();
 		if (mode === "edit") {
 			mode = "";
 		} else {
@@ -275,12 +295,9 @@
 			{#if showRedo && mode === ""}
 				<button
 					class="action icon"
-					aria-label="Reset audio"
-					on:click={() => {
-						handle_reset_value();
-						clearRegions();
-						mode = "";
-					}}
+					aria-label="Reset annotations"
+					title={i18n("Reset annotations")}
+					on:click={resetAnnotations}
 				>
 					<Undo />
 				</button>
@@ -376,8 +393,7 @@
 		color: var(--neutral-400);
 		margin-left: var(--spacing-md);
 	}
-	.icon:hover,
-	.icon:focus {
+	.icon:hover {
 		color: var(--color-accent);
 	}
 	.play-pause-wrapper {

@@ -271,7 +271,6 @@
 		{waveform_settings}
 		{waveform_options}
 		{trim_region_settings}
-		{handle_reset_value}
 		{editable}
 		interactive
 		on:stop

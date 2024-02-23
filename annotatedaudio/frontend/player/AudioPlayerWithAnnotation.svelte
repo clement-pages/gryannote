@@ -27,7 +27,6 @@
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let mode = "";
-	export let handle_reset_value: () => void = () => {};
 
 	let container: HTMLDivElement;
 	let waveform: WaveSurfer | undefined;
@@ -191,7 +190,6 @@
 				bind:trimDuration
 				bind:show_volume_slider
 				showRedo={interactive}
-				{handle_reset_value}
 				{waveform_options}
 				{trim_region_settings}
 				{editable}
