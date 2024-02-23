@@ -295,7 +295,7 @@
 					<Trim />
 				</button>
 				<button
-					class="text-button"
+					class="annotations-button"
 					on:click={editAnnotations}
 					> Send annotations</button>
 			{:else}
@@ -312,7 +312,7 @@
 		justify-self: self-end;
 		align-items: center;
 	}
-	.text-button {
+	.text-button, .annotations-button {
 		border: 1px solid var(--neutral-400);
 		border-radius: var(--radius-sm);
 		font-weight: 300;
@@ -323,6 +323,11 @@
 		font-weight: bold;
 		padding: 0 5px;
 		margin-left: 5px;
+	}
+
+	.annotations-button:hover {
+		color: var(--color-accent);
+		border-color: var(--color-accent);
 	}
 
 	.text-button:hover,
@@ -360,7 +365,7 @@
 			margin: var(--spacing-sm);
 		}
 
-		.controls .text-button {
+		.controls .text-button, .annotations-button {
 			margin-left: 0;
 		}
 	}
