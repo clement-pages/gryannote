@@ -55,8 +55,9 @@
 
 	$: wsRegions?.on("region-updated", (region) => {
 		var updatedAnnotation = regionsMap.get(region.id);
-		updatedAnnotation.start = region.start
-		updatedAnnotation.end = region.end
+		updatedAnnotation.start = region.start;
+		updatedAnnotation.end = region.end;
+		editAnnotations();
 	});
 
 	$: wsRegions?.on("region-clicked", (region, e) => {
@@ -123,6 +124,8 @@
 				annotation => value.annotations.push(Object.assign({}, annotation))
 		);
 		addAnnotations();
+		console.log(value)
+		dispatch("edit", value);
 	}
 
 	const editAnnotations = (): void => {
@@ -311,10 +314,6 @@
 				>
 					<Trim />
 				</button>
-				<button
-					class="annotations-button"
-					on:click={editAnnotations}
-					> Send annotations</button>
 			{:else}
 				<button class="text-button" on:click={trimAudio}>Trim</button>
 				<button class="text-button" on:click={toggleTrimmingMode}>Cancel</button>
@@ -329,7 +328,7 @@
 		justify-self: self-end;
 		align-items: center;
 	}
-	.text-button, .annotations-button {
+	.text-button {
 		border: 1px solid var(--neutral-400);
 		border-radius: var(--radius-sm);
 		font-weight: 300;
@@ -340,11 +339,6 @@
 		font-weight: bold;
 		padding: 0 5px;
 		margin-left: 5px;
-	}
-
-	.annotations-button:hover {
-		color: var(--color-accent);
-		border-color: var(--color-accent);
 	}
 
 	.text-button:hover,
@@ -382,7 +376,7 @@
 			margin: var(--spacing-sm);
 		}
 
-		.controls .text-button, .annotations-button {
+		.controls .text-button {
 			margin-left: 0;
 		}
 	}
