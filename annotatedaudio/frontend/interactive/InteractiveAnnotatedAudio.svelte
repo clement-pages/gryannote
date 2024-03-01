@@ -31,7 +31,6 @@
 	export let streaming = false;
 	export let i18n: I18nFormatter;
 	export let waveform_settings: Record<string, any>;
-	export let trim_region_settings = {};
 	export let waveform_options: WaveformOptions = {};
 	export let dragging: boolean;
 	export let active_source: "microphone" | "upload";
@@ -267,10 +266,8 @@
 		{value}
 		{label}
 		{i18n}
-		{dispatch_blob}
 		{waveform_settings}
 		{waveform_options}
-		{trim_region_settings}
 		{editable}
 		interactive
 		on:stop
@@ -281,13 +278,3 @@
 {/if}
 
 <SelectSource {sources} bind:active_source handle_clear={clear} />
-
-<style>
-	.icon-buttons {
-		display: flex;
-		position: absolute;
-		top: 8px;
-		right: 35px;
-		gap: var(--size-1);
-	}
-</style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Play, Pause, Forward, Backward, Undo, Trim } from "@gradio/icons";
+	import { Play, Pause, Forward, Backward, Undo } from "@gradio/icons";
 	import { get_skip_rewind_amount } from "../shared/utils";
 	import type { I18nFormatter } from "@gradio/utils";
 	import type { Annotation } from "./types";
@@ -20,11 +20,9 @@
 	export let playing: boolean;
 	export let showRedo = false;
 	export let interactive = false;
-	export let handle_trim_audio: (start: number, end: number) => void;
 	export let mode = "";
 	export let container: HTMLDivElement;
 	export let waveform_options: WaveformOptions = {};
-	export let trim_region_settings: WaveformOptions = {};
 	export let show_volume_slider = false;
 	export let editable = true;
 
@@ -133,18 +131,6 @@
 		dispatch("edit", value);
 	}
 
-	const trimAudio = (): void => {
-		if (waveform && wsRegions) {
-			if (activeRegion) {
-				const start = activeRegion.start;
-				const end = activeRegion.end;
-				handle_trim_audio(start, end);
-				mode = "";
-				activeRegion = null;
-			}
-		}
-	};
-
 	const clearAnnotations = (): void => {
 		wsRegions?.getRegions().forEach((region) => {
 			region.remove();
@@ -153,15 +139,6 @@
 
 		value.annotations = []
 		regionsMap.clear()
-	};
-
-	const toggleTrimmingMode = (): void => {
-		clearAnnotations();
-		if (mode === "edit") {
-			mode = "";
-		} else {
-			mode = "edit";
-		}
 	};
 
 	const adjustRegionHandles = (handle: string, key: string): void => {
@@ -305,19 +282,6 @@
 					<Undo />
 				</button>
 			{/if}
-
-			{#if mode === ""}
-				<button
-					class="action icon"
-					aria-label="Trim audio to selection"
-					on:click={toggleTrimmingMode}
-				>
-					<Trim />
-				</button>
-			{:else}
-				<button class="text-button" on:click={trimAudio}>Trim</button>
-				<button class="text-button" on:click={toggleTrimmingMode}>Cancel</button>
-			{/if}
 		{/if}
 	</div>
 </div>
@@ -327,24 +291,6 @@
 		display: flex;
 		justify-self: self-end;
 		align-items: center;
-	}
-	.text-button {
-		border: 1px solid var(--neutral-400);
-		border-radius: var(--radius-sm);
-		font-weight: 300;
-		font-size: var(--size-3);
-		text-align: center;
-		color: var(--neutral-400);
-		height: var(--size-5);
-		font-weight: bold;
-		padding: 0 5px;
-		margin-left: 5px;
-	}
-
-	.text-button:hover,
-	.text-button:focus {
-		color: var(--color-accent);
-		border-color: var(--color-accent);
 	}
 
 	.controls {
@@ -376,9 +322,6 @@
 			margin: var(--spacing-sm);
 		}
 
-		.controls .text-button {
-			margin-left: 0;
-		}
 	}
 
 	.action {

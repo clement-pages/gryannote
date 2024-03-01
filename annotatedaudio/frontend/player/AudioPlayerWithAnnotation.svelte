@@ -17,13 +17,8 @@
 	$: url = value.file_data?.url;
 	export let label: string;
 	export let i18n: I18nFormatter;
-	export let dispatch_blob: (
-		blobs: Uint8Array[] | Blob[],
-		event: "stream" | "change" | "stop_recording"
-	) => Promise<void> = () => Promise.resolve();
 	export let interactive = true;
 	export let editable = true;
-	export let trim_region_settings = {};
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let mode = "";
@@ -108,23 +103,6 @@
 		dispatch("play");
 	});
 
-	const handle_trim_audio = async (
-		start: number,
-		end: number
-	): Promise<void> => {
-		mode = "";
-		const decodedData = waveform?.getDecodedData();
-		if (decodedData)
-			await process_audio(decodedData, start, end).then(
-				async (trimmedBlob: Uint8Array) => {
-					await dispatch_blob([trimmedBlob], "change");
-					waveform?.destroy();
-					create_waveform();
-				}
-			);
-		dispatch("edit");
-	};
-
 	async function load_audio(data: string): Promise<void> {
 		await resolve_wasm_src(data).then((resolved_src) => {
 			if (!resolved_src || value.file_data?.is_stream) return;
@@ -185,13 +163,11 @@
 				{audio_duration}
 				{i18n}
 				{interactive}
-				{handle_trim_audio}
 				bind:mode
 				bind:trimDuration
 				bind:show_volume_slider
 				showRedo={interactive}
 				{waveform_options}
-				{trim_region_settings}
 				{editable}
 				on:edit={(e) => dispatch("edit", e.detail)}
 			/>
