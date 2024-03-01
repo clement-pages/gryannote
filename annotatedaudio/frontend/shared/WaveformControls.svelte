@@ -281,7 +281,7 @@
 	</div>
 
 	<div class="annotations-actions">
-		{#if editable && interactive}
+		{#if editable && interactive && value.annotations}
 			{#if showRedo}
 				<button
 					class="action icon"
