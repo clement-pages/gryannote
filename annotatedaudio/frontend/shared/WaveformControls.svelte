@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Play, Pause, Forward, Backward, Undo } from "@gradio/icons";
+	import Gum from "./icons/Gum.svelte";
 	import { get_skip_rewind_amount } from "../shared/utils";
 	import type { I18nFormatter } from "@gradio/utils";
 	import type { Annotation } from "./types";
@@ -60,8 +61,17 @@
 
 	$: wsRegions?.on("region-clicked", (region, e) => {
 		e.stopPropagation(); // prevent triggering a click on the waveform
-		activeRegion = region;
-		region.play();
+		console.log("passing here");
+		// if removal mode is enable, remove clicked region
+		if (region && mode === "remove") {
+			regionsMap.delete(region.id)
+			region.remove();
+			editAnnotations();
+		}
+		else{
+			activeRegion = region;
+			region.play();
+		}
 	});
 
 	$: if (activeRegion) {
@@ -270,24 +280,33 @@
 		</button>
 	</div>
 
-	<div class="settings-wrapper">
+	<div class="annotations-actions">
 		{#if editable && interactive}
-			{#if showRedo && mode === ""}
+			{#if showRedo}
 				<button
 					class="action icon"
 					aria-label="Reset annotations"
 					title={i18n("Reset annotations")}
 					on:click={resetAnnotations}
 				>
-					<Undo />
+					<Undo/>
 				</button>
 			{/if}
+			<button
+				class="action icon remove-button"
+				aria-label="Remove an annotation"
+				title={i18n("Remove an annotation")}
+				on:focusin={() => mode = "remove"}
+				on:focusout={() => mode = ""}
+			>
+				<Gum/>
+			</button>
 		{/if}
 	</div>
 </div>
 
 <style>
-	.settings-wrapper {
+	.annotations-actions {
 		display: flex;
 		justify-self: self-end;
 		align-items: center;
@@ -347,6 +366,14 @@
 		color: var(--neutral-400);
 		height: var(--size-5);
 		font-weight: bold;
+	}
+
+	.remove-button {
+		fill: #9ca3af;
+	}
+
+	.remove-button:hover, .remove-button:focus {
+		fill: var(--color-accent);
 	}
 
 	.playback:hover,
