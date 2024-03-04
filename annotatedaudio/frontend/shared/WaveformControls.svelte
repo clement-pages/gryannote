@@ -52,6 +52,10 @@
 
 	$: wsRegions = waveform.registerPlugin(RegionsPlugin.create());
 
+	$: if(value?.annotations !== null && initialAnnotations.length === 0){
+		addAnnotations()
+	}
+
 	$: wsRegions?.on("region-updated", (region) => {
 		var updatedAnnotation = regionsMap.get(region.id);
 		updatedAnnotation.start = region.start;
@@ -226,13 +230,8 @@
 		trimDuration = activeRegion.end - activeRegion.start;
 	};
 
-
 	waveform?.on("ready", function(){
 		wsRegions.clearRegions();
-		if(value && value.annotations){
-			regionsMap.clear()
-			addAnnotations();
-		}
 		window.addEventListener("keydown", (e) => {
 			switch(e.key){
 				case "ArrowLeft": adjustRegionHandles(activeHandle, "ArrowLeft"); break;
