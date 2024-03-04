@@ -61,13 +61,18 @@
 
 	$: wsRegions?.on("region-clicked", (region, e) => {
 		e.stopPropagation(); // prevent triggering a click on the waveform
-		console.log("passing here");
 		// if removal mode is enable, remove clicked region
 		if (region && mode === "remove") {
 			removeAnnotation(region)
 		}
 		else{
+			// update the active region
+			if(activeRegion !== null) {
+				activeRegion.element.classList.remove("active-region");
+			}
 			activeRegion = region;
+			console.log(activeRegion.id);
+			activeRegion.element.classList.add("active-region");
 			region.play();
 		}
 	});
@@ -132,7 +137,7 @@
 	 * Remove the annotation linked to the specified region
 	 * @param region region of the annotation to be removed
 	 */
-	const removeAnnotation = (region): void => {
+	const removeAnnotation = (region: Region): void => {
 		regionsMap.delete(region.id)
 		region.remove();
 		updateAnnotations();
@@ -164,13 +169,30 @@
 	 * Clear all the annotations, and linked regions, from the waveform
 	 */
 	const clearAnnotations = (): void => {
-		wsRegions?.getRegions().forEach((region) => {
-			region.remove();
-		});
 		wsRegions?.clearRegions();
-
 		value.annotations = []
 		regionsMap.clear()
+	};
+
+	/**
+	 * Select the annotation next (in terms of time) to current
+	 * active annotation. If active annotation is the last one,
+	 * the next region to be activated is the first annotation
+	 * on the waveform.
+	 */
+	const selectNextAnnotation = (shiftPressed: boolean): void => {
+		if(activeRegion !== null){
+			// do nothing if there is no active annotation
+			return;
+		}
+
+		// Go back if shift was pressed, else go ahead:
+		var direction = shiftPressed ? -1 : 1;
+		var regions = wsRegions.getRegions();
+		console.log(regions);
+		var activeRegionIdx = regions.indexOf(activeRegion);
+		activeRegion = regions.at((activeRegionIdx + direction) % regions.length);
+		console.log(activeRegion.id);
 	};
 
 	const adjustRegionHandles = (handle: string, key: string): void => {
@@ -204,14 +226,6 @@
 		trimDuration = activeRegion.end - activeRegion.start;
 	};
 
-	$: wsRegions &&
-		window.addEventListener("keydown", (e) => {
-			if (e.key === "ArrowLeft") {
-				adjustRegionHandles(activeHandle, "ArrowLeft");
-			} else if (e.key === "ArrowRight") {
-				adjustRegionHandles(activeHandle, "ArrowRight");
-			}
-		});
 
 	waveform?.on("ready", function(){
 		wsRegions.clearRegions();
@@ -219,6 +233,14 @@
 			regionsMap.clear()
 			addAnnotations();
 		}
+		window.addEventListener("keydown", (e) => {
+			switch(e.key){
+				case "ArrowLeft": adjustRegionHandles(activeHandle, "ArrowLeft"); break;
+				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
+				case "Tab": selectNextAnnotation(e.shiftKey); break;
+				default: //do nothing
+			}
+		});
 	});
 
 </script>
