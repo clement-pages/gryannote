@@ -56,7 +56,7 @@
 		var updatedAnnotation = regionsMap.get(region.id);
 		updatedAnnotation.start = region.start;
 		updatedAnnotation.end = region.end;
-		editAnnotations();
+		updateAnnotations();
 	});
 
 	$: wsRegions?.on("region-clicked", (region, e) => {
@@ -64,9 +64,7 @@
 		console.log("passing here");
 		// if removal mode is enable, remove clicked region
 		if (region && mode === "remove") {
-			regionsMap.delete(region.id)
-			region.remove();
-			editAnnotations();
+			removeAnnotation(region)
 		}
 		else{
 			activeRegion = region;
@@ -98,6 +96,10 @@
 		}
 	}
 
+	/**
+	 * Print annotations on waveform by linking regions to each annotations.
+	 * A region can be view as a visual representation of an annotation.
+	 */
 	const  addAnnotations = (): void =>{
 
 		var annotations = value.annotations;
@@ -126,6 +128,20 @@
 		});
 	}
 
+	/**
+	 * Remove the annotation linked to the specified region
+	 * @param region region of the annotation to be removed
+	 */
+	const removeAnnotation = (region): void => {
+		regionsMap.delete(region.id)
+		region.remove();
+		updateAnnotations();
+	}
+
+	/**
+	 * Reset annotations to their initial state, ie annotations
+	 * provided by the pyannote pipeline
+	 */
 	const resetAnnotations = (): void  => {
 		clearAnnotations();
 		initialAnnotations.forEach(
@@ -136,11 +152,17 @@
 		dispatch("edit", value);
 	}
 
-	const editAnnotations = (): void => {
+	/**
+	 * update annotations with current regions' state
+	 */
+	const updateAnnotations = (): void => {
 		value.annotations = Array.from(regionsMap.values());
 		dispatch("edit", value);
 	}
 
+	/**
+	 * Clear all the annotations, and linked regions, from the waveform
+	 */
 	const clearAnnotations = (): void => {
 		wsRegions?.getRegions().forEach((region) => {
 			region.remove();
