@@ -19,13 +19,13 @@ micromamba install python=3.10 -c conda-forge
 
 2 - Install `pyannote-audio` and `gradio`:
 ```shell
-pip install pyannote.audio gradio
+pip install -U pyannote.audio gradio
 ```
 
 3 - Install npm 9+ and node.js v16.14+
 ```shell
-npm install -g npm
 nvm install node
+npm install -g npm
 ```
 
 4 - Clone this repository in your favorite directory
@@ -34,12 +34,8 @@ git clone git@github.com:clement-pages/pyannote-gradio.git
 cd pyannote-gradio/annotatedaudio
 ```
 
-5 - Install the component
+Then, you can use the component in development mode:
 ```shell
 gradio cc install
-```
-
-6 - Launch component's demo in a local server:
-```shell
 gradio cc dev
 ```
