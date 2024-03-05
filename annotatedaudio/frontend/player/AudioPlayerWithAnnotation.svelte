@@ -280,7 +280,7 @@
 			activeRegion.element.classList.add("active-region");
 			region.play();
 		}
-	});
+	}, {once: true});
 
 	$: if (activeRegion) {
 		const shadowRoot = container.children[0]!.shadowRoot!;
