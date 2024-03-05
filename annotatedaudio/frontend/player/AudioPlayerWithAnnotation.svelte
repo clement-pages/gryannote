@@ -155,20 +155,20 @@
 	 * active annotation. If active annotation is the last one,
 	 * the next region to be activated is the first annotation
 	 * on the waveform.
+	 * @param shiftPressed: go ahead if true, else go back
 	 */
-	const selectNextAnnotation = (shiftPressed: boolean): void => {
-		if(activeRegion !== null){
-			// do nothing if there is no active annotation
-			return;
-		}
-
-		// Go back if shift was pressed, else go ahead:
+	function selectNextAnnotation(shiftPressed: boolean): void {
+		// go back if shift was pressed, else go ahead:
 		var direction = shiftPressed ? -1 : 1;
-		var regions = wsRegions.getRegions();
-		console.log(regions);
-		var activeRegionIdx = regions.indexOf(activeRegion);
-		activeRegion = regions.at((activeRegionIdx + direction) % regions.length);
-		console.log(activeRegion.id);
+		var regions = wsRegions.getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
+		// if there is no active region, active the first one
+		if(activeRegion === null){
+			activeRegion = regions[0];
+		}
+		else{
+			var activeRegionIdx = regions.indexOf(activeRegion);
+			activeRegion = regions.at((activeRegionIdx + direction) % regions.length);
+		}
 	};
 
 	const adjustRegionHandles = (handle: string, key: string): void => {
@@ -234,14 +234,6 @@
 		} else {
 			waveform?.play();
 		}
-		window.addEventListener("keydown", (e) => {
-			switch(e.key){
-				case "ArrowLeft":  adjustRegionHandles(activeHandle, "ArrowLeft"); break;
-				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
-				case "Tab": selectNextAnnotation(e.shiftKey); break;
-				default: //do nothing
-			}
-		});
 	});
 
 	$: waveform?.on("finish", () => {
@@ -317,11 +309,11 @@
 
 	onMount(() => {
 		window.addEventListener("keydown", (e) => {
-			if (!waveform || show_volume_slider) return;
-			if (e.key === "ArrowRight" && mode !== "edit") {
-				skip_audio(waveform, 0.1);
-			} else if (e.key === "ArrowLeft" && mode !== "edit") {
-				skip_audio(waveform, -0.1);
+			switch(e.key){
+				case "ArrowLeft":  adjustRegionHandles(activeHandle, "ArrowLeft"); break;
+				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
+				case "Tab": e.preventDefault(); selectNextAnnotation(e.shiftKey); break;
+				default: //do nothing
 			}
 		});
 	});
