@@ -6,6 +6,7 @@
 	import type {WaveformOptions } from "./types";
 	import VolumeLevels from "./VolumeLevels.svelte";
 	import VolumeControl from "./VolumeControl.svelte";
+	import { onMount } from "svelte";
 
 	export let waveform: WaveSurfer;
 	export let audio_duration: number;
@@ -19,6 +20,14 @@
 
 	let currentVolume = 1;
 
+	onMount(() => {
+		window.addEventListener("keydown", (e) =>{
+			switch(e.key){
+				case " ": waveform.playPause(); e.preventDefault(); break;
+				default: //do nothing
+			}
+		})
+	});
 
 </script>
 
