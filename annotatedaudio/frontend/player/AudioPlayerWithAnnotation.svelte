@@ -151,6 +151,23 @@
 	};
 
 	/**
+	 * Set active region with specified region.
+	 * @param region the region to activate
+	 */
+	function setActiveRegion(region: Region): void {
+		if(activeRegion !== null){
+			activeRegion.element.classList.remove("active-region");
+		}
+	
+		if(region === null){
+			activeRegion = region;
+			return;
+		}
+		activeRegion = region;
+		activeRegion.element.classList.add("active-region");
+	}
+
+	/**
 	 * Select the annotation next (in terms of time) to current
 	 * active annotation. If active annotation is the last one,
 	 * the next region to be activated is the first annotation
@@ -163,11 +180,11 @@
 		var regions = wsRegions.getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
 		// if there is no active region, active the first one
 		if(activeRegion === null){
-			activeRegion = regions[0];
+			setActiveRegion(regions[0]);
 		}
 		else{
 			var activeRegionIdx = regions.indexOf(activeRegion);
-			activeRegion = regions.at((activeRegionIdx + direction) % regions.length);
+			setActiveRegion(regions.at((activeRegionIdx + direction) % regions.length));
 		}
 	};
 
@@ -264,12 +281,7 @@
 		}
 		else{
 			// update the active region
-			if(activeRegion !== null) {
-				activeRegion.element.classList.remove("active-region");
-			}
-			activeRegion = region;
-			console.log(activeRegion.id);
-			activeRegion.element.classList.add("active-region");
+			setActiveRegion(region);
 			region.play();
 		}
 	}, {once: true});
@@ -312,6 +324,7 @@
 			switch(e.key){
 				case "ArrowLeft":  adjustRegionHandles(activeHandle, "ArrowLeft"); break;
 				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
+				case "Escape": setActiveRegion(null); break;
 				case "Tab": e.preventDefault(); selectNextAnnotation(e.shiftKey); break;
 				default: //do nothing
 			}
