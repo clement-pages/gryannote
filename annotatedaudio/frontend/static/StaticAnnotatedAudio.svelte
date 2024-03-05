@@ -55,6 +55,7 @@
 	</div>
 	<AudioPlayerWithAnnotation
 		value={value}
+		interactive={false}
 		{label}
 		{i18n}
 		{waveform_settings}
