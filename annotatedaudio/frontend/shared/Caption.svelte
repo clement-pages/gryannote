@@ -1,9 +1,15 @@
 <script lang="ts">
     import type { Annotation } from "./types";
+    import { createEventDispatcher } from "svelte";
 
     export let value: Annotation[] | null = null;
 
     let items = [];
+
+    const dispatch = createEventDispatcher<{
+        select: string;
+    }>();
+
     $:{
         // retrieve speaker list and corresponding annotation color
         value.forEach(annotation => {
@@ -19,9 +25,9 @@
     {#each items as item }
         <div class="caption-item-component">
             <button 
-                disabled 
                 style="background-color: {item.color}"
                 class="caption-item"
+                on:click={() => dispatch("select", item.color)}
             >
                 {item.speaker}
             </button>

@@ -401,6 +401,7 @@
 			{#if value?.annotations}
 				<Caption
 					value={value.annotations}
+					on:select={(e) => console.log(e.detail)}
 				/>
 			{/if}
 		{/if}
