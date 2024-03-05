@@ -57,14 +57,14 @@
 		end: undefined;
 	}>();
 
-	const formatTime = (seconds: number): string => {
+	function formatTime(seconds: number): string {
 		const minutes = Math.floor(seconds / 60);
 		const secondsRemainder = Math.round(seconds) % 60;
 		const paddedSeconds = `0${secondsRemainder}`.slice(-2);
 		return `${minutes}:${paddedSeconds}`;
 	};
 
-	const create_waveform = (): void => {
+	function create_waveform(): void {
 		waveform = WaveSurfer.create({
 			container: container,
 			...waveform_settings
@@ -80,7 +80,7 @@
 	 * Print annotations on waveform by linking regions to each annotations.
 	 * A region can be view as a visual representation of an annotation.
 	 */
-	const  addAnnotations = (): void =>{
+	function addAnnotations(): void {
 
 		var annotations = value.annotations;
 
@@ -113,7 +113,7 @@
 	 * Remove the annotation linked to the specified region
 	 * @param region region of the annotation to be removed
 	 */
-	const removeAnnotation = (region: Region): void => {
+	function removeAnnotation(region: Region): void {
 		regionsMap.delete(region.id)
 		region.remove();
 		updateAnnotations();
@@ -123,7 +123,7 @@
 	 * Reset annotations to their initial state, ie annotations
 	 * provided by the pyannote pipeline
 	 */
-	const resetAnnotations = (): void  => {
+	function resetAnnotations(): void {
 		clearAnnotations();
 		initialAnnotations.forEach(
 				annotation => value.annotations.push(Object.assign({}, annotation))
@@ -136,7 +136,7 @@
 	/**
 	 * update annotations with current regions' state
 	 */
-	const updateAnnotations = (): void => {
+	function updateAnnotations(): void {
 		value.annotations = Array.from(regionsMap.values());
 		dispatch("edit", value);
 	}
@@ -144,7 +144,7 @@
 	/**
 	 * Clear all the annotations, and linked regions, from the waveform
 	 */
-	const clearAnnotations = (): void => {
+	function clearAnnotations(): void {
 		wsRegions?.clearRegions();
 		value.annotations = []
 		regionsMap.clear()
@@ -171,9 +171,9 @@
 		}
 	};
 
-	const adjustRegionHandles = (handle: string, key: string): void => {
-		let newStart;
-		let newEnd;
+	function adjustRegionHandles(handle: string, key: string): void {
+		let newStart: number;
+		let newEnd: number;
 
 		if (!activeRegion) return;
 		if (handle === "left") {
