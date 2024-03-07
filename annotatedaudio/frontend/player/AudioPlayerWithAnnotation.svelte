@@ -284,7 +284,7 @@
 			setActiveRegion(region);
 			region.play();
 		}
-	}, {once: true});
+	});
 
 	$: if (activeRegion) {
 		const shadowRoot = container.children[0]!.shadowRoot!;
