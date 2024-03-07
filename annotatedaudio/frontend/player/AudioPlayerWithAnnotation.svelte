@@ -168,6 +168,35 @@
 	}
 
 	/**
+	 * Set annotation speaker for the active annotation with specified
+	 * speaker label
+	 * @param speaker speaker label
+	 */
+	function setAnnotationSpeaker(speaker: string){
+		// get label color
+		let color = value.annotations.find((annotation) => annotation.speaker === speaker).color;
+		// if label does not exist
+		if (color === undefined){
+			return;
+		}
+
+		if(activeRegion !== null) {
+			activeRegion.color = color;
+			activeRegion.setOptions({
+				start: activeRegion.start,
+				end: activeRegion.end,
+				color: color,
+				drag: true,
+				resize: true,
+			});
+			let activeAnnotation = regionsMap.get(activeRegion.id);
+			activeAnnotation.color = color;
+			activeAnnotation.speaker = speaker;
+			updateAnnotations();
+		}
+	}
+
+	/**
 	 * Select the annotation next (in terms of time) to current
 	 * active annotation. If active annotation is the last one,
 	 * the next region to be activated is the first annotation
@@ -401,7 +430,7 @@
 			{#if value?.annotations}
 				<Caption
 					value={value.annotations}
-					on:select={(e) => console.log(e.detail)}
+					on:select={(e) => setAnnotationSpeaker(e.detail.speaker)}
 				/>
 			{/if}
 		{/if}

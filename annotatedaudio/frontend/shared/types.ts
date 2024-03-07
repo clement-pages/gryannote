@@ -15,3 +15,9 @@ export type Annotation = {
 	level: number
 	numLevels: number
 }
+
+export type CaptionItem = {
+	speaker: string
+	color: string
+	shortcut: string
+}
