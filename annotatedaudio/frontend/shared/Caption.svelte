@@ -1,75 +1,73 @@
 <script lang="ts">
-    import type { Annotation, CaptionItem } from "./types";
+    import type { Annotation, CaptionLabel } from "./types";
     import { createEventDispatcher, onMount} from "svelte";
 
     export let value: Annotation[] | null = null;
 
-    let captionItems: CaptionItem[] = [];
-    let activeItem = null;
+    let captionLabels: CaptionLabel[] = [];
+    let activeLabel = null;
 
     const dispatch = createEventDispatcher<{
-        select: CaptionItem;
+        select: CaptionLabel;
     }>();
 
-    function handleCaptionButtonSelection(key: string): void {
-        if(key === "Escape" && activeItem){
-            // reset active item
-            document.getElementById(activeItem.shortcut).classList.remove("active-button");
-            activeItem = null;
+    function selectActiveLabel(key: string): void {
+        if(key === "Escape" && activeLabel){
+            // reset active label
+            document.getElementById(activeLabel.shortcut).classList.remove("active-button");
+            activeLabel = null;
             return;
         }
 
-        let item = captionItems.find((_item) => _item.shortcut === key.toUpperCase());
-        if(item === undefined){
+        let label = captionLabels.find((_label) => _label.shortcut === key.toUpperCase());
+        if(label === undefined){
             return;
         }
 
-        // reset active item
-        if(activeItem){
-            document.getElementById(activeItem.shortcut).classList.remove("active-button");
+        // reset active label
+        if(activeLabel){
+            document.getElementById(activeLabel.shortcut).classList.remove("active-button");
         }
-        activeItem = item;
-        document.getElementById(activeItem.shortcut).classList.add("active-button");
-        dispatch("select", activeItem);
+        activeLabel = label;
+        document.getElementById(activeLabel.shortcut).classList.add("active-button");
+        dispatch("select", activeLabel);
     }
 
     $:{
         // retrieve speaker list and corresponding annotation color
         let shortcut = "A";
         value.forEach(annotation => {
-            if(!captionItems.some(item => item.speaker === annotation.speaker)){
-                let item = {
+            if(!captionLabels.some(label => label.speaker === annotation.speaker)){
+                let label = {
                     speaker: annotation.speaker,
                     color: annotation.color,
                     shortcut: shortcut,
                 }
-                captionItems = [...captionItems, item];
-                // register keyboard shortcut for current speaker item
-
+                captionLabels = [...captionLabels, label];
                 shortcut = String.fromCharCode(shortcut.charCodeAt(0) + 1);
             }
         });
-        captionItems = captionItems.sort((i1, i2) => i1.shortcut.localeCompare(i2.shortcut));
+        captionLabels = captionLabels.sort((i1, i2) => i1.shortcut.localeCompare(i2.shortcut));
     }
 
     onMount(() => {
         window.addEventListener("keydown", (e): void => {
-            handleCaptionButtonSelection(e.key);
+            selectActiveLabel(e.key);
         });
     });
 </script>
 
 <div class="caption-component">
-    {#each captionItems as item }
-        <div class="caption-item-component">
+    {#each captionLabels as label }
+        <div class="caption-label-component">
             <button 
-                style="background-color: {item.color}"
-                class="caption-item"
-                id={item.shortcut}
-                on:focusin={() => handleCaptionButtonSelection(item.shortcut)}
-                on:focusout={() => handleCaptionButtonSelection("Escape")}
+                style="background-color: {label.color}"
+                class="caption-label"
+                id={label.shortcut}
+                on:focusin={() => selectActiveLabel(label.shortcut)}
+                on:focusout={() => selectActiveLabel("Escape")}
             >
-                <span class="shortcut-letter">{item.shortcut}</span>{": " + item.speaker}
+                <span class="shortcut-letter">{label.shortcut}</span>{": " + label.speaker}
             </button>
         </div>
     {/each}
@@ -87,12 +85,12 @@
     display: flex;
 }
 
-.caption-item-component {
+.caption-label-component {
     display: inline-block;
     margin: 0.5em;
 }
 
-.caption-item{
+.caption-label{
     padding-left: 0.5em;
     padding-right: 0.5em;
 }
