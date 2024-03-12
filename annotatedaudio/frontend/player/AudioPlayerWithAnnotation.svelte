@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Annotation, WaveformOptions } from "../shared/types";
+	import type { Annotation, WaveformOptions , CaptionLabel} from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 
 	import { onMount } from "svelte";
@@ -9,7 +9,6 @@
 	import RegionsPlugin, {
 		type Region
 	} from "wavesurfer.js/dist/plugins/regions.js";
-	import { skip_audio } from "../shared/utils";
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
@@ -49,6 +48,9 @@
 	// correspondance between a Region and an Annotation
 	let regionsMap: Map<string, Annotation> = new Map();
 
+	let defaultLabel: CaptionLabel | null = null;
+	let activeLabel: CaptionLabel | null = null;
+
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
 		play: undefined;
@@ -74,19 +76,28 @@
 				return waveform.load(resolved_src);
 			}
 		});
+
+		waveform.on("dblclick", (_, relativeY) => {
+			// allow the user to add a region only after the pipeline has been applied
+			if(value?.annotations){
+				addAnnotation(relativeY);
+			}
+		});
 	};
 
 	/**
 	 * Print annotations on waveform by linking regions to each annotations.
 	 * A region can be view as a visual representation of an annotation.
 	 */
-	function addAnnotations(): void {
+	function initAnnotations(): void {
 
 		var annotations = value.annotations;
 
 		// keep initial annotations in memory, for future retrieval
 		if (initialAnnotations === null){
 			initialAnnotations = []
+			// Set default label with first annotation's speaker and color
+			defaultLabel = {speaker: annotations[0].speaker, color: annotations[0].color, shortcut: "A"};
 			annotations.forEach(
 				annotation => initialAnnotations.push(Object.assign({}, annotation))
 			);
@@ -110,6 +121,36 @@
 	}
 
 	/**
+	 * 
+	 * @param relativeY
+	 */
+	function addAnnotation(relativeY: number): void{
+		let annotationLabel = (activeLabel !== null ? activeLabel : defaultLabel);
+		// if annotations were not initialized, do nothin
+		if (annotationLabel === null){
+			return;
+		}
+		let region = wsRegions.addRegion({
+			start: relativeY - 1.0,
+			end: relativeY + 1.0,
+			color: annotationLabel.color,
+			drag: true,
+			resize: true,
+		});
+		regionsMap.set(region.id, {
+			start: region.start,
+			end: region.end, 
+			color: region.color, 
+			speaker: annotationLabel.speaker
+		});
+
+		// set region as active one
+		activeRegion = region;
+
+		updateAnnotations();
+	}
+
+	/**
 	 * Remove the annotation linked to the specified region
 	 * @param region region of the annotation to be removed
 	 */
@@ -128,7 +169,7 @@
 		initialAnnotations.forEach(
 				annotation => value.annotations.push(Object.assign({}, annotation))
 		);
-		addAnnotations();
+		initAnnotations();
 		console.log(value)
 		dispatch("edit", value);
 	}
@@ -170,11 +211,12 @@
 	/**
 	 * Set annotation speaker for the active annotation with specified
 	 * speaker label
-	 * @param speaker speaker label
+	 * @param activeCaptionLabel active caption's label
 	 */
-	function setAnnotationSpeaker(speaker: string){
+	function setAnnotationSpeaker(activeCaptionLabel: CaptionLabel){
+		activeLabel = activeCaptionLabel
 		// get label color
-		let color = value.annotations.find((annotation) => annotation.speaker === speaker).color;
+		let color = value.annotations.find((annotation) => annotation.speaker === activeLabel.speaker).color;
 		// if label does not exist
 		if (color === undefined){
 			return;
@@ -191,7 +233,7 @@
 			});
 			let activeAnnotation = regionsMap.get(activeRegion.id);
 			activeAnnotation.color = color;
-			activeAnnotation.speaker = speaker;
+			activeAnnotation.speaker = activeLabel.speaker;
 			updateAnnotations();
 		}
 	}
@@ -260,7 +302,7 @@
 	}
 
 	$: if(value?.annotations !== null && initialAnnotations === null){
-		addAnnotations()
+		initAnnotations();
 	}
 
 	$: waveform?.on("decode", (duration: any) => {
@@ -286,10 +328,12 @@
 		playing = false;
 		dispatch("stop");
 	});
+
 	$: waveform?.on("pause", () => {
 		playing = false;
 		dispatch("pause");
 	});
+
 	$: waveform?.on("play", () => {
 		playing = true;
 		dispatch("play");
@@ -355,6 +399,7 @@
 				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
 				case "Escape": setActiveRegion(null); break;
 				case "Tab": e.preventDefault(); selectNextAnnotation(e.shiftKey); break;
+				case "Enter": e.preventDefault(); addAnnotation(waveform.getCurrentTime()); break;
 				default: //do nothing
 			}
 		});
@@ -430,7 +475,7 @@
 			{#if value?.annotations}
 				<Caption
 					value={value.annotations}
-					on:select={(e) => setAnnotationSpeaker(e.detail.speaker)}
+					on:select={(e) => setAnnotationSpeaker(e.detail)}
 				/>
 			{/if}
 		{/if}

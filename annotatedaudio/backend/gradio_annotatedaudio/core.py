@@ -18,17 +18,17 @@ class Annotation(GradioModel):
     # annotation speaker color
     color: Text
     # css style level of the annotation
-    level: int
+    level: Optional[int]
     # total num level
-    num_levels: int
+    num_levels: Optional[int]
 
     def __init__(
         self,
         start: float,
         end: float,
         speaker: Text,
-        level: int,
-        num_levels: int,
+        level: Optional[int] = None,
+        num_levels: Optional[int] = None,
         **kwargs,
     ):
         color = self.get_annotation_color(speaker)

@@ -16,20 +16,21 @@
             // reset active label
             document.getElementById(activeLabel.shortcut).classList.remove("active-button");
             activeLabel = null;
-            return;
         }
+        else{
+            let label = captionLabels.find((_label) => _label.shortcut === key.toUpperCase());
+            // if current key does not correspond to any label, do nothing
+            if(label === undefined){
+                return;
+            }
 
-        let label = captionLabels.find((_label) => _label.shortcut === key.toUpperCase());
-        if(label === undefined){
-            return;
-        }
-
-        // reset active label
-        if(activeLabel){
-            document.getElementById(activeLabel.shortcut).classList.remove("active-button");
-        }
-        activeLabel = label;
-        document.getElementById(activeLabel.shortcut).classList.add("active-button");
+            // update active label
+            if(activeLabel){
+                document.getElementById(activeLabel.shortcut).classList.remove("active-button");
+            }
+            activeLabel = label;
+            document.getElementById(activeLabel.shortcut).classList.add("active-button");
+            }
         dispatch("select", activeLabel);
     }
 
