@@ -18,6 +18,8 @@
     "@gradio/statustracker": "0.4.8",
     "@gradio/upload": "^0.7.7",
     "@gradio/utils": "0.3.0",
-    "@zerodevx/svelte-json-view": "^1.0.7"
+    "@huggingface/hub": "^0.14.2",
+    "@zerodevx/svelte-json-view": "^1.0.7",
+    "js-yaml": "^4.1.0"
   }
 }

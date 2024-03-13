@@ -2,10 +2,12 @@ from typing import Any, Callable, Optional, Text
 
 from gradio.components.base import Component
 from gradio.data_classes import FileData, GradioModel
+from gradio.events import Events
 
 from huggingface_hub import HfApi
 
 from pyannote.audio import Pipeline
+
 
 class PipelineConfig(GradioModel):
     config: FileData | Text
@@ -15,6 +17,10 @@ class PipelineConfig(GradioModel):
 class PipelineHandler(Component):
 
     data_model = PipelineConfig
+
+    EVENTS = [
+        Events.select,
+    ]
 
     def __init__(
             self,
@@ -49,13 +55,6 @@ class PipelineHandler(Component):
             load_fn=load_fn,
             every=every
         )
-        self.available_pipelines = [
-            p.modelId for p in HfApi().list_models(
-                filter="pyannote-audio-pipeline",
-                sort="last_modified",
-                direction=-1
-            )
-        ]
 
     def preprocess(self, payload: PipelineConfig | None):
         """
@@ -94,3 +93,7 @@ class PipelineHandler(Component):
 
     def api_info(self):
         return {"type": {}, "description": "any valid json"}
+    
+    def get_pipeline_params(pipeline_name: str):
+        """Get pipeline's list of parameters, with their default value"""
+        print(pipeline_name)
