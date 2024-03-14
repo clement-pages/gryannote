@@ -196,7 +196,7 @@
 	 * annotation data given by pipeline
 	 */
 	function clearRegions(): void {
-		setActiveRegion(null);
+		setActiveRegion();
 		wsRegions?.clearRegions();
 		value.annotations = [];
 		regionsMap.clear();
@@ -206,12 +206,12 @@
 	 * Set active region with specified region.
 	 * @param region the region to activate
 	 */
-	function setActiveRegion(region: Region): void {
+	function setActiveRegion(region?: Region): void {
 		if(activeRegion !== null){
 			activeRegion.element.style.background = activeRegion.color;
 		}
 	
-		if(region === null){
+		if(region === undefined){
 			activeRegion = region;
 			return;
 		}
@@ -469,7 +469,7 @@
 			switch(e.key){
 				case "ArrowLeft":  adjustRegionHandles(activeHandle, "ArrowLeft"); break;
 				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
-				case "Escape": setActiveRegion(null); break;
+				case "Escape": setActiveRegion(); break;
 				case "Tab": e.preventDefault(); selectNextRegion(e.shiftKey); break;
 				case "Enter": 
 					e.preventDefault();
