@@ -80,16 +80,16 @@
 		waveform.on("dblclick", (_, relativeY) => {
 			// allow the user to add a region only after the pipeline has been applied
 			if(value?.annotations){
-				addAnnotation(relativeY);
+				addRegion(relativeY);
 			}
 		});
 	};
 
 	/**
-	 * Print annotations on waveform by linking regions to each annotations.
+	 * Print regions on waveform given annotation data provided by the pipeline.
 	 * A region can be view as a visual representation of an annotation.
 	 */
-	function initAnnotations(): void {
+	function initRegions(): void {
 
 		var annotations = value.annotations;
 
@@ -121,19 +121,27 @@
 	}
 
 	/**
+	 * update annotations with current regions' state
+	 */
+	 function updateAnnotations(): void {
+		value.annotations = Array.from(regionsMap.values());
+		dispatch("edit", value);
+	}
+
+	/**
 	 * 
 	 * @param relativeY
 	 */
-	function addAnnotation(relativeY: number): void{
-		let annotationLabel = (activeLabel !== null ? activeLabel : defaultLabel);
+	function addRegion(relativeY: number): void{
+		let regionLabel = (activeLabel !== null ? activeLabel : defaultLabel);
 		// if annotations were not initialized, do nothin
-		if (annotationLabel === null){
+		if (regionLabel === null){
 			return;
 		}
 		let region = wsRegions.addRegion({
 			start: relativeY - 1.0,
 			end: relativeY + 1.0,
-			color: annotationLabel.color,
+			color: regionLabel.color,
 			drag: true,
 			resize: true,
 		});
@@ -141,7 +149,7 @@
 			start: region.start,
 			end: region.end, 
 			color: region.color, 
-			speaker: annotationLabel.speaker
+			speaker: regionLabel.speaker
 		});
 
 		// set region as active one
@@ -151,40 +159,34 @@
 	}
 
 	/**
-	 * Remove the annotation linked to the specified region
-	 * @param region region of the annotation to be removed
+	 * Remove specified region from waveform as well as
+	 * the linked annotation
+	 * @param region region to remove
 	 */
-	function removeAnnotation(region: Region): void {
+	function removeRegion(region: Region): void {
 		regionsMap.delete(region.id)
 		region.remove();
 		updateAnnotations();
 	}
 
 	/**
-	 * Reset annotations to their initial state, ie annotations
-	 * provided by the pyannote pipeline
+	 * Reset regions to their initial state, ie from annotations
+	 * data provided by pipeline
 	 */
-	function resetAnnotations(): void {
-		clearAnnotations();
+	function resetRegions(): void {
+		clearRegions();
 		initialAnnotations.forEach(
 				annotation => value.annotations.push(Object.assign({}, annotation))
 		);
-		initAnnotations();
+		initRegions();
 		dispatch("edit", value);
 	}
 
 	/**
-	 * update annotations with current regions' state
+	 * Clear all the regions from waveform, as well as
+	 * annotation data given by pipeline
 	 */
-	function updateAnnotations(): void {
-		value.annotations = Array.from(regionsMap.values());
-		dispatch("edit", value);
-	}
-
-	/**
-	 * Clear all the annotations, and linked regions, from the waveform
-	 */
-	function clearAnnotations(): void {
+	function clearRegions(): void {
 		setActiveRegion(null);
 		wsRegions?.clearRegions();
 		value.annotations = [];
@@ -213,11 +215,11 @@
 	}
 
 	/**
-	 * Set annotation speaker for the active annotation with specified
+	 * Set region speaker for the active region with specified
 	 * speaker label
 	 * @param activeCaptionLabel active caption's label
 	 */
-	function setAnnotationSpeaker(activeCaptionLabel: CaptionLabel){
+	function setRegionSpeaker(activeCaptionLabel: CaptionLabel){
 		activeLabel = activeCaptionLabel
 		// get label color
 		let color = value.annotations.find((annotation) => annotation.speaker === activeLabel.speaker).color;
@@ -243,13 +245,13 @@
 	}
 
 	/**
-	 * Select the annotation next (in terms of time) to current
-	 * active annotation. If active annotation is the last one,
-	 * the next region to be activated is the first annotation
+	 * Select the region next (in terms of time) to current
+	 * active region. If active region is the last one,
+	 * the next region to be activated is the first one
 	 * on the waveform.
 	 * @param shiftPressed: go ahead if true, else go back
 	 */
-	function selectNextAnnotation(shiftPressed: boolean): void {
+	function selectNextRegion(shiftPressed: boolean): void {
 		// go back if shift was pressed, else go ahead:
 		var direction = shiftPressed ? -1 : 1;
 		var regions = wsRegions.getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
@@ -306,7 +308,7 @@
 			speaker: regionsMap.get(region.id).speaker
 		});
 
-		removeAnnotation(region);
+		removeRegion(region);
 
 	}
 
@@ -315,7 +317,7 @@
 	 *   - if there is an active region
 	 * @param currentTime position of the cursor on the waveform
 	 */
-	function handleAnnotationSplit(currentTime: number): void {
+	function handleRegionSplit(currentTime: number): void {
 		// get region in which the cursor in currently located
 		let region = wsRegions.getRegions().find(
 			(_region) => _region.start < currentTime && _region.end > currentTime
@@ -374,7 +376,7 @@
 	}
 
 	$: if(value?.annotations !== null && initialAnnotations === null){
-		initAnnotations();
+		initRegions();
 	}
 
 	$: waveform?.on("decode", (duration: any) => {
@@ -422,7 +424,7 @@
 		e.stopPropagation(); // prevent triggering a click on the waveform
 		// if removal mode is enable, remove clicked region
 		if (region && mode === "remove") {
-			removeAnnotation(region)
+			removeRegion(region)
 		}
 		else{
 			// update the active region
@@ -470,13 +472,13 @@
 				case "ArrowLeft":  adjustRegionHandles(activeHandle, "ArrowLeft"); break;
 				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
 				case "Escape": setActiveRegion(null); break;
-				case "Tab": e.preventDefault(); selectNextAnnotation(e.shiftKey); break;
+				case "Tab": e.preventDefault(); selectNextRegion(e.shiftKey); break;
 				case "Enter": 
 					e.preventDefault();
 					if(e.shiftKey){
-						handleAnnotationSplit(waveform.getCurrentTime());
+						handleRegionSplit(waveform.getCurrentTime());
 					} else {
-						addAnnotation(waveform.getCurrentTime());
+						addRegion(waveform.getCurrentTime());
 					}
 					break;
 				default: //do nothing
@@ -527,14 +529,14 @@
 						{waveform_options}
 					/>
 				</div>
-				<div class="annotations-actions">
+				<div class="regions-actions">
 					{#if editable && interactive && value.annotations}
 					{#if showRedo}
 						<button
 							class="action icon"
 							aria-label="Reset annotations"
 							title={i18n("Reset annotations")}
-							on:click={resetAnnotations}
+							on:click={resetRegions}
 						>
 							<Undo/>
 						</button>
@@ -554,7 +556,7 @@
 			{#if value?.annotations}
 				<Caption
 					value={value.annotations}
-					on:select={(e) => setAnnotationSpeaker(e.detail)}
+					on:select={(e) => setRegionSpeaker(e.detail)}
 				/>
 			{/if}
 		{/if}
@@ -569,7 +571,7 @@
 		margin-left: var(--spacing-md);
 	}
 
-	.annotations-actions {
+	.regions-actions {
 		display: flex;
 		justify-self: self-end;
 		align-items: center;
