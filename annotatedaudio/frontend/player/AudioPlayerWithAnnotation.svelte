@@ -145,7 +145,7 @@
 		});
 
 		// set region as active one
-		activeRegion = region;
+		setActiveRegion(region);
 
 		updateAnnotations();
 	}
