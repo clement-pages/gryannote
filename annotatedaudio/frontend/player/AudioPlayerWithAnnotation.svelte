@@ -263,6 +263,74 @@
 		}
 	};
 
+	/**
+	 * Split the specified region at indicated split time, and set
+	 * active region to the resulting left region.
+	 * @param region region to split
+	 * @param splitTime split position. Must be inside region's boundaries
+	 */
+	function splitRegion(region: Region, splitTime: number){
+		if (splitTime < region.start || splitTime > region.end){
+			throw new RangeError("split time out of region bounds");
+		}
+
+		// TODO It could be very useful to add a addRegion function
+		let regionLeft = wsRegions.addRegion({
+			start: region.start,
+			end: splitTime,
+			color: region.color,
+			drag: region.drag,
+			resize: region.resize,
+		});
+		regionsMap.set(regionLeft.id, {
+			start:regionLeft.start, 
+			end: regionLeft.end, 
+			color: regionLeft.color, 
+			speaker: regionsMap.get(region.id).speaker
+		});
+
+		// update active region
+		setActiveRegion(regionLeft);
+
+		let regionRight = wsRegions.addRegion({
+			start: splitTime,
+			end: region.end,
+			color: region.color,
+			drag: region.drag,
+			resize: region.resize,
+		});
+		regionsMap.set(regionRight.id, {
+			start:regionRight.start, 
+			end: regionRight.end, 
+			color: regionRight.color, 
+			speaker: regionsMap.get(region.id).speaker
+		});
+
+		removeAnnotation(region);
+
+	}
+
+	/**
+	 * Split a region into two distinct regions. There are two cases (sorted by priority):
+	 *   - if there is an active region
+	 * @param currentTime position of the cursor on the waveform
+	 */
+	function handleAnnotationSplit(currentTime: number): void {
+		// get region in which the cursor in currently located
+		let region = wsRegions.getRegions().find(
+			(_region) => _region.start < currentTime && _region.end > currentTime
+		);
+		if(region === undefined){
+			// if cursor is not in a region, use active region, if available
+			if(activeRegion === null){
+				return;
+			}
+			region = activeRegion;
+			currentTime = region.start + (region.end - region.start) / 2.;
+		}
+		splitRegion(region, currentTime);
+	}
+
 	function adjustRegionHandles(handle: string, key: string): void {
 		let newStart: number;
 		let newEnd: number;
@@ -336,7 +404,6 @@
 	$: waveform?.on("pause", () => {
 		playing = false;
 		dispatch("pause");
-		console.log("passing here");
 	});
 
 	$: waveform?.on("play", () => {
@@ -404,7 +471,14 @@
 				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
 				case "Escape": setActiveRegion(null); break;
 				case "Tab": e.preventDefault(); selectNextAnnotation(e.shiftKey); break;
-				case "Enter": e.preventDefault(); addAnnotation(waveform.getCurrentTime()); break;
+				case "Enter": 
+					e.preventDefault();
+					if(e.shiftKey){
+						handleAnnotationSplit(waveform.getCurrentTime());
+					} else {
+						addAnnotation(waveform.getCurrentTime());
+					}
+					break;
 				default: //do nothing
 			}
 		});
