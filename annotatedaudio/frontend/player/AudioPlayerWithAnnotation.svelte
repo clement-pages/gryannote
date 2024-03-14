@@ -7,7 +7,8 @@
 	import Gum from "../shared/icons/Gum.svelte";
 	import WaveSurfer from "wavesurfer.js";
 	import RegionsPlugin, {
-		type Region
+		type Region,
+		type RegionParams,
 	} from "wavesurfer.js/dist/plugins/regions.js";
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import { Empty } from "@gradio/atoms";
@@ -80,7 +81,7 @@
 		waveform.on("dblclick", (_, relativeY) => {
 			// allow the user to add a region only after the pipeline has been applied
 			if(value?.annotations){
-				addRegion(relativeY);
+				handleRegionAdd(relativeY);
 			}
 		});
 	};
@@ -91,7 +92,7 @@
 	 */
 	function initRegions(): void {
 
-		var annotations = value.annotations;
+		let annotations = value.annotations;
 
 		// keep initial annotations in memory, for future retrieval
 		if (initialAnnotations === null){
@@ -104,18 +105,15 @@
 		}
 
 		value.annotations.forEach(annotation => {
-			var region = wsRegions.addRegion({
+			let region = addRegion({
 				start: annotation.start,
 				end: annotation.end,
 				color: annotation.color,
 				drag: true,
 				resize: true,
-			})
+			}, annotation.speaker);
 			region.element.style.top = (annotation.level * 10).toString() + "%";
 			region.element.style.height = (100 - (annotation.numLevels + 1) * 10 ).toString() + "%";
-
-			// link annotation to region
-			regionsMap.set(region.id, annotation);
 
 		});
 	}
@@ -128,34 +126,45 @@
 		dispatch("edit", value);
 	}
 
+
+	/**
+	 * 
+	 * @param options
+	 * @param speaker
+	 */
+	function addRegion(options: RegionParams, speaker: string): Region {
+		let region = wsRegions.addRegion(options);
+		regionsMap.set(region.id, {
+			start: region.start,
+			end: region.end,
+			speaker: speaker,
+			color: region.color,
+		});
+		updateAnnotations();
+		
+		return region;
+	}
+
 	/**
 	 * 
 	 * @param relativeY
 	 */
-	function addRegion(relativeY: number): void{
+	function handleRegionAdd(relativeY: number): void{
 		let regionLabel = (activeLabel !== null ? activeLabel : defaultLabel);
 		// if annotations were not initialized, do nothin
 		if (regionLabel === null){
 			return;
 		}
-		let region = wsRegions.addRegion({
+		let region = addRegion({
 			start: relativeY - 1.0,
 			end: relativeY + 1.0,
 			color: regionLabel.color,
 			drag: true,
 			resize: true,
-		});
-		regionsMap.set(region.id, {
-			start: region.start,
-			end: region.end, 
-			color: region.color, 
-			speaker: regionLabel.speaker
-		});
+		}, regionLabel.speaker);
 
 		// set region as active one
 		setActiveRegion(region);
-
-		updateAnnotations();
 	}
 
 	/**
@@ -276,38 +285,27 @@
 			throw new RangeError("split time out of region bounds");
 		}
 
-		// TODO It could be very useful to add a addRegion function
-		let regionLeft = wsRegions.addRegion({
+		let speaker = regionsMap.get(region.id).speaker;
+
+		let regionLeft = addRegion({
 			start: region.start,
 			end: splitTime,
 			color: region.color,
 			drag: region.drag,
 			resize: region.resize,
-		});
-		regionsMap.set(regionLeft.id, {
-			start:regionLeft.start, 
-			end: regionLeft.end, 
-			color: regionLeft.color, 
-			speaker: regionsMap.get(region.id).speaker
-		});
+		}, speaker);
 
-		// update active region
-		setActiveRegion(regionLeft);
-
-		let regionRight = wsRegions.addRegion({
+		let regionRight = addRegion({
 			start: splitTime,
 			end: region.end,
 			color: region.color,
 			drag: region.drag,
 			resize: region.resize,
-		});
-		regionsMap.set(regionRight.id, {
-			start:regionRight.start, 
-			end: regionRight.end, 
-			color: regionRight.color, 
-			speaker: regionsMap.get(region.id).speaker
-		});
+		}, speaker);
 
+		// update active region
+		setActiveRegion(regionLeft);
+		// remove splitted region
 		removeRegion(region);
 
 	}
@@ -478,7 +476,7 @@
 					if(e.shiftKey){
 						handleRegionSplit(waveform.getCurrentTime());
 					} else {
-						addRegion(waveform.getCurrentTime());
+						handleRegionAdd(waveform.getCurrentTime());
 					}
 					break;
 				default: //do nothing
