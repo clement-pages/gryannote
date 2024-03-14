@@ -197,7 +197,7 @@
 	 */
 	function setActiveRegion(region: Region): void {
 		if(activeRegion !== null){
-			activeRegion.element.classList.remove("active-region");
+			activeRegion.element.style.background = activeRegion.color;
 		}
 	
 		if(region === null){
@@ -205,7 +205,11 @@
 			return;
 		}
 		activeRegion = region;
-		activeRegion.element.classList.add("active-region");
+		activeRegion.element.style.background = "repeating-linear-gradient(45deg,"
+						+ region.color
+						+ " ,"
+						+ region.color
+						+ " 10px, #ffffff 10px ,#ffffff 15px)";
 	}
 
 	/**
