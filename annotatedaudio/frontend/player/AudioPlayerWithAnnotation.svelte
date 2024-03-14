@@ -3,7 +3,7 @@
 	import type { I18nFormatter } from "@gradio/utils";
 
 	import { onMount } from "svelte";
-	import { Music, Undo} from "@gradio/icons";
+	import { Music, Undo, Trim } from "@gradio/icons";
 	import Gum from "../shared/icons/Gum.svelte";
 	import WaveSurfer from "wavesurfer.js";
 	import RegionsPlugin, {
@@ -420,14 +420,10 @@
 
 	$: wsRegions?.on("region-clicked", (region, e) => {
 		e.stopPropagation(); // prevent triggering a click on the waveform
-		// if removal mode is enable, remove clicked region
-		if (region && mode === "remove") {
-			removeRegion(region)
-		}
-		else{
-			// update the active region
-			setActiveRegion(region);
-			region.play();
+		switch(mode){
+			case "remove": removeRegion(region); break;
+			case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
+			default: setActiveRegion(region); region.play();
 		}
 	});
 
@@ -548,6 +544,15 @@
 					>
 						<Gum/>
 					</button>
+					<button
+						class="action icon trim-button"
+						aria-label="Split an annotation"
+						title={i18n("Split an annotation")}
+						on:focusin={() => mode = "split"}
+						on:focusout={() => mode = ""}
+					>
+						<Trim/>
+					</button>
 				{/if}
 				</div>
 			</div>
@@ -588,11 +593,15 @@
 		color: var(--color-accent);
 	}
 
-	.remove-button {
+	.remove-button, .trim-button {
 		fill: #9ca3af;
 	}
 
 	.remove-button:hover, .remove-button:focus {
+		fill: var(--color-accent);
+	}
+
+	.trim-button:hover, .trim-button:focus {
 		fill: var(--color-accent);
 	}
 
