@@ -170,7 +170,6 @@
 				annotation => value.annotations.push(Object.assign({}, annotation))
 		);
 		initAnnotations();
-		console.log(value)
 		dispatch("edit", value);
 	}
 
@@ -186,9 +185,10 @@
 	 * Clear all the annotations, and linked regions, from the waveform
 	 */
 	function clearAnnotations(): void {
+		setActiveRegion(null);
 		wsRegions?.clearRegions();
-		value.annotations = []
-		regionsMap.clear()
+		value.annotations = [];
+		regionsMap.clear();
 	};
 
 	/**
@@ -336,6 +336,7 @@
 	$: waveform?.on("pause", () => {
 		playing = false;
 		dispatch("pause");
+		console.log("passing here");
 	});
 
 	$: waveform?.on("play", () => {
