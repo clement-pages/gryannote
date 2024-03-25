@@ -1,13 +1,21 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable, Literal, List
+from typing import Any, Callable, List, Literal, Optional
 
 from pyannote.audio import Pipeline
 from gradio.components.base import FormComponent
 from gradio.events import Events
+from gradio.data_classes import GradioModel
 
 from huggingface_hub import HfApi
+
+
+class PipelineInfo(GradioModel):
+    # name of the pipeline:
+    name: str
+    # token used to load the pipeline, if needed:
+    token: Optional[str]
 
 
 class PipelineSelector(FormComponent):
@@ -16,6 +24,8 @@ class PipelineSelector(FormComponent):
 
     Demos: sentence_builder, titanic_survival
     """
+
+    data_model = PipelineInfo
 
     EVENTS = [
         Events.change,
@@ -101,7 +111,9 @@ class PipelineSelector(FormComponent):
             self.pipeline = pipeline
 
         self.source = source
+
         self.token = token
+        self.enable_token_entry = (token == None)
 
         if not filterable and allow_custom_value:
             filterable = True
@@ -127,33 +139,26 @@ class PipelineSelector(FormComponent):
             value=value,
         )
 
-    def api_info(self) -> dict[str, Any]:
-        if self.source == "dropdown":
-            json_type = {
-                "type": "string",
-                "enum": [c[1] for c in self.choices],
-            }
-        else:
-            json_type = {
-                "type": {},
-            }
-        return json_type
-
     def example_inputs(self) -> Any:
         if self.source == "dropdown":
             return self.choices[0][1]
         return None
 
-    def preprocess(self, payload: str | None) -> Pipeline:
+    def preprocess(self, payload: PipelineInfo | None) -> Pipeline:
         """
         Parameters:
-            payload: the value of the selected dropdown choice if source has been set to `dropdown`
-            or None if source has been set to `instance`
+            payload: PipelineInfo
+                info about the pipepline to load, if source has been set to `dropdown`
+                or None if source has been set to `instance`
         Returns:
             An instanciated pipeline
         """
         if self.source == "dropdown":
-            self.pipeline = Pipeline.from_pretrained(payload, use_auth_token=self.token)
+            if not self.token:
+                self.token = payload.token
+                print(self.token)
+            name = payload.name
+            self.pipeline = Pipeline.from_pretrained(name, use_auth_token=self.token)
         else:
             if payload:
                 warnings.warn("Payload is not empty, whereas source has been set to `instance`")

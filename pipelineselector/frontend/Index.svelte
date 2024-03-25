@@ -5,18 +5,20 @@
 </script>
 
 <script lang="ts">
-	import type { Gradio, KeyUpData, SelectData } from "@gradio/utils";
 	import Dropdown from "./shared/Dropdown.svelte";
 	import { Block } from "@gradio/atoms";
 	import { StatusTracker } from "@gradio/statustracker";
+
+	import type { Gradio, KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
+	import PipelineInfo from "./shared/PipelineInfo" 
 
 	export let label = "Dropdown";
 	export let info: string | undefined = undefined;
 	export let elem_id = "";
 	export let elem_classes: string[] = [];
 	export let visible = true;
-	export let value: string | string[] | undefined = undefined;
+	export let value: PipelineInfo | null = null;
 	export let value_is_output = false;
 	export let choices: [string, string | number][];
 	export let show_label: boolean;
@@ -26,15 +28,33 @@
 	export let min_width: number | undefined = undefined;
 	export let loading_status: LoadingStatus;
 	export let allow_custom_value = false;
+	export let enable_token_entry = true;
 	export let gradio: Gradio<{
-		change: never;
+		change: typeof value;
 		input: never;
-		select: SelectData;
+		select: typeof value;
 		blur: never;
 		focus: never;
 		key_up: KeyUpData;
 	}>;
 	export let interactive: boolean;
+
+	let token: string = "";
+
+	/**
+	 * Handle drop down selection event
+	 * @param name name of the selected pipeline
+	 */
+	function handleSelect(name: string): void {
+		if(name !== ""){
+			if(value === null){
+				value = new PipelineInfo({name, token});
+			} else {
+				value.name = name;
+			}
+			gradio.dispatch("select", value);
+		}
+	}
 </script>
 
 <Block
@@ -53,8 +73,19 @@
 	/>
 
 	{#if visible}
+		{#if enable_token_entry}
+			<label class:container>
+				<input
+					data-testid="textbox"
+					type="text"
+					class="text-area"
+					bind:value={token}
+					placeholder="hf_xxxxxxx..."
+					disabled={!interactive}
+				/>
+			</label>
+		{/if}
 		<Dropdown
-			bind:value
 			bind:value_is_output
 			{choices}
 			{label}
@@ -65,7 +96,7 @@
 			{container}
 			on:change={() => gradio.dispatch("change")}
 			on:input={() => gradio.dispatch("input")}
-			on:select={(e) => gradio.dispatch("select", e.detail)}
+			on:select={(e) => handleSelect(e.detail.value)}
 			on:blur={() => gradio.dispatch("blur")}
 			on:focus={() => gradio.dispatch("focus")}
 			on:key_up={(e) => gradio.dispatch("key_up", e.detail)}
@@ -73,3 +104,12 @@
 		/>
 	{/if}
 </Block>
+
+
+<style>
+
+	.text-area {
+		color: black;
+	}
+
+</style>
