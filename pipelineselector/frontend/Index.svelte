@@ -6,14 +6,14 @@
 
 <script lang="ts">
 	import Dropdown from "./shared/Dropdown.svelte";
-	import { Block } from "@gradio/atoms";
+	import { Block, BlockTitle } from "@gradio/atoms";
 	import { StatusTracker } from "@gradio/statustracker";
+	import PipelineInfo from "./shared/PipelineInfo" 
 
 	import type { Gradio, KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
-	import PipelineInfo from "./shared/PipelineInfo" 
 
-	export let label = "Dropdown";
+	export let label: string = "";
 	export let info: string | undefined = undefined;
 	export let elem_id = "";
 	export let elem_classes: string[] = [];
@@ -57,6 +57,7 @@
 	}
 </script>
 
+<BlockTitle>{label}</BlockTitle>
 <Block
 	{visible}
 	{elem_id}
@@ -73,43 +74,85 @@
 	/>
 
 	{#if visible}
+		<div class="form">
 		{#if enable_token_entry}
-			<label class:container>
+			<div class="form-element">
+				<label for="token" class="label"> Enter your Hugging Face token:</label>
 				<input
 					data-testid="textbox"
 					type="text"
 					class="text-area"
-					bind:value={token}
+					name="token"
+					id="token"
 					placeholder="hf_xxxxxxx..."
+					aria-label="Enter your Hugging Face token"
+					maxlength="50"
+					disabled={!interactive}
+					bind:value={token}
+				/>
+			</div>
+		{/if}
+			<div class="form-element">
+				<Dropdown
+					bind:value_is_output
+					{choices}
+					label={"Select the pipeline to use: "}
+					{info}
+					{show_label}
+					{filterable}
+					{allow_custom_value}
+					{container}
+					on:change={() => gradio.dispatch("change")}
+					on:input={() => gradio.dispatch("input")}
+					on:select={(e) => handleSelect(e.detail.value)}
+					on:blur={() => gradio.dispatch("blur")}
+					on:focus={() => gradio.dispatch("focus")}
+					on:key_up={(e) => gradio.dispatch("key_up", e.detail)}
 					disabled={!interactive}
 				/>
-			</label>
-		{/if}
-		<Dropdown
-			bind:value_is_output
-			{choices}
-			{label}
-			{info}
-			{show_label}
-			{filterable}
-			{allow_custom_value}
-			{container}
-			on:change={() => gradio.dispatch("change")}
-			on:input={() => gradio.dispatch("input")}
-			on:select={(e) => handleSelect(e.detail.value)}
-			on:blur={() => gradio.dispatch("blur")}
-			on:focus={() => gradio.dispatch("focus")}
-			on:key_up={(e) => gradio.dispatch("key_up", e.detail)}
-			disabled={!interactive}
-		/>
+			</div>
+		</div>
 	{/if}
 </Block>
 
 
 <style>
 
+	.form {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-around;
+	}
+
+	.label {
+		font-size: var(--input-text-size);
+		font-weight: var(--input-text-weight);
+	}
+
 	.text-area {
-		color: black;
+		display: block;
+		position: relative;
+		outline: none !important;
+		box-shadow: var(--input-shadow);
+		background: var(--input-background-fill);
+		padding: var(--input-padding);
+		width: 100%;
+		color: var(--body-text-color);
+		font-weight: var(--input-text-weight);
+		font-size: var(--input-text-size);
+		line-height: var(--line-sm);
+		border: var(--input-border-width) solid var(--border-color-primary);
+	}
+
+	.form-element {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		margin-bottom: 2em;
+	}
+
+	input::placeholder {
+		color: var(--input-placeholder-color);
 	}
 
 </style>
