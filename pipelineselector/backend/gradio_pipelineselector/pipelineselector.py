@@ -81,7 +81,11 @@ class PipelineSelector(FormComponent):
 
         if source == "dropdown":
             if not choices:
-                self.choices = self.get_available_pipelines()
+                self.choices = []
+                available_pipelines = self.get_available_pipelines()
+                for pipeline in available_pipelines:
+                    # each choice is a tuple (name, value). Here name and value are the same
+                    self.choices.append((pipeline, pipeline))
             else:
                 self.choices = choices
         else:
@@ -148,7 +152,6 @@ class PipelineSelector(FormComponent):
         Returns:
             An instanciated pipeline
         """
-        print(payload)
         if self.source == "dropdown":
             self.pipeline = Pipeline.from_pretrained(payload, use_auth_token=self.token)
         else:

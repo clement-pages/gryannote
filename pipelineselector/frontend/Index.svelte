@@ -35,8 +35,6 @@
 		key_up: KeyUpData;
 	}>;
 	export let interactive: boolean;
-
-	$: console.log(choices);
 </script>
 
 <Block
