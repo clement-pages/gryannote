@@ -95,12 +95,14 @@
 	): Promise<void> => {
 		let _audio_blob = new File(blobs, "audio.wav");
 		const val = await prepare_files([_audio_blob], event === "stream");
-		value.file_data = (
+		let fileData = (
 			(await upload(val, root, undefined, upload_fn))?.filter(
 				Boolean
 			) as FileData[]
 		)[0];
-
+		if(value === null){
+			value = new AnnotatedAudioData(fileData);
+		}
 		dispatch(event, value);
 	};
 
