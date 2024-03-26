@@ -312,7 +312,7 @@
 
 	/**
 	 * Split the specified region at indicated split time, and set
-	 * active region to the resulting left region.
+	 * active region to the resulting right region.
 	 * @param region region to split
 	 * @param splitTime split position. Must be inside region's boundaries
 	 */
@@ -340,7 +340,7 @@
 		}, speaker);
 
 		// update active region
-		setActiveRegion(regionLeft);
+		setActiveRegion(regionRight);
 		// remove splitted region
 		removeRegion(region);
 
