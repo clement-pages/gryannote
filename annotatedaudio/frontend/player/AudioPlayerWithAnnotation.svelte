@@ -264,11 +264,11 @@
 	 * active region. If active region is the last one,
 	 * the next region to be activated is the first one
 	 * on the waveform.
-	 * @param shiftPressed: go ahead if true, else go back
+	 * @param shiftKey: go ahead if true, else go back
 	 */
-	function selectNextRegion(shiftPressed: boolean): void {
+	function selectNextRegion(shiftKey: boolean): void {
 		// go back if shift was pressed, else go ahead:
-		var direction = shiftPressed ? -1 : 1;
+		var direction = shiftKey ? -1 : 1;
 		var regions = wsRegions.getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
 		// if there is no active region, active the first one
 		if(activeRegion === null){
@@ -337,36 +337,100 @@
 		splitRegion(region, currentTime);
 	}
 
-	function adjustRegionHandles(handle: string, key: string): void {
+	/**
+	 *  Adjust region start and end time bounds
+	 * @param key shortcut name. Indicates direction: forward or backward.
+	 * @param shiftKey indicates whether shift key was pressed. If true, move faster
+	 * @param altKey indicates whether alt key was pressed. If true, move end bound,
+	 * else start bound 
+	 */
+	function adjustRegionBounds(key: string, shiftKey: boolean, altKey: boolean): void {
 		let newStart: number;
 		let newEnd: number;
+		let delta: number = 0.05;  //TODO do not hardcore this and adapt it according to relative size of the waveform
 
-		if (!activeRegion) return;
-		if (handle === "left") {
+		// if alt is pressed, go faster
+		if(shiftKey){
+			delta = delta * 4.0;
+		}
+
+		// edit active region end time
+		if (!altKey) {
 			if (key === "ArrowLeft") {
-				newStart = activeRegion.start - 0.05;
+				newStart = activeRegion.start - delta;
 				newEnd = activeRegion.end;
 			} else {
-				newStart = activeRegion.start + 0.05;
+				newStart = activeRegion.start + delta;
 				newEnd = activeRegion.end;
 			}
+		// edit active region start time
 		} else {
 			if (key === "ArrowLeft") {
 				newStart = activeRegion.start;
-				newEnd = activeRegion.end - 0.05;
+				newEnd = activeRegion.end - delta;
 			} else {
 				newStart = activeRegion.start;
-				newEnd = activeRegion.end + 0.05;
+				newEnd = activeRegion.end + delta;
 			}
+		}
+
+		// saturate region bound
+		if(newStart > activeRegion.end){
+			newStart = activeRegion.end - 0.1;
+		}
+		if(newEnd < activeRegion.start){
+			newEnd = activeRegion.start + 0.1;
 		}
 
 		activeRegion.setOptions({
 			start: newStart,
 			end: newEnd
 		});
-
-		trimDuration = activeRegion.end - activeRegion.start;
 	};
+
+	/**
+	 * Adjust position of the cursor on the waveform
+	 * @param key shortcut name. Indicates direction: forward or backward.
+	 * @param shiftKey indicates whether shift key was pressed. If true, move faster
+	 */
+	function adjustTimeCursorPosition(key: string, shiftKey: boolean): void {
+		let currentTime = waveform.getCurrentTime();
+		let newTime: number;
+		let delta = 0.05; //TODO do not hardcore this and adapt it according to relative size of the waveform
+
+		// if alt is pressed, go faster
+		if(shiftKey){
+			delta = delta * 4.0;
+		}
+
+		if(key === "ArrowLeft"){
+			newTime = currentTime - delta;
+		}else {
+			newTime = currentTime + delta;
+		}
+
+		waveform.setTime(newTime);
+	}
+
+	/**
+	 * Handle time adjustement shortcuts. There are two cases whether there is
+	 * an active region set. If yes, region bounds are adjusted. Otherwise, time
+	 * cursor position is updated.
+	 * @param key shortcut name. Indicates direction: forward or backward.
+	 * @param shiftKey indicates whether shift key was pressed. If true, move faster
+	 * @param altKey indicates whether alt key was pressed. If true, move end bound,
+	 * else start bound. No effect when updating time cursor.
+	 */
+	function handleTimeAdjustement(key: string, shiftKey: boolean, altKey: boolean): void {
+		// if there is an active region, update region bounds
+		if(activeRegion){
+			adjustRegionBounds(key, shiftKey, altKey);
+			return;
+		}
+		// else update time cursor position
+		adjustTimeCursorPosition(key, shiftKey);
+	}
+
 
 	$: if (container !== undefined) {
 		if (waveform !== undefined) waveform.destroy();
@@ -469,8 +533,8 @@
 	onMount(() => {
 		window.addEventListener("keydown", (e) => {
 			switch(e.key){
-				case "ArrowLeft":  adjustRegionHandles(activeHandle, "ArrowLeft"); break;
-				case "ArrowRight": adjustRegionHandles(activeHandle, "ArrowRight"); break;
+				case "ArrowLeft":  handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey);  break;
+				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
 				case "Escape": setActiveRegion(); break;
 				case "Tab": e.preventDefault(); selectNextRegion(e.shiftKey); break;
 				case "Enter": 
