@@ -60,4 +60,4 @@ The following table summarizes available keyboard shortcuts for the `AnnotatedAu
 |`BACKSAPCE`                                    | Delete selected annotation and select the previous one                |
 |`DELETE` or `SHIFT + BACKSPACE`                | Delete selected region and select the next one                        |
 |`ESC`                                          | Unselect selected annotation and / or label                           |
-| `UP` or `DOWN`                                | Zoom in/out [WIP]                                                     |
+| `UP` or `DOWN`                                | Zoom in/out                                                           |
