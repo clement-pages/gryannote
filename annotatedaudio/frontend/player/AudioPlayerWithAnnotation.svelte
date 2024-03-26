@@ -97,7 +97,13 @@
 		// keep initial annotations in memory, for future retrieval
 		if (initialAnnotations === null){
 			initialAnnotations = []
-			// Set default label with first annotation's speaker and color
+
+			// defines a label that will be activated by default if the user selects none
+			// this label is set to the first annotation's speaker, if there is at least one
+			// annotation, or none otherwise.
+			if(annotations.length === 0){
+				return;
+			}
 			defaultLabel = {speaker: annotations[0].speaker, color: annotations[0].color, shortcut: "A"};
 			annotations.forEach(
 				annotation => initialAnnotations.push(Object.assign({}, annotation))
