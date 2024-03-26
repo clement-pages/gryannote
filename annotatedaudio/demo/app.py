@@ -1,6 +1,3 @@
-import os
-from typing import List
-
 import gradio as gr
 from gradio_annotatedaudio import AnnotatedAudio
 from gradio_pipelineselector import PipelineSelector
@@ -11,12 +8,12 @@ example = AnnotatedAudio().example_inputs()
 annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
 
 
-def apply_pipeline(pipeline: Pipeline, data: AnnotatedAudio):
+def apply_pipeline(pipeline: Pipeline, audio_data):
     """ Apply specified pipeline on the indicated file"""
-    filepath, _ = data
-    annotations = pipeline(filepath)
+    audio, _ = audio_data
+    annotations = pipeline(audio)
 
-    return (filepath, annotations)
+    return (audio, annotations)
 
 
 def update_annotations(data: AnnotatedAudio):
