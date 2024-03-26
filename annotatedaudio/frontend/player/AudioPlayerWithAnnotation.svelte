@@ -40,8 +40,6 @@
 	let audio_duration: number;
 	let playing = false;
 
-	let trimDuration = 0;
-
 	let show_volume_slider = false;
 	let showRedo = interactive;
 
@@ -134,9 +132,11 @@
 
 
 	/**
+	 * Add a region on the waveform given its parameters and speaker label
+	 * @param options region's params (start, end, color)
+	 * @param speaker region's label
 	 * 
-	 * @param options
-	 * @param speaker
+	 * @returns the added region
 	 */
 	function addRegion(options: RegionParams, speaker: string): Region {
 		let region = wsRegions.addRegion(options);
@@ -152,8 +152,8 @@
 	}
 
 	/**
-	 * 
-	 * @param relativeY
+	 * Handle add region event. The new added region become the active region.
+	 * @param relativeY mouse y-coordinate relative to waveform start
 	 */
 	function handleRegionAdd(relativeY: number): void{
 		let regionLabel = (activeLabel !== null ? activeLabel : defaultLabel);
@@ -188,6 +188,13 @@
 		updateAnnotations();
 	}
 
+	/**
+	 * Handle the region removal event, and remove the active region. According to `key` and
+	 * `shiftKey` value, the new active region is the one set before or after the removed region.
+	 * Do nothing if there is no active region.
+	 * @param key shortcut name. Help to determine which region to select after the removal.
+	 * @param shiftKey indicates whether shift key was pressed. Help to determine which region to select
+	 */
 	function handleRegionRemoval(key: string, shiftKey: boolean): void {
 		// if there is no active region, do nothing
 		if(!activeRegion){
@@ -232,7 +239,7 @@
 	};
 
 	/**
-	 * Set active region with specified region.
+	 * Set active region with specified one.
 	 * @param region the region to activate
 	 */
 	function setActiveRegion(region: Region): void {
@@ -287,7 +294,7 @@
 	 * active one. If active region is the last one,
 	 * the next region to be activated is the first one
 	 * on the waveform.
-	 * @param shiftKey: go ahead if false, else go back
+	 * @param shiftKey: go back if true, go ahead otherwise
 	 */
 	function selectNextRegion(shiftKey: boolean): void {
 		// go back if shift was pressed, else go ahead:
@@ -341,7 +348,9 @@
 
 	/**
 	 * Split a region into two distinct regions. There are two cases (sorted by priority):
-	 *   - if there is an active region
+	 *   - if there is an active region, split this region
+	 *   - else, split the region in which the time cursor is
+	 * 	 - if the cursor is out on any region, do nothing
 	 * @param currentTime position of the cursor on the waveform
 	 */
 	function handleRegionSplit(currentTime: number): void {
@@ -599,9 +608,6 @@
 		<div class="timestamps">
 			<time bind:this={timeRef} id="time">0:00</time>
 			<div>
-				{#if mode === "edit" && trimDuration > 0}
-					<time id="trim-duration">{formatTime(trimDuration)}</time>
-				{/if}
 				<time bind:this={durationRef} id="duration">0:00</time>
 			</div>
 		</div>
