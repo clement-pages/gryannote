@@ -179,9 +179,32 @@
 	 * @param region region to remove
 	 */
 	function removeRegion(region: Region): void {
+		// if region to remove is the active one, first unselect it:
+		if(region === activeRegion){
+			setActiveRegion(null);
+		}
 		regionsMap.delete(region.id)
 		region.remove();
 		updateAnnotations();
+	}
+
+	function handleRegionRemoval(key: string, shiftKey: boolean): void {
+		// if there is no active region, do nothing
+		if(!activeRegion){
+			return;
+		}
+
+		let region2remove = wsRegions.getRegions().find((region) => region.id === activeRegion.id);
+		// remove active region and set the next region as the active one
+		if(key === "Delete" || (key == "Backspace" && shiftKey)){
+			selectNextRegion(false);
+		}
+		// remove region and set the previous region as the active one 
+		else {
+			selectNextRegion(true);
+		}
+
+		removeRegion(region2remove);
 	}
 
 	/**
@@ -202,7 +225,7 @@
 	 * annotation data given by pipeline
 	 */
 	function clearRegions(): void {
-		setActiveRegion();
+		setActiveRegion(null);
 		wsRegions?.clearRegions();
 		value.annotations = [];
 		regionsMap.clear();
@@ -212,12 +235,12 @@
 	 * Set active region with specified region.
 	 * @param region the region to activate
 	 */
-	function setActiveRegion(region?: Region): void {
+	function setActiveRegion(region: Region): void {
 		if(activeRegion !== null){
 			activeRegion.element.style.background = activeRegion.color;
 		}
 	
-		if(region === undefined){
+		if(region === null){
 			activeRegion = region;
 			return;
 		}
@@ -260,11 +283,11 @@
 	}
 
 	/**
-	 * Select the region next (in terms of time) to current
-	 * active region. If active region is the last one,
+	 * Select the region next (in terms of time) to the current
+	 * active one. If active region is the last one,
 	 * the next region to be activated is the first one
 	 * on the waveform.
-	 * @param shiftKey: go ahead if true, else go back
+	 * @param shiftKey: go ahead if false, else go back
 	 */
 	function selectNextRegion(shiftKey: boolean): void {
 		// go back if shift was pressed, else go ahead:
@@ -535,8 +558,10 @@
 			switch(e.key){
 				case "ArrowLeft":  handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey);  break;
 				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
-				case "Escape": setActiveRegion(); break;
+				case "Escape": setActiveRegion(null); break;
 				case "Tab": e.preventDefault(); selectNextRegion(e.shiftKey); break;
+				case "Delete": handleRegionRemoval("Delete", e.shiftKey);  break;
+				case "Backspace": handleRegionRemoval("Backspace", e.shiftKey); break;
 				case "Enter": 
 					e.preventDefault();
 					if(e.shiftKey){

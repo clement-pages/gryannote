@@ -57,7 +57,7 @@ The following table summarizes available keyboard shortcuts for the `AnnotatedAu
 | `SHIFT + ALT + LEFT` or `SHIFT + ALT + RIGHT` | Same, but faster                                                      |
 | `TAB`                                         | Select next annotation                                                |
 | `SHIFT + TAB`                                 | Select previous annotation                                            |
-|`BACKSAPCE`                                    | Delete selected annotation and select the previous one [WIP]          |
-|`DELETE` or `SHIFT + BACKSPACE`                | Delete selected region and select the next one [WIP]                  |
+|`BACKSAPCE`                                    | Delete selected annotation and select the previous one                |
+|`DELETE` or `SHIFT + BACKSPACE`                | Delete selected region and select the next one                        |
 |`ESC`                                          | Unselect selected annotation and / or label                           |
 | `UP` or `DOWN`                                | Zoom in/out [WIP]                                                     |
