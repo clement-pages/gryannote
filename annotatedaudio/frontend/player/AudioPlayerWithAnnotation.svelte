@@ -274,6 +274,7 @@
 		}
 
 		if(activeRegion !== null) {
+			// update region color
 			activeRegion.color = color;
 			activeRegion.setOptions({
 				start: activeRegion.start,
@@ -282,6 +283,13 @@
 				drag: true,
 				resize: true,
 			});
+			activeRegion.element.style.background = "repeating-linear-gradient(45deg,"
+						+ activeRegion.color
+						+ " ,"
+						+ activeRegion.color
+						+ " 10px, #ffffff 10px ,#ffffff 15px)";
+
+			// update corresponding annotation color
 			let activeAnnotation = regionsMap.get(activeRegion.id);
 			activeAnnotation.color = color;
 			activeAnnotation.speaker = activeLabel.speaker;
