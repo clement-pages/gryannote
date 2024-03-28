@@ -11,8 +11,8 @@ pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth
 
 demo = gr.Interface(
     lambda x:x,
-    PipelineSelector(source="dropdown"), 
-    PipelineSelector(source="instance", pipeline=pipeline)
+    inputs=PipelineSelector(), 
+    outputs=PipelineSelector(pipelines=pipeline),
     # examples=[[example]],  # uncomment this line to view the "example version" of your component
 )
 

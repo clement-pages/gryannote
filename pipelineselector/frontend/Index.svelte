@@ -20,15 +20,12 @@
 	export let visible = true;
 	export let value: PipelineInfo | null = null;
 	export let value_is_output = false;
-	export let choices: [string, string | number][];
+	export let pipelines: [string, string | number][];
 	export let show_label: boolean;
-	export let filterable: boolean;
 	export let container = true;
 	export let scale: number | null = null;
 	export let min_width: number | undefined = undefined;
 	export let loading_status: LoadingStatus;
-	export let allow_custom_value = false;
-	export let enable_token_entry = true;
 	export let gradio: Gradio<{
 		change: typeof value;
 		input: never;
@@ -38,6 +35,8 @@
 		key_up: KeyUpData;
 	}>;
 	export let interactive: boolean;
+
+	$: console.log(pipelines)
 
 	let token: string = "";
 
@@ -75,7 +74,6 @@
 
 	{#if visible}
 		<div class="form">
-		{#if enable_token_entry}
 			<div class="form-element">
 				<label for="token" class="label"> Enter your Hugging Face token:</label>
 				<input
@@ -91,16 +89,13 @@
 					bind:value={token}
 				/>
 			</div>
-		{/if}
 			<div class="form-element">
 				<Dropdown
 					bind:value_is_output
-					{choices}
+					choices={pipelines}
 					label={"Select the pipeline to use: "}
 					{info}
 					{show_label}
-					{filterable}
-					{allow_custom_value}
 					{container}
 					on:change={() => gradio.dispatch("change")}
 					on:input={() => gradio.dispatch("input")}
