@@ -56,7 +56,6 @@
 	}
 </script>
 
-<BlockTitle>{label}</BlockTitle>
 <Block
 	{visible}
 	{elem_id}
@@ -93,6 +92,7 @@
 				<Dropdown
 					bind:value_is_output
 					choices={pipelines}
+					value={pipelines[0][0]}
 					label={"Select the pipeline to use: "}
 					{info}
 					{show_label}
