@@ -92,7 +92,7 @@
 				<Dropdown
 					bind:value_is_output
 					choices={pipelines}
-					value={pipelines[0][0]}
+					value={value ? value.name : pipelines[0][0]}
 					label={"Select the pipeline to use: "}
 					{info}
 					{show_label}
