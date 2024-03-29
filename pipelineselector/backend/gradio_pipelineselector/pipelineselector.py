@@ -3,19 +3,28 @@ from __future__ import annotations
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from pyannote.audio import Pipeline
 from gradio.components.base import FormComponent
-from gradio.events import Events
 from gradio.data_classes import GradioModel
-
+from gradio.events import Events
 from huggingface_hub import HfApi
-
+from pyannote.audio import Pipeline
+from pyannote.pipeline.parameter import (
+    Categorical, 
+    DiscreteUniform,
+    Integer,
+    LogUniform,
+    Uniform,
+    Frozen,
+    ParamDict,
+)
 
 class PipelineInfo(GradioModel):
     # name of the pipeline:
     name: str
     # token used to load the pipeline, if needed:
     token: Optional[str]
+    # pipeline's parameters specifications
+    param_specs: Optional[Dict]
 
 
 class PipelineSelector(FormComponent):
@@ -36,10 +45,11 @@ class PipelineSelector(FormComponent):
         Events.key_up,
     ]
 
-
     def __init__(
         self,
-        pipelines: Optional[Pipeline | List[str] | Dict[str, Pipeline] | Tuple[str, Pipeline]] = None,
+        pipelines: Optional[
+            Pipeline | List[str] | Dict[str, Pipeline] | Tuple[str, Pipeline]
+        ] = None,
         *,
         value: str | Callable | None = None,
         token: str | None = None,
@@ -66,32 +76,32 @@ class PipelineSelector(FormComponent):
                 - list of (pipeline name, pipeline instance)
                 - dict {pipeline name : pipeline instance}
             By default, the component ask the user to select a pipeline from a dropdown with availbale pyannote pipeline on Hugging Face
-        value: optional 
-            default value selected in dropdown. If None, no value is selected by default. 
+        value: optional
+            default value selected in dropdown. If None, no value is selected by default.
             If callable, the function will be called whenever the app loads to set the initial value of the component.
-        label: optional 
+        label: optional
             The label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.
         info: optional
             additional component description.
-        every: optional 
+        every: optional
             If `value` is a callable, run the function 'every' number of seconds while the client connection is open. Has no effect otherwise. The event can be accessed (e.g. to cancel it) via this component's .load_event attribute.
-        show_label: optional 
+        show_label: optional
             if True, will display label.
-        container: optional 
+        container: optional
             If True, will place the component in a container - providing some extra padding around the border.
-        scale: optional 
+        scale: optional
             relative size compared to adjacent Components. For example if Components A and B are in a Row, and A has scale=2, and B has scale=1, A will be twice as wide as B. Should be an integer. scale applies in Rows, and to top-level Components in Blocks where fill_height=True.
-        min_width: optional 
+        min_width: optional
             minimum pixel width, will wrap if not sufficient screen space to satisfy this value. If a certain scale value results in this Component being narrower than min_width, the min_width parameter will be respected first.
-        interactive: optional 
+        interactive: optional
             if True, choices in this dropdown will be selectable; if False, selection will be disabled. If not provided, this is inferred based on whether the component is used as an input or output.
-        visible: optional 
+        visible: optional
             If False, component will be hidden. Default to True.
         elem_id: optional
             An optional string that is assigned as the id of this component in the HTML DOM. Can be used for targeting CSS styles.
         elem_classes: optional
             An optional list of strings that are assigned as the classes of this component in the HTML DOM. Can be used for targeting CSS styles.
-        render: optional 
+        render: optional
             If False, component will not be rendered in the Blocks context. Should be used if the intention is to assign event listeners now but render the component later.
         """
 
@@ -99,7 +109,7 @@ class PipelineSelector(FormComponent):
 
         if not pipelines:
             self.pipelines = [(p, p) for p in self.get_available_pipelines()]
-            
+
         elif isinstance(pipelines, Pipeline):
             self._pipeline = pipelines
 
@@ -113,23 +123,24 @@ class PipelineSelector(FormComponent):
                 self.pipelines.append((pipeline, pipeline))
 
         elif isinstance(pipelines, list) and isinstance(pipelines[0], tuple):
-            self._pipeline_map = {name : instance for name, instance in pipelines}
+            self._pipeline_map = dict(pipelines)
             self.pipelines = [(name, name) for name, _ in pipelines]
 
         elif isinstance(pipelines, dict):
-            self._pipeline_map = {name : instance for name, instance in pipelines.items()}
+            self._pipeline_map = dict(pipelines.items())
             self.pipelines = [(name, name) for name in pipelines]
 
         else:
             raise ValueError(
                 "pipeline must be an instanciated pipeline, a list of pipeline name,",
-                "a list of (pipeline name, pipeline instance) or a dict of pipeline name, pipeline instance"
+                "a list of (pipeline name, pipeline instance) or a dict of pipeline name",
+                "pipeline instance",
             )
-    
+
         self.token = token
 
         # component is visible only if a pipeline was not already set
-        visible = (getattr(self, "_pipeline", None) == None)
+        visible = getattr(self, "_pipeline", None) is None
 
         super().__init__(
             label=label,
@@ -148,6 +159,7 @@ class PipelineSelector(FormComponent):
         )
 
     def example_inputs(self) -> Any:
+        """Return example inputs"""
         if getattr(self, "pipelines", None):
             return self.pipelines[0][1]
 
@@ -165,21 +177,14 @@ class PipelineSelector(FormComponent):
         if not getattr(self, "_pipeline", None):
             if not payload:
                 raise ValueError(
-                    "Cannot instantiate a pipeline as no pipeline was provided in the backend or in the interface"
+                    "Cannot instantiate a pipeline as no pipeline",
+                    "was provided in the backend or in the interface"
                 )
-            if not self.token:
-                self.token = payload.token
-            name = payload.name
-            if self._pipeline_map:
-                self._pipeline = self._pipeline_map[name]
-            else:
-                self._pipeline = Pipeline.from_pretrained(name, use_auth_token=self.token)
+            self._pipeline = self._load_pipeline(payload)
 
         return self._pipeline
 
-    def postprocess(
-        self, value: Pipeline | None
-    ) -> str | None:
+    def postprocess(self, value: Pipeline | None) -> str | None:
         """
         Parameters:
             value: instanciated pipeline
@@ -188,17 +193,78 @@ class PipelineSelector(FormComponent):
         """
         if not value:
             return None
-        else:
-            return value.__repr__
+        return value.__repr__
+
+    def on_select(self, value: Dict):
+        """Update pipeline according to selected value from frontend"""
+        pipeline_info = PipelineInfo(**value)
+        self._pipeline = self._load_pipeline(pipeline_info)
+        param_types = self._pipeline.parameters(instantiated=False)
+        param_values = self._pipeline.parameters(instantiated=True)
+        pipeline_info.param_specs = self._get_param_specs(param_types, param_values)
+
+        return pipeline_info
 
     def get_available_pipelines(self) -> List[str]:
         """Get official pyannote pipelines from Hugging Face
-        
+
         Returns
         -------
             list of default available pyannote pipelines
         """
         available_pipelines = [
-            p.modelId for p in HfApi().list_models(filter="pyannote-audio-pipeline", sort="last_modified", direction=-1)
+            p.modelId
+            for p in HfApi().list_models(
+                filter="pyannote-audio-pipeline", sort="last_modified", direction=-1
+            )
         ]
         return list(filter(lambda p: p.startswith("pyannote/"), available_pipelines))
+
+    def _load_pipeline(self, pipeline_info: PipelineInfo) -> Pipeline:
+
+        if pipeline_info.token != "":
+            self.token = pipeline_info.token
+        if self._pipeline_map:
+            pipeline = self._pipeline_map[pipeline_info.name]
+        else:
+            pipeline = Pipeline.from_pretrained(pipeline_info.name, self.token)
+        return pipeline
+
+    def _get_param_specs(self, param_types: Dict, param_values: Dict) -> Dict:
+        param_specs = {}
+
+        for param_name, param in param_types.items():
+            param_specs[param_name] = {}
+            if isinstance(param, (ParamDict, Dict)):
+               param_specs[param_name] = self._get_param_specs(param, param_values[param_name])
+               param_specs[param_name]["name"] = param_name
+
+            elif isinstance(param, Categorical):
+                param_specs[param_name]["name"] = param_name
+                param_specs[param_name]["component"] = "dropdown"
+                param_specs[param_name]["choices"] = param.choices
+                param_specs[param_name]["value"] = param_values[param_name]
+    
+            elif isinstance(param, (DiscreteUniform, Uniform, LogUniform, Integer)):
+                param_specs[param_name]["name"] = param_name
+                param_specs[param_name]["component"] = "slider"
+                param_specs[param_name]["value"] = param_values[param_name]
+                param_specs[param_name]["min"] = param.low
+                param_specs[param_name]["max"] = param.high
+                if isinstance(param, DiscreteUniform):
+                    param_specs[param_name]["step"] = param.q
+                elif isinstance(param, Integer):
+                    param_specs[param_name]["step"] = 1
+                else:
+                    param_specs[param_name]["step"] = 0.0001
+
+            elif isinstance(param, Frozen):
+                 # just for printing purpose
+                param_specs[param_name]["name"] = param_name
+                param_specs[param_name]["component"] = "textbox"
+                param_specs[param_name]["value"] = param_values[param_name]
+
+            else:
+                raise TypeError(f"Unknow type for {param_name} (type = {type(param)})")
+
+        return param_specs

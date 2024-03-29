@@ -36,8 +36,6 @@
 	}>;
 	export let interactive: boolean;
 
-	$: console.log(pipelines)
-
 	let token: string = "";
 
 	/**
@@ -54,6 +52,8 @@
 			gradio.dispatch("select", value);
 		}
 	}
+
+	$: console.log(value);
 </script>
 
 <Block
