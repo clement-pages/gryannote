@@ -8,15 +8,14 @@ example = AnnotatedAudio().example_inputs()
 annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
 
 
-def apply_pipeline(pipeline: Pipeline, audio_data):
-    """ Apply specified pipeline on the indicated file"""
-    audio, _ = audio_data
+def apply_pipeline(pipeline: Pipeline, audio):
+    """ Apply specified pipeline on the indicated audio file"""
     annotations = pipeline(audio)
 
     return (audio, annotations)
 
 
-def update_annotations(data: AnnotatedAudio):
+def update_annotations(data):
     print(data)
 
 
@@ -29,7 +28,7 @@ with gr.Blocks() as demo:
         type="filepath",
         interactive=True,
     )
-    annotated_audio.edit(fn=update_annotations, inputs=annotated_audio)
+    annotated_audio.edit(fn=update_annotations, inputs=annotated_audio, preprocess=False)
 
     run_btn = gr.Button("Run pipeline")
     run_btn.click(
