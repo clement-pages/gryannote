@@ -9,12 +9,15 @@ example = PipelineSelector().example_inputs()
 
 pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=os.environ["HG_TOKEN"])
 
-demo = gr.Interface(
-    lambda x:x,
-    inputs=PipelineSelector(), 
-    outputs=PipelineSelector(pipelines=pipeline),
-    # examples=[[example]],  # uncomment this line to view the "example version" of your component
-)
+with gr.Blocks() as demo:
+    pipeline_selector = PipelineSelector()
+    pipeline_selector.select(
+        fn=pipeline_selector.on_select,
+        inputs=pipeline_selector,
+        outputs=pipeline_selector,
+        preprocess=False,
+        postprocess=False,
+    )
 
 
 if __name__ == "__main__":
