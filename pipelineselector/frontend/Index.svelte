@@ -6,9 +6,9 @@
 
 <script lang="ts">
 	import Dropdown from "./shared/Dropdown.svelte";
-	import { Block, BlockTitle } from "@gradio/atoms";
+	import { Block } from "@gradio/atoms";
 	import { StatusTracker } from "@gradio/statustracker";
-	import PipelineInfo from "./shared/PipelineInfo" 
+	import PipelineInfo from "./shared/PipelineInfo"
 
 	import type { Gradio, KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
@@ -49,11 +49,114 @@
 			} else {
 				value.name = name;
 			}
+			// dispatch event to backward
 			gradio.dispatch("select", value);
+
+			// clear parameters:
+			document.getElementById("params-control").replaceChildren();
 		}
 	}
 
-	$: console.log(value);
+	function object2Map(obj?: Object) {
+		const map = new Map<string, any>();
+		if(!obj){
+			return map;
+		}
+
+		for(const key in obj) {
+			if(obj.hasOwnProperty(key)) {
+				if(typeof obj[key] == "object" && obj[key] !== null) {
+					map.set(key, object2Map(obj[key]));
+				} else {
+					map.set(key, obj[key]);
+				}
+			}
+		}
+		return map;
+	}
+
+	function addDropdown(container: HTMLElement, name: string, choices: string[], value: string, id?: string): void {
+		const label = document.createElement("label");
+		label.textContent = name;
+		container.appendChild(label);
+
+		const dropdown = document.createElement("select");
+		choices.forEach((choice) => {
+			const option = document.createElement("option");
+			option.textContent = choice;
+			option.value = choice;
+			dropdown.appendChild(option);
+			if(choice === value){
+				option.selected = true;
+			}
+		});
+
+		container.appendChild(dropdown);
+	}
+
+	function addSlider(container: HTMLElement, name: string, min: number, max: number, value: number, step: number, id?: string): void {
+		const label = document.createElement("label");
+		label.textContent = name;
+		container.appendChild(label);
+
+		const slider = document.createElement("input");
+		slider.type = "range";
+		slider.min = min.toString();
+		slider.max = max.toString();
+		slider.value = value.toString();
+		slider.step = step.toString();
+		slider.addEventListener("change", (event) =>{
+			const textbox = document.getElementById(name + "_textbox");
+			textbox.value = slider.value;
+		});
+		container.appendChild(slider);
+
+		addTextbox(container, name, value, true, false, name + "_textbox");
+	}
+
+	function addTextbox(container: HTMLElement, name: string, value: number | string, editable: boolean, show_label: boolean, id?: string): void {
+		if(show_label){
+			const label = document.createElement("label");
+			label.textContent = name;
+			container.appendChild(label);
+		}
+
+		const boxvalue = document.createElement("input");
+		boxvalue.type = "text";
+		boxvalue.value = value.toString();
+		boxvalue.contentEditable = String(editable);
+		boxvalue.classList.add("text-area");
+		if(id){
+			boxvalue.id = id;
+		}
+		container.appendChild(boxvalue);
+	}
+
+	function addFormElements(container: HTMLElement, param_specs : Map<string, Map<string, any>>): void {
+		param_specs.forEach((specs, name) => {
+			if (specs.size == 1){
+				// handle nested parameters
+				addFormElements(container, specs);
+			} else {
+				const element = document.createElement("div");
+				container.appendChild(element);
+				switch(specs.get("component")){
+					case "slider": addSlider(element, name, specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
+					case "dropdown": addDropdown(element, name, specs.get("choices"), specs.get("value")); break;
+					case "textbox": addTextbox(element, name, specs.get("value"), false, true); break;
+				}
+			}
+		});
+	}
+
+	$: {
+		if(value?.param_specs){
+			const container = document.getElementById("params-control");
+			let param_specs = object2Map(value?.param_specs);
+			addFormElements(container, param_specs);
+		}
+	}
+
 </script>
 
 <Block
@@ -106,17 +209,22 @@
 					disabled={!interactive}
 				/>
 			</div>
+			<div class="params-control" id="params-control"></div>
 		</div>
 	{/if}
 </Block>
 
 
 <style>
-
 	.form {
 		display: flex;
 		flex-direction: column;
 		justify-content: space-around;
+	}
+
+
+	.params-control {
+		color: black;
 	}
 
 	.label {

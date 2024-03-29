@@ -9,14 +9,15 @@ from gradio.events import Events
 from huggingface_hub import HfApi
 from pyannote.audio import Pipeline
 from pyannote.pipeline.parameter import (
-    Categorical, 
+    Categorical,
     DiscreteUniform,
+    Frozen,
     Integer,
     LogUniform,
-    Uniform,
-    Frozen,
     ParamDict,
+    Uniform,
 )
+
 
 class PipelineInfo(GradioModel):
     # name of the pipeline:
@@ -178,7 +179,7 @@ class PipelineSelector(FormComponent):
             if not payload:
                 raise ValueError(
                     "Cannot instantiate a pipeline as no pipeline",
-                    "was provided in the backend or in the interface"
+                    "was provided in the backend or in the interface",
                 )
             self._pipeline = self._load_pipeline(payload)
 
@@ -236,15 +237,17 @@ class PipelineSelector(FormComponent):
         for param_name, param in param_types.items():
             param_specs[param_name] = {}
             if isinstance(param, (ParamDict, Dict)):
-               param_specs[param_name] = self._get_param_specs(param, param_values[param_name])
-               param_specs[param_name]["name"] = param_name
+                param_specs[param_name] = self._get_param_specs(
+                    param, param_values[param_name]
+                )
+                param_specs[param_name]["name"] = param_name
 
             elif isinstance(param, Categorical):
                 param_specs[param_name]["name"] = param_name
                 param_specs[param_name]["component"] = "dropdown"
                 param_specs[param_name]["choices"] = param.choices
                 param_specs[param_name]["value"] = param_values[param_name]
-    
+
             elif isinstance(param, (DiscreteUniform, Uniform, LogUniform, Integer)):
                 param_specs[param_name]["name"] = param_name
                 param_specs[param_name]["component"] = "slider"
@@ -259,7 +262,7 @@ class PipelineSelector(FormComponent):
                     param_specs[param_name]["step"] = 0.0001
 
             elif isinstance(param, Frozen):
-                 # just for printing purpose
+                # just for printing purpose
                 param_specs[param_name]["name"] = param_name
                 param_specs[param_name]["component"] = "textbox"
                 param_specs[param_name]["value"] = param_values[param_name]
