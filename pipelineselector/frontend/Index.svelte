@@ -75,7 +75,7 @@
 		return map;
 	}
 
-	function addDropdown(container: HTMLElement, name: string, choices: string[], value: string, id?: string): void {
+	function addDropdown(container: HTMLElement, name: string, choices: string[], value: string): void {
 		const label = document.createElement("label");
 		label.textContent = name;
 		container.appendChild(label);
@@ -103,7 +103,7 @@
 		step: string,
 		id?: string
 	): void {
-		let textboxID = name + "-textbox"
+		let boxvalueID = name + "-textbox"
 		// add slider label
 		const label = document.createElement("label");
 		label.textContent = name;
@@ -116,31 +116,38 @@
 		slider.max = max;
 		slider.value = value;
 		slider.step = step;
+		slider.id = name;
 		slider.addEventListener("input", (event) => {
-			const textbox = document.getElementById(name + "-textbox");
+			const textbox = document.getElementById(boxvalueID);
 			textbox.value = slider.value;
 		});
 		container.appendChild(slider);
 
 		// add corresponding text box
-		addTextbox(container, name, value, true, false, name + "-textbox");
+		const boxvalue = document.createElement("input");
+		boxvalue.type = "number";
+		boxvalue.min = min;
+		boxvalue.max = max;
+		boxvalue.value = value;
+		boxvalue.contentEditable = "true";
+		boxvalue.id = boxvalueID;
+		boxvalue.addEventListener("input", (event) => {
+			const slider = document.getElementById(name);
+			slider.value = boxvalue.value;
+		});
+		container.appendChild(boxvalue);
 	}
 
-	function addTextbox(container: HTMLElement, name: string, value: string, editable: boolean, show_label: boolean, id?: string): void {
-		if(show_label){
-			const label = document.createElement("label");
-			label.textContent = name;
-			container.appendChild(label);
-		}
+	function addTextbox(container: HTMLElement, name: string, value: string, editable: boolean): void {
+		const label = document.createElement("label");
+		label.textContent = name;
+		container.appendChild(label);
 
 		const boxvalue = document.createElement("input");
 		boxvalue.type = "text";
 		boxvalue.value = value;
 		boxvalue.contentEditable = String(editable);
 		boxvalue.classList.add("text-area");
-		if(id){
-			boxvalue.id = id;
-		}
 		container.appendChild(boxvalue);
 	}
 
@@ -155,7 +162,7 @@
 				switch(specs.get("component")){
 					case "slider": addSlider(element, name, specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
 					case "dropdown": addDropdown(element, name, specs.get("choices"), specs.get("value")); break;
-					case "textbox": addTextbox(element, name, specs.get("value"), false, true); break;
+					case "textbox": addTextbox(element, name, specs.get("value"), false); break;
 				}
 			}
 		});
@@ -222,6 +229,9 @@
 				/>
 			</div>
 			<div class="params-control" id="params-control"></div>
+			<div class="validation">
+				<button></button>
+			</div>
 		</div>
 	{/if}
 </Block>
