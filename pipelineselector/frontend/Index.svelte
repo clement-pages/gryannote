@@ -10,8 +10,9 @@
 	import { StatusTracker } from "@gradio/statustracker";
 	import PipelineInfo from "./shared/PipelineInfo"
 
-	import type { Gradio, KeyUpData } from "@gradio/utils";
+	import { copy, type Gradio, type KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
+    import { slide } from "svelte/transition";
 
 	export let label: string = "";
 	export let info: string | undefined = undefined;
@@ -37,6 +38,7 @@
 	export let interactive: boolean;
 
 	let token: string = "";
+	let paramsViewNeedUpdate = false;
 
 	/**
 	 * Handle drop down selection event
@@ -51,9 +53,7 @@
 			}
 			// dispatch event to backward
 			gradio.dispatch("select", value);
-
-			// clear parameters:
-			document.getElementById("params-control").replaceChildren();
+			paramsViewNeedUpdate = true;
 		}
 	}
 
@@ -73,6 +73,27 @@
 			}
 		}
 		return map;
+	}
+
+	function Map2Object(map: Map<any, any>): Object {
+		let obj = Object.fromEntries(Array.from(
+				map.entries(), ([ k, v ]) =>
+				v instanceof Map ? [ k, Map2Object(v) ]: [ k, v ]
+			)
+		);
+		return obj;
+	}
+
+	function updateParameter(name: string, val: string): void {
+		const parents = name.split("-");
+		let param_specs = object2Map(value.param_specs);
+		var subset = param_specs;
+		parents.forEach((parent) => {
+			subset = subset.get(parent);
+		});
+		subset.set("value", val);
+		value.param_specs = Map2Object(param_specs);
+
 	}
 
 	function addDropdown(container: HTMLElement, name: string, choices: string[], value: string): void {
@@ -120,6 +141,7 @@
 		slider.addEventListener("input", (event) => {
 			const textbox = document.getElementById(boxvalueID);
 			textbox.value = slider.value;
+			updateParameter(name, slider.value);
 		});
 		container.appendChild(slider);
 
@@ -134,6 +156,7 @@
 		boxvalue.addEventListener("input", (event) => {
 			const slider = document.getElementById(name);
 			slider.value = boxvalue.value;
+			updateParameter(name, slide.value);
 		});
 		container.appendChild(boxvalue);
 	}
@@ -169,10 +192,15 @@
 	}
 
 	$: {
-		if(value?.param_specs){
+		// if a pipeline was selected and instantiated, and if parameters view need an update
+		if(value && Object.keys(value.param_specs).length > 0 && paramsViewNeedUpdate){
 			const container = document.getElementById("params-control");
-			let param_specs = object2Map(value?.param_specs);
+			container.replaceChildren();
+
+			let param_specs = object2Map(value.param_specs);
 			addFormElements(container, param_specs);
+
+			paramsViewNeedUpdate = false;
 		}
 	}
 
@@ -219,7 +247,6 @@
 					{info}
 					{show_label}
 					{container}
-					on:change={() => gradio.dispatch("change")}
 					on:input={() => gradio.dispatch("input")}
 					on:select={(e) => handleSelect(e.detail.value)}
 					on:blur={() => gradio.dispatch("blur")}
@@ -230,7 +257,11 @@
 			</div>
 			<div class="params-control" id="params-control"></div>
 			<div class="validation">
-				<button></button>
+				<button
+					on:click={() => gradio.dispatch("change", value)}
+				>
+					Update parameters
+				</button>
 			</div>
 		</div>
 	{/if}

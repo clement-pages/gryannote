@@ -72,11 +72,11 @@ class PipelineSelector(FormComponent):
         ----------
         pipelines: optional
             Can be a:
-                - instanciated pyannote pipeline
+                - instantiated pyannote pipeline
                 - list of possible pipeline name. This list must be subset of pyannote pipelines available on Hugging Face
                 - list of (pipeline name, pipeline instance)
                 - dict {pipeline name : pipeline instance}
-            By default, the component ask the user to select a pipeline from a dropdown with availbale pyannote pipeline on Hugging Face
+            By default, the component ask the user to select a pipeline from a dropdown with available pyannote pipeline on Hugging Face
         value: optional
             default value selected in dropdown. If None, no value is selected by default.
             If callable, the function will be called whenever the app loads to set the initial value of the component.
@@ -133,7 +133,7 @@ class PipelineSelector(FormComponent):
 
         else:
             raise ValueError(
-                "pipeline must be an instanciated pipeline, a list of pipeline name,",
+                "pipeline must be an instantiated pipeline, a list of pipeline name,",
                 "a list of (pipeline name, pipeline instance) or a dict of pipeline name",
                 "pipeline instance",
             )
@@ -170,10 +170,10 @@ class PipelineSelector(FormComponent):
         """
         Parameters:
             payload: PipelineInfo
-                info about the pipepline selected by the user in the frontend,
+                info about the pipeline selected by the user in the frontend,
                 None if pipeline was directly set in the backend
         Returns:
-            An instanciated pipeline
+            An instantiated pipeline
         """
         if not getattr(self, "_pipeline", None):
             if not payload:
@@ -188,7 +188,7 @@ class PipelineSelector(FormComponent):
     def postprocess(self, value: Pipeline | None) -> str | None:
         """
         Parameters:
-            value: instanciated pipeline
+            value: instantiated pipeline
         Returns:
             Returns the values of the selected dropdown entry or entries.
         """
@@ -206,6 +206,13 @@ class PipelineSelector(FormComponent):
 
         return pipeline_info
 
+    def on_change(self, value: Dict):
+        """Update selected pipeline's parameters"""
+        pipeline_info = PipelineInfo(**value)
+        param_values = self._get_param_values(pipeline_info.param_specs)
+        self._pipeline = self._pipeline.instantiate(param_values)
+        return pipeline_info
+
     def get_available_pipelines(self) -> List[str]:
         """Get official pyannote pipelines from Hugging Face
 
@@ -220,6 +227,15 @@ class PipelineSelector(FormComponent):
             )
         ]
         return list(filter(lambda p: p.startswith("pyannote/"), available_pipelines))
+
+    def _get_param_values(self, param_specs: Dict[str, Any]) -> Dict[str, Any]:
+        param_values = {}
+        for name, specs in param_specs.items():
+            if "value" not in specs:
+                param_values[name] = self._get_param_values(specs)
+            else:
+                param_values[name] = specs["value"]
+        return param_values
 
     def _load_pipeline(self, pipeline_info: PipelineInfo) -> Pipeline:
 
@@ -264,6 +280,6 @@ class PipelineSelector(FormComponent):
                 param_specs[param_name]["value"] = str(param_values[param_name])
 
             else:
-                raise TypeError(f"Unknow type for {param_name} (type = {type(param)})")
+                raise TypeError(f"Unknown type for {param_name} (type = {type(param)})")
 
         return param_specs
