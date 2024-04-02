@@ -240,32 +240,28 @@ class PipelineSelector(FormComponent):
                 param_specs[param_name] = self._get_param_specs(
                     param, param_values[param_name]
                 )
-                param_specs[param_name]["name"] = param_name
 
             elif isinstance(param, Categorical):
-                param_specs[param_name]["name"] = param_name
                 param_specs[param_name]["component"] = "dropdown"
                 param_specs[param_name]["choices"] = param.choices
                 param_specs[param_name]["value"] = param_values[param_name]
 
             elif isinstance(param, (DiscreteUniform, Uniform, LogUniform, Integer)):
-                param_specs[param_name]["name"] = param_name
                 param_specs[param_name]["component"] = "slider"
-                param_specs[param_name]["value"] = param_values[param_name]
-                param_specs[param_name]["min"] = param.low
-                param_specs[param_name]["max"] = param.high
+                param_specs[param_name]["value"] = str(param_values[param_name])
+                param_specs[param_name]["min"] = str(param.low)
+                param_specs[param_name]["max"] = str(param.high)
                 if isinstance(param, DiscreteUniform):
-                    param_specs[param_name]["step"] = param.q
+                    param_specs[param_name]["step"] = str(param.q)
                 elif isinstance(param, Integer):
-                    param_specs[param_name]["step"] = 1
+                    param_specs[param_name]["step"] = "1"
                 else:
-                    param_specs[param_name]["step"] = 0.0001
+                    param_specs[param_name]["step"] = "any"
 
             elif isinstance(param, Frozen):
                 # just for printing purpose
-                param_specs[param_name]["name"] = param_name
                 param_specs[param_name]["component"] = "textbox"
-                param_specs[param_name]["value"] = param_values[param_name]
+                param_specs[param_name]["value"] = str(param_values[param_name])
 
             else:
                 raise TypeError(f"Unknow type for {param_name} (type = {type(param)})")

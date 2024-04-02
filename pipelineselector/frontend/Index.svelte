@@ -94,17 +94,25 @@
 		container.appendChild(dropdown);
 	}
 
-	function addSlider(container: HTMLElement, name: string, min: number, max: number, value: number, step: number, id?: string): void {
+	function addSlider(
+		container: HTMLElement,
+		name: string,
+		min: string,
+		max: string,
+		value: string,
+		step: string,
+		id?: string
+	): void {
 		const label = document.createElement("label");
 		label.textContent = name;
 		container.appendChild(label);
 
 		const slider = document.createElement("input");
 		slider.type = "range";
-		slider.min = min.toString();
-		slider.max = max.toString();
-		slider.value = value.toString();
-		slider.step = step.toString();
+		slider.min = min;
+		slider.max = max;
+		slider.value = value;
+		slider.step = step;
 		slider.addEventListener("change", (event) =>{
 			const textbox = document.getElementById(name + "_textbox");
 			textbox.value = slider.value;
@@ -114,7 +122,7 @@
 		addTextbox(container, name, value, true, false, name + "_textbox");
 	}
 
-	function addTextbox(container: HTMLElement, name: string, value: number | string, editable: boolean, show_label: boolean, id?: string): void {
+	function addTextbox(container: HTMLElement, name: string, value: string, editable: boolean, show_label: boolean, id?: string): void {
 		if(show_label){
 			const label = document.createElement("label");
 			label.textContent = name;
@@ -123,7 +131,7 @@
 
 		const boxvalue = document.createElement("input");
 		boxvalue.type = "text";
-		boxvalue.value = value.toString();
+		boxvalue.value = value;
 		boxvalue.contentEditable = String(editable);
 		boxvalue.classList.add("text-area");
 		if(id){
