@@ -103,23 +103,27 @@
 		step: string,
 		id?: string
 	): void {
+		let textboxID = name + "-textbox"
+		// add slider label
 		const label = document.createElement("label");
 		label.textContent = name;
 		container.appendChild(label);
 
+		// add slider
 		const slider = document.createElement("input");
 		slider.type = "range";
 		slider.min = min;
 		slider.max = max;
 		slider.value = value;
 		slider.step = step;
-		slider.addEventListener("change", (event) =>{
-			const textbox = document.getElementById(name + "_textbox");
+		slider.addEventListener("input", (event) => {
+			const textbox = document.getElementById(name + "-textbox");
 			textbox.value = slider.value;
 		});
 		container.appendChild(slider);
 
-		addTextbox(container, name, value, true, false, name + "_textbox");
+		// add corresponding text box
+		addTextbox(container, name, value, true, false, name + "-textbox");
 	}
 
 	function addTextbox(container: HTMLElement, name: string, value: string, editable: boolean, show_label: boolean, id?: string): void {
