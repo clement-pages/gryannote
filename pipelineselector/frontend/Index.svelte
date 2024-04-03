@@ -93,7 +93,6 @@
 		});
 		subset.set("value", val);
 		value.param_specs = Map2Object(param_specs);
-
 	}
 
 	function addDropdown(container: HTMLElement, name: string, choices: string[], value: string): void {
@@ -156,7 +155,7 @@
 		boxvalue.addEventListener("input", (event) => {
 			const slider = document.getElementById(name);
 			slider.value = boxvalue.value;
-			updateParameter(name, slide.value);
+			updateParameter(name, slider.value);
 		});
 		container.appendChild(boxvalue);
 	}
@@ -181,12 +180,12 @@
 				addFormElements(container, specs, name);
 			} else {
 				const element = document.createElement("div");
-				container.id = (parent ? parent : "") + "-" + name;
+				element.id = (parent ? parent : "") + "-" + name;
 				container.appendChild(element);
 				switch(specs.get("component")){
-					case "slider": addSlider(element, name, specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
-					case "dropdown": addDropdown(element, name, specs.get("choices"), specs.get("value")); break;
-					case "textbox": addTextbox(element, name, specs.get("value"), false); break;
+					case "slider": addSlider(element, element.id , specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
+					case "dropdown": addDropdown(element, element.id , specs.get("choices"), specs.get("value")); break;
+					case "textbox": addTextbox(element, element.id , specs.get("value"), false); break;
 				}
 			}
 		});

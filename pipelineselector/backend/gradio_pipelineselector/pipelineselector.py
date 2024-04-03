@@ -208,7 +208,8 @@ class PipelineSelector(FormComponent):
     def on_change(self, value: Dict):
         """Update selected pipeline's parameters"""
         pipeline_info = PipelineInfo(**value)
-        param_values = self._get_param_values(pipeline_info.param_specs)
+        param_types = self._pipeline.parameters(instantiated=False)
+        param_values = self._get_param_values(param_types, pipeline_info.param_specs)
         self._pipeline = self._pipeline.instantiate(param_values)
         return pipeline_info
 
@@ -227,13 +228,21 @@ class PipelineSelector(FormComponent):
         ]
         return list(filter(lambda p: p.startswith("pyannote/"), available_pipelines))
 
-    def _get_param_values(self, param_specs: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_param_values(
+        self, param_types: Dict[str, Any], param_specs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         param_values = {}
-        for name, specs in param_specs.items():
-            if "value" not in specs:
-                param_values[name] = self._get_param_values(specs)
+        for param, specs in param_specs.items():
+            param_type = param_types[param]
+            if isinstance(param_type, (ParamDict, Dict)):
+                param_values[param] = self._get_param_values(param_type, specs)
             else:
-                param_values[name] = specs["value"]
+                if isinstance(param_type, (DiscreteUniform, Integer)):
+                    param_values[param] = int(specs["value"])
+                elif isinstance(param_type, (Uniform, LogUniform)):
+                    param_values[param] = float(specs["value"])
+                else:
+                    param_values[param] = specs["value"]
         return param_values
 
     def _load_pipeline(self, pipeline_info: PipelineInfo) -> Pipeline:
