@@ -12,9 +12,7 @@
 
 	import { type Gradio, type KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
-    import { slide } from "svelte/transition";
 
-	export let label: string = "";
 	export let info: string | undefined = undefined;
 	export let elem_id = "";
 	export let elem_classes: string[] = [];
@@ -95,12 +93,19 @@
 		value.param_specs = Map2Object(param_specs);
 	}
 
-	function addDropdown(container: HTMLElement, name: string, choices: string[], value: string): void {
+	function addLabel(container: HTMLElement, value: string): void {
 		const label = document.createElement("label");
-		label.textContent = name;
+		label.textContent = value;
 		container.appendChild(label);
+	}
 
+	function addDropdown(container: HTMLElement, choices: string[], value: string): void {
 		const dropdown = document.createElement("select");
+		const paramName = container.id;
+
+		addLabel(container, paramName);
+
+		// add dropdown label
 		choices.forEach((choice) => {
 			const option = document.createElement("option");
 			option.textContent = choice;
@@ -110,66 +115,61 @@
 				option.selected = true;
 			}
 		});
-
+		dropdown.addEventListener("select", (event) => {
+			updateParameter(paramName, dropdown.value);
+		});
 		container.appendChild(dropdown);
 	}
 
 	function addSlider(
 		container: HTMLElement,
-		name: string,
 		min: string,
 		max: string,
 		value: string,
 		step: string,
-		id?: string
 	): void {
-		let boxvalueID = name + "-textbox"
+		const slider = document.createElement("input");
+		const boxvalue = document.createElement("input");
+		const paramName = container.id;
+
 		// add slider label
-		const label = document.createElement("label");
-		label.textContent = name;
-		container.appendChild(label);
+		addLabel(container, paramName);
 
 		// add slider
-		const slider = document.createElement("input");
 		slider.type = "range";
 		slider.min = min;
 		slider.max = max;
 		slider.value = value;
 		slider.step = step;
-		slider.id = name;
 		slider.addEventListener("input", (event) => {
-			const textbox = document.getElementById(boxvalueID);
-			textbox.value = slider.value;
-			updateParameter(name, slider.value);
+			boxvalue.value = slider.value;
+			updateParameter(paramName, slider.value);
 		});
 		container.appendChild(slider);
 
 		// add corresponding text box
-		const boxvalue = document.createElement("input");
 		boxvalue.type = "number";
 		boxvalue.min = min;
 		boxvalue.max = max;
 		boxvalue.value = value;
 		boxvalue.contentEditable = "true";
-		boxvalue.id = boxvalueID;
 		boxvalue.addEventListener("input", (event) => {
-			const slider = document.getElementById(name);
 			slider.value = boxvalue.value;
-			updateParameter(name, slider.value);
+			updateParameter(paramName, slider.value);
 		});
 		container.appendChild(boxvalue);
 	}
 
-	function addTextbox(container: HTMLElement, name: string, value: string, editable: boolean): void {
-		const label = document.createElement("label");
-		label.textContent = name;
-		container.appendChild(label);
-
+	function addTextbox(container: HTMLElement, value: string, editable: boolean): void {
 		const boxvalue = document.createElement("input");
-		boxvalue.type = "text";
+		const paramName = container.id;
+
+		// add label
+		addLabel(container, paramName);
+
+		boxvalue.type = "number";
 		boxvalue.value = value;
 		boxvalue.contentEditable = String(editable);
-		boxvalue.classList.add("text-area");
 		container.appendChild(boxvalue);
 	}
 
@@ -183,9 +183,9 @@
 				element.id = (parent ? parent : "") + "-" + name;
 				container.appendChild(element);
 				switch(specs.get("component")){
-					case "slider": addSlider(element, element.id , specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
-					case "dropdown": addDropdown(element, element.id , specs.get("choices"), specs.get("value")); break;
-					case "textbox": addTextbox(element, element.id , specs.get("value"), false); break;
+					case "slider": addSlider(element, specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
+					case "dropdown": addDropdown(element, specs.get("choices"), specs.get("value")); break;
+					case "textbox": addTextbox(element, specs.get("value"), false); break;
 				}
 			}
 		});
