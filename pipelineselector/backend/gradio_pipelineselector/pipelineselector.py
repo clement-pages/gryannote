@@ -182,7 +182,6 @@ class PipelineSelector(FormComponent):
                     "was provided in the backend or in the interface",
                 )
             self._pipeline = self._load_pipeline(payload)
-
         return self._pipeline
 
     def postprocess(self, value: Pipeline | None) -> str | None:

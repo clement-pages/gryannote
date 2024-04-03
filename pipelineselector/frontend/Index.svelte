@@ -10,7 +10,7 @@
 	import { StatusTracker } from "@gradio/statustracker";
 	import PipelineInfo from "./shared/PipelineInfo"
 
-	import { copy, type Gradio, type KeyUpData } from "@gradio/utils";
+	import { type Gradio, type KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
     import { slide } from "svelte/transition";
 
@@ -174,13 +174,14 @@
 		container.appendChild(boxvalue);
 	}
 
-	function addFormElements(container: HTMLElement, param_specs : Map<string, Map<string, any>>): void {
+	function addFormElements(container: HTMLElement, param_specs : Map<string, Map<string, any>>, parent?: string): void {
 		param_specs.forEach((specs, name) => {
-			if (specs.size == 1){
+			if (specs.values().next().value instanceof Map){
 				// handle nested parameters
-				addFormElements(container, specs);
+				addFormElements(container, specs, name);
 			} else {
 				const element = document.createElement("div");
+				container.id = (parent ? parent : "") + "-" + name;
 				container.appendChild(element);
 				switch(specs.get("component")){
 					case "slider": addSlider(element, name, specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
@@ -242,7 +243,6 @@
 				<Dropdown
 					bind:value_is_output
 					choices={pipelines}
-					value={value ? value.name : pipelines[0][0]}
 					label={"Select the pipeline to use: "}
 					{info}
 					{show_label}
