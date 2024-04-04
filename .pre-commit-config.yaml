@@ -1,0 +1,87 @@
+default_stages: [commit]
+
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: destroyed-symlinks
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+      - id: file-contents-sorter
+        files: ^tools\.yml$
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--config-file, .github/yamllint.yml]
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        # MD013: line too long
+        # MD033: no inline HTML
+        # MD041: first line in a file should be a top-level heading
+        args: [--disable, MD013, MD033, MD041, '--']
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
+    hooks:
+      - id: codespell
+        exclude: ^site/src/sites.yml$
+        args: [--ignore-words-list, 'ons,linz', --check-filenames]
+        stages: [commit, commit-msg]
+
+  - repo: local
+    hooks:
+      - id: avif-screenshots
+        name: Screenshots must use AVIF format
+        entry: screenshot filenames must end in .avif
+        language: fail
+        files: '^site/static/screenshots/.*(?<!\.avif)$'
+
+      - id: no-bracket-links
+        name: 'Brackets should not be inside links [[link]](url) -> [[link](url)]'
+        entry: '\]\]\('
+        language: pygrep
+        types: [markdown]
+
+      - id: no-http
+        name: URLs must use HTTPS
+        entry: 'http:'
+        language: pygrep
+        types_or: [markdown, yaml]
+        exclude: .pre-commit-config.yaml
+
+      - id: no-repeated-whitespace
+        name: No repeated spaces
+        entry: '\S+\s{2,}'
+        language: pygrep
+        types: [text]
+        exclude_types: [javascript, ts]
+
+      - id: format-urls
+        name: Format URLs
+        entry: .github/format_urls.py
+        language: python
+        files: ^(sites.yml|readme.md|.github/format_urls.py)$
+
+  # Format Python Code
+  - repo: https://github.com/ambv/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+
+  # Sort Python imports
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]

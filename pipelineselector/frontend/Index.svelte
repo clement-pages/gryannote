@@ -6,29 +6,25 @@
 
 <script lang="ts">
 	import Dropdown from "./shared/Dropdown.svelte";
-	import { Block, BlockTitle } from "@gradio/atoms";
+	import { Block } from "@gradio/atoms";
 	import { StatusTracker } from "@gradio/statustracker";
-	import PipelineInfo from "./shared/PipelineInfo" 
+	import PipelineInfo from "./shared/PipelineInfo"
 
-	import type { Gradio, KeyUpData } from "@gradio/utils";
+	import { type Gradio, type KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
 
-	export let label: string = "";
 	export let info: string | undefined = undefined;
 	export let elem_id = "";
 	export let elem_classes: string[] = [];
 	export let visible = true;
-	export let value: PipelineInfo | null = null;
+	export let value: PipelineInfo = new PipelineInfo({name:"", token:""});
 	export let value_is_output = false;
-	export let choices: [string, string | number][];
+	export let pipelines: [string, string | number][];
 	export let show_label: boolean;
-	export let filterable: boolean;
 	export let container = true;
 	export let scale: number | null = null;
 	export let min_width: number | undefined = undefined;
 	export let loading_status: LoadingStatus;
-	export let allow_custom_value = false;
-	export let enable_token_entry = true;
 	export let gradio: Gradio<{
 		change: typeof value;
 		input: never;
@@ -39,7 +35,7 @@
 	}>;
 	export let interactive: boolean;
 
-	let token: string = "";
+	let paramsViewNeedUpdate = false;
 
 	/**
 	 * Handle drop down selection event
@@ -47,17 +43,166 @@
 	 */
 	function handleSelect(name: string): void {
 		if(name !== ""){
-			if(value === null){
-				value = new PipelineInfo({name, token});
-			} else {
-				value.name = name;
-			}
+			value.name = name;
+			// reset pipeline's parameters
+			value.param_specs = {};
+			// dispatch event to backward
 			gradio.dispatch("select", value);
+			paramsViewNeedUpdate = true;
 		}
 	}
+
+	function object2Map(obj?: Object) {
+		const map = new Map<string, any>();
+		if(!obj){
+			return map;
+		}
+
+		for(const key in obj) {
+			if(obj.hasOwnProperty(key)) {
+				if(typeof obj[key] == "object" && obj[key] !== null) {
+					map.set(key, object2Map(obj[key]));
+				} else {
+					map.set(key, obj[key]);
+				}
+			}
+		}
+		return map;
+	}
+
+	function Map2Object(map: Map<any, any>): Object {
+		let obj = Object.fromEntries(Array.from(
+				map.entries(), ([ k, v ]) =>
+				v instanceof Map ? [ k, Map2Object(v) ]: [ k, v ]
+			)
+		);
+		return obj;
+	}
+
+	function updateParameter(name: string, val: string): void {
+		const parents = name.split("-");
+		let param_specs = object2Map(value.param_specs);
+		var subset = param_specs;
+		parents.forEach((parent) => {
+			subset = subset.get(parent);
+		});
+		subset.set("value", val);
+		value.param_specs = Map2Object(param_specs);
+	}
+
+	function addLabel(container: HTMLElement, value: string): void {
+		const label = document.createElement("label");
+		label.textContent = value;
+		container.appendChild(label);
+	}
+
+	function addDropdown(container: HTMLElement, choices: string[], value: string): void {
+		const dropdown = document.createElement("select");
+		const paramName = container.id;
+
+		addLabel(container, paramName.split("-").at(-1));
+
+		// add dropdown label
+		choices.forEach((choice) => {
+			const option = document.createElement("option");
+			option.textContent = choice;
+			option.value = choice;
+			dropdown.appendChild(option);
+			if(choice === value){
+				option.selected = true;
+			}
+		});
+		dropdown.addEventListener("change", (event) => {
+			updateParameter(paramName, dropdown.value);
+		});
+		container.appendChild(dropdown);
+	}
+
+	function addSlider(
+		container: HTMLElement,
+		min: string,
+		max: string,
+		value: string,
+		step: string,
+	): void {
+		const slider = document.createElement("input");
+		const boxvalue = document.createElement("input");
+		const paramName = container.id;
+
+		// add slider label
+		addLabel(container, paramName.split("-").at(-1));
+
+		// add slider
+		slider.type = "range";
+		slider.min = min;
+		slider.max = max;
+		slider.value = value;
+		slider.step = step;
+		slider.addEventListener("input", (event) => {
+			boxvalue.value = slider.value;
+			updateParameter(paramName, slider.value);
+		});
+		container.appendChild(slider);
+
+		// add corresponding text box
+		boxvalue.type = "number";
+		boxvalue.min = min;
+		boxvalue.max = max;
+		boxvalue.value = value;
+		boxvalue.contentEditable = "true";
+		boxvalue.addEventListener("input", (event) => {
+			slider.value = boxvalue.value;
+			updateParameter(paramName, slider.value);
+		});
+		container.appendChild(boxvalue);
+	}
+
+	function addTextbox(container: HTMLElement, value: string, editable: boolean): void {
+		const boxvalue = document.createElement("input");
+		const paramName = container.id;
+
+		// add label
+		addLabel(container, paramName.split("-").at(-1));
+
+		boxvalue.type = "number";
+		boxvalue.value = value;
+		boxvalue.contentEditable = String(editable);
+		container.appendChild(boxvalue);
+	}
+
+	function addFormElements(container: HTMLElement, param_specs : Map<string, Map<string, any>>, parent?: string): void {
+		param_specs.forEach((specs, name) => {
+			if (specs.values().next().value instanceof Map){
+				// handle nested parameters
+				addFormElements(container, specs, name);
+			} else {
+				const element = document.createElement("div");
+				element.id = (parent ? parent : "") + "-" + name;
+				container.appendChild(element);
+				switch(specs.get("component")){
+					case "slider": addSlider(element, specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
+					case "dropdown": addDropdown(element, specs.get("choices"), specs.get("value")); break;
+					case "textbox": addTextbox(element, specs.get("value"), false); break;
+				}
+			}
+		});
+	}
+
+	$: {
+		// if a pipeline was instantiated, and if parameters view need an update
+		if(Object.keys(value.param_specs).length > 0 && paramsViewNeedUpdate){
+			const container = document.getElementById("params-control");
+			container.replaceChildren();
+
+			let param_specs = object2Map(value.param_specs);
+			addFormElements(container, param_specs);
+
+			paramsViewNeedUpdate = false;
+		}
+	}
+
 </script>
 
-<BlockTitle>{label}</BlockTitle>
 <Block
 	{visible}
 	{elem_id}
@@ -75,7 +220,6 @@
 
 	{#if visible}
 		<div class="form">
-		{#if enable_token_entry}
 			<div class="form-element">
 				<label for="token" class="label"> Enter your Hugging Face token:</label>
 				<input
@@ -88,21 +232,17 @@
 					aria-label="Enter your Hugging Face token"
 					maxlength="50"
 					disabled={!interactive}
-					bind:value={token}
+					bind:value={value.token}
 				/>
 			</div>
-		{/if}
 			<div class="form-element">
 				<Dropdown
 					bind:value_is_output
-					{choices}
+					choices={pipelines}
 					label={"Select the pipeline to use: "}
 					{info}
 					{show_label}
-					{filterable}
-					{allow_custom_value}
 					{container}
-					on:change={() => gradio.dispatch("change")}
 					on:input={() => gradio.dispatch("input")}
 					on:select={(e) => handleSelect(e.detail.value)}
 					on:blur={() => gradio.dispatch("blur")}
@@ -111,17 +251,29 @@
 					disabled={!interactive}
 				/>
 			</div>
+			<div class="params-control" id="params-control"></div>
+			<div class="validation">
+				<button
+					on:click={() => gradio.dispatch("change", value)}
+				>
+					Update parameters
+				</button>
+			</div>
 		</div>
 	{/if}
 </Block>
 
 
 <style>
-
 	.form {
 		display: flex;
 		flex-direction: column;
 		justify-content: space-around;
+	}
+
+
+	.params-control {
+		color: black;
 	}
 
 	.label {
