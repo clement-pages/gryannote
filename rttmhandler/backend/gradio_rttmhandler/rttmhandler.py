@@ -132,7 +132,9 @@ class RTTMHandler(Component):
 
         audio = Path(data.file_data.path)
         audioname = audio.name.split(".")[0]
-        with open(f"{audioname}.rttm", "w", encoding="utf-8") as rttm:
+        with open(
+            f"{self.GRADIO_CACHE}/{audioname}.rttm", "w", encoding="utf-8"
+        ) as rttm:
             for annotation in data.annotations:
                 duration = annotation.end - annotation.start
                 rttm.write(
