@@ -9,7 +9,7 @@ annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
 
 
 def apply_pipeline(pipeline: Pipeline, audio):
-    """ Apply specified pipeline on the indicated audio file"""
+    """Apply specified pipeline on the indicated audio file"""
     annotations = pipeline(audio)
 
     return (audio, annotations)
@@ -23,12 +23,29 @@ with gr.Blocks() as demo:
     gr.Markdown(
         "Welcome to the [pyannote.audio](https://github.com/pyannote/pyannote-audio) app !"
     )
-    pipeline_selector = PipelineSelector(source="dropdown")
+    pipeline_selector = PipelineSelector()
+    pipeline_selector.select(
+        fn=pipeline_selector.on_select,
+        inputs=pipeline_selector,
+        outputs=pipeline_selector,
+        preprocess=False,
+        postprocess=False,
+    )
+    pipeline_selector.change(
+        fn=pipeline_selector.on_change,
+        inputs=pipeline_selector,
+        outputs=pipeline_selector,
+        preprocess=False,
+        postprocess=False,
+    )
+
     annotated_audio = AnnotatedAudio(
         type="filepath",
         interactive=True,
     )
-    annotated_audio.edit(fn=update_annotations, inputs=annotated_audio, preprocess=False)
+    annotated_audio.edit(
+        fn=update_annotations, inputs=annotated_audio, preprocess=False
+    )
 
     run_btn = gr.Button("Run pipeline")
     run_btn.click(
