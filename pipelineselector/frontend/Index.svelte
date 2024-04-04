@@ -115,7 +115,7 @@
 				option.selected = true;
 			}
 		});
-		dropdown.addEventListener("select", (event) => {
+		dropdown.addEventListener("change", (event) => {
 			updateParameter(paramName, dropdown.value);
 		});
 		container.appendChild(dropdown);
