@@ -1,10 +1,8 @@
 """RTTMHandler component"""
 
-from __future__ import annotations
-
 import tempfile
 from pathlib import Path
-from typing import Any, Callable, Literal, Tuple
+from typing import Any, Callable, Dict, Literal, Tuple
 
 from gradio.components.base import Component
 from gradio.data_classes import FileData, ListFiles
@@ -116,7 +114,7 @@ class RTTMHandler(Component):
             "Unknown type: " + str(type) + ". Please choose from: 'filepath', 'binary'."
         )
 
-    def _process_rttm(self, audio: str | Path, annotations: PyannoteAnnotation) -> Path:
+    def _process_rttm(self, data: AnnotadedAudioData) -> Path:
         """Dump pipeline's annotations to file using RTTM format
 
         Parameters
@@ -132,10 +130,14 @@ class RTTMHandler(Component):
             path to rttm file
         """
 
-        audio = Path(audio)
+        audio = Path(data.file_data.path)
         audioname = audio.name.split(".")[0]
         with open(f"{audioname}.rttm", "w", encoding="utf-8") as rttm:
-            annotations.write_rttm(rttm)
+            for annotation in data.annotations:
+                duration = annotation.end - annotation.start
+                rttm.write(
+                    f"SPEAKER {audioname} 1 {annotation.start:.3f} {duration:.3f} <NA> <NA> {annotation.speaker} <NA> <NA>\n"
+                )
 
         return Path(rttm.name)
 
@@ -166,7 +168,9 @@ class RTTMHandler(Component):
             return None
 
         if isinstance(value, tuple):
-            rttm = self._process_rttm(*value)
+            audio, annotations = value
+            file_data = FileData(path=audio)
+            rttm = self._process_rttm(AnnotadedAudioData(file_data, annotations))
             return FileData(
                 path=str(rttm),
                 orig_name=rttm.name,
@@ -188,6 +192,16 @@ class RTTMHandler(Component):
             path=value,
             orig_name=Path(value).name,
             size=Path(value).stat().st_size,
+        )
+
+    def on_edit(self, value: Dict) -> FileData | None:
+        if value is None:
+            return value
+        rttm = self._process_rttm(AnnotadedAudioData(**value))
+        return FileData(
+            path=str(rttm),
+            orig_name=rttm.name,
+            size=rttm.stat().st_size,
         )
 
     def process_example(self, input_data: str | list | None) -> str:
