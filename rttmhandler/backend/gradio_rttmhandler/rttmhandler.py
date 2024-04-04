@@ -5,14 +5,14 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 from typing import Any, Callable, Literal, Tuple
-import numpy as np
 
+import numpy as np
 from gradio.components.base import Component
 from gradio.data_classes import FileData, ListFiles
 from gradio.events import Events
 from gradio.utils import NamedString
-from gradio_client.documentation import document, set_documentation_group
 from gradio_annotatedaudio.core import AnnotadedAudioData, Annotation
+from gradio_client.documentation import document, set_documentation_group
 from pyannote.core import Annotation as PyannoteAnnotation
 
 set_documentation_group("component")
@@ -118,7 +118,7 @@ class RTTMHandler(Component):
             )
 
     def _process_rttm(self, audio: str | Path, annotations: PyannoteAnnotation) -> Path:
-        """ Dump pipeline's annotations to file using RTTM format
+        """Dump pipeline's annotations to file using RTTM format
 
         Parameters
         ----------
@@ -126,7 +126,7 @@ class RTTMHandler(Component):
             audio on which the pipeline has been applied
         annotations: Annotation
             pipeline provided annotations
-        
+
         Returns
         -------
         rttm_file: Path
@@ -136,7 +136,9 @@ class RTTMHandler(Component):
         audio = Path(audio)
         audioname = audio.name.split(".")[0]
 
-        rttm = tempfile.NamedTemporaryFile(delete=False, dir=self.GRADIO_CACHE, mode="w")
+        rttm = tempfile.NamedTemporaryFile(
+            delete=False, dir=self.GRADIO_CACHE, mode="w"
+        )
         rttm.name = f"{self.GRADIO_CACHE}/{audioname}.rttm"
         annotations.write_rttm(rttm)
 
@@ -160,7 +162,9 @@ class RTTMHandler(Component):
             else:
                 return [self._process_single_file(payload)]
 
-    def postprocess(self, value: str | list[str] | Tuple[str | Path, PyannoteAnnotation] | None) -> ListFiles | FileData | None:
+    def postprocess(
+        self, value: str | list[str] | Tuple[str | Path, PyannoteAnnotation] | None
+    ) -> ListFiles | FileData | None:
         if value is None:
             return None
 

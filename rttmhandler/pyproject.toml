@@ -7,7 +7,7 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "gradio_rttmhanlder"
+name = "gradio_rttmhandler"
 version = "0.0.1"
 description = "Component to load, display and download RTTM files"
 readme = "README.md"
@@ -36,7 +36,7 @@ classifiers = [
 dev = ["build", "twine"]
 
 [tool.hatch.build]
-artifacts = ["/backend/gradio_rttmhanlder/templates", "*.pyi"]
+artifacts = ["/backend/gradio_rttmhandler/templates", "*.pyi"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["/backend/gradio_rttmhanlder"]
+packages = ["/backend/gradio_rttmhandler"]
