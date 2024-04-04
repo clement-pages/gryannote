@@ -252,7 +252,9 @@ class PipelineSelector(FormComponent):
         if self._pipeline_map:
             pipeline = self._pipeline_map[pipeline_info.name]
         else:
-            pipeline = Pipeline.from_pretrained(pipeline_info.name, self.token)
+            pipeline = Pipeline.from_pretrained(
+                pipeline_info.name, use_auth_token=self.token
+            )
         return pipeline
 
     def _get_param_specs(self, param_types: Dict, param_values: Dict) -> Dict:

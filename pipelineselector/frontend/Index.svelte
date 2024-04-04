@@ -17,7 +17,7 @@
 	export let elem_id = "";
 	export let elem_classes: string[] = [];
 	export let visible = true;
-	export let value: PipelineInfo | null = null;
+	export let value: PipelineInfo = new PipelineInfo({name:"", token:""});
 	export let value_is_output = false;
 	export let pipelines: [string, string | number][];
 	export let show_label: boolean;
@@ -35,7 +35,6 @@
 	}>;
 	export let interactive: boolean;
 
-	let token: string = "";
 	let paramsViewNeedUpdate = false;
 
 	/**
@@ -44,11 +43,7 @@
 	 */
 	function handleSelect(name: string): void {
 		if(name !== ""){
-			if(value === null){
-				value = new PipelineInfo({name, token});
-			} else {
-				value.name = name;
-			}
+			value.name = name;
 			// reset pipeline's parameters
 			value.param_specs = {};
 			// dispatch event to backward
@@ -194,8 +189,8 @@
 	}
 
 	$: {
-		// if a pipeline was selected and instantiated, and if parameters view need an update
-		if(value && Object.keys(value.param_specs).length > 0 && paramsViewNeedUpdate){
+		// if a pipeline was instantiated, and if parameters view need an update
+		if(Object.keys(value.param_specs).length > 0 && paramsViewNeedUpdate){
 			const container = document.getElementById("params-control");
 			container.replaceChildren();
 
@@ -237,7 +232,7 @@
 					aria-label="Enter your Hugging Face token"
 					maxlength="50"
 					disabled={!interactive}
-					bind:value={token}
+					bind:value={value.token}
 				/>
 			</div>
 			<div class="form-element">
