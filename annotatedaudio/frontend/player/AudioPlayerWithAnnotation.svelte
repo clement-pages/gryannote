@@ -44,7 +44,7 @@
 	let showRedo = interactive;
 
 	let initialAnnotations: Annotation[] | null = null;
-	// correspondance between a Region and an Annotation
+	// correspondence between a Region and an Annotation
 	let regionsMap: Map<string, Annotation> = new Map();
 
 	let defaultLabel: CaptionLabel | null = null;
@@ -76,10 +76,10 @@
 			}
 		});
 
-		waveform.on("dblclick", (_, relativeY) => {
+		waveform.on("dblclick", () => {
 			// allow the user to add a region only after the pipeline has been applied
 			if(value?.annotations){
-				handleRegionAdd(relativeY);
+				handleRegionAdd(waveform.getCurrentTime());
 			}
 		});
 	};
@@ -135,7 +135,7 @@
 	 * Add a region on the waveform given its parameters and speaker label
 	 * @param options region's params (start, end, color)
 	 * @param speaker region's label
-	 * 
+	 *
 	 * @returns the added region
 	 */
 	function addRegion(options: RegionParams, speaker: string): Region {
@@ -147,7 +147,7 @@
 			color: region.color,
 		});
 		updateAnnotations();
-		
+
 		return region;
 	}
 
@@ -157,7 +157,7 @@
 	 */
 	function handleRegionAdd(relativeY: number): void{
 		let regionLabel = (activeLabel !== null ? activeLabel : defaultLabel);
-		// if annotations were not initialized, do nothin
+		// if annotations were not initialized, do nothing
 		if (regionLabel === null){
 			return;
 		}
@@ -206,7 +206,7 @@
 		if(key === "Delete" || (key == "Backspace" && shiftKey)){
 			selectNextRegion(false);
 		}
-		// remove region and set the previous region as the active one 
+		// remove region and set the previous region as the active one
 		else {
 			selectNextRegion(true);
 		}
@@ -246,7 +246,7 @@
 		if(activeRegion !== null){
 			activeRegion.element.style.background = activeRegion.color;
 		}
-	
+
 		if(region === null){
 			activeRegion = region;
 			return;
@@ -349,16 +349,16 @@
 
 		// update active region
 		setActiveRegion(regionRight);
-		// remove splitted region
+		// remove split region
 		removeRegion(region);
 
 	}
 
 	/**
 	 * Split a region into two distinct regions. There are two cases (sorted by priority):
-	 *   - if there is an active region, split this region
-	 *   - else, split the region in which the time cursor is
-	 * 	 - if the cursor is out on any region, do nothing
+	 * - if there is an active region, split this region
+	 * - else, split the region in which the time cursor is
+	 * - if the cursor is out on any region, do nothing
 	 * @param currentTime position of the cursor on the waveform
 	 */
 	function handleRegionSplit(currentTime: number): void {
@@ -378,16 +378,16 @@
 	}
 
 	/**
-	 *  Adjust region start and end time bounds
+	 * Adjust region start and end time bounds
 	 * @param key shortcut name. Indicates direction: forward or backward.
 	 * @param shiftKey indicates whether shift key was pressed. If true, move faster
 	 * @param altKey indicates whether alt key was pressed. If true, move end bound,
-	 * else start bound 
+	 * else start bound
 	 */
 	function adjustRegionBounds(key: string, shiftKey: boolean, altKey: boolean): void {
 		let newStart: number;
 		let newEnd: number;
-		let delta: number = 0.05;  //TODO do not hardcore this and adapt it according to relative size of the waveform
+		let delta: number = 0.05; //TODO do not hardcore this and adapt it according to relative size of the waveform
 
 		// if alt is pressed, go faster
 		if(shiftKey){
@@ -453,7 +453,7 @@
 	}
 
 	/**
-	 * Handle time adjustement shortcuts. There are two cases whether there is
+	 * Handle time adjustment shortcuts. There are two cases whether there is
 	 * an active region set. If yes, region bounds are adjusted. Otherwise, time
 	 * cursor position is updated.
 	 * @param key shortcut name. Indicates direction: forward or backward.
@@ -529,7 +529,6 @@
 	});
 
 	$: wsRegions?.on("region-clicked", (region, e) => {
-		e.stopPropagation(); // prevent triggering a click on the waveform
 		switch(mode){
 			case "remove": removeRegion(region); break;
 			case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
@@ -573,13 +572,13 @@
 	onMount(() => {
 		window.addEventListener("keydown", (e) => {
 			switch(e.key){
-				case "ArrowLeft":  handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey);  break;
+				case "ArrowLeft": handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
 				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
 				case "Escape": setActiveRegion(null); break;
 				case "Tab": e.preventDefault(); selectNextRegion(e.shiftKey); break;
-				case "Delete": handleRegionRemoval("Delete", e.shiftKey);  break;
+				case "Delete": handleRegionRemoval("Delete", e.shiftKey); break;
 				case "Backspace": handleRegionRemoval("Backspace", e.shiftKey); break;
-				case "Enter": 
+				case "Enter":
 					e.preventDefault();
 					if(e.shiftKey){
 						handleRegionSplit(waveform.getCurrentTime());
