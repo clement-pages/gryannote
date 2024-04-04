@@ -1,18 +1,15 @@
-"""gr.File() component"""
-
-from __future__ import annotations
+"""RTTMHandler component"""
 
 import tempfile
 from pathlib import Path
-from typing import Any, Callable, Literal, Tuple
-import numpy as np
+from typing import Any, Callable, Dict, Literal, Tuple
 
 from gradio.components.base import Component
 from gradio.data_classes import FileData, ListFiles
 from gradio.events import Events
 from gradio.utils import NamedString
+from gradio_annotatedaudio.core import AnnotadedAudioData
 from gradio_client.documentation import document, set_documentation_group
-from gradio_annotatedaudio.core import AnnotadedAudioData, Annotation
 from pyannote.core import Annotation as PyannoteAnnotation
 
 set_documentation_group("component")
@@ -102,23 +99,23 @@ class RTTMHandler(Component):
         self.height = height
 
     def _process_single_file(self, f: FileData) -> NamedString | bytes:
-        file_name = f.path
+        filename = f.path
+
         if self.type == "filepath":
             file = tempfile.NamedTemporaryFile(delete=False, dir=self.GRADIO_CACHE)
-            file.name = file_name
-            return NamedString(file_name)
-        elif self.type == "binary":
-            with open(file_name, "rb") as file_data:
-                return file_data.read()
-        else:
-            raise ValueError(
-                "Unknown type: "
-                + str(type)
-                + ". Please choose from: 'filepath', 'binary'."
-            )
+            file.name = filename
+            return NamedString(filename)
 
-    def _process_rttm(self, audio: str | Path, annotations: PyannoteAnnotation) -> Path:
-        """ Dump pipeline's annotations to file using RTTM format
+        if self.type == "binary":
+            with open(filename, "rb") as file_data:
+                return file_data.read()
+
+        raise ValueError(
+            "Unknown type: " + str(type) + ". Please choose from: 'filepath', 'binary'."
+        )
+
+    def _process_rttm(self, data: AnnotadedAudioData) -> Path:
+        """Dump pipeline's annotations to file using RTTM format
 
         Parameters
         ----------
@@ -126,52 +123,63 @@ class RTTMHandler(Component):
             audio on which the pipeline has been applied
         annotations: Annotation
             pipeline provided annotations
-        
+
         Returns
         -------
         rttm_file: Path
             path to rttm file
         """
 
-        audio = Path(audio)
+        audio = Path(data.file_data.path)
         audioname = audio.name.split(".")[0]
-
-        rttm = tempfile.NamedTemporaryFile(delete=False, dir=self.GRADIO_CACHE, mode="w")
-        rttm.name = f"{self.GRADIO_CACHE}/{audioname}.rttm"
-        annotations.write_rttm(rttm)
+        with open(
+            f"{self.GRADIO_CACHE}/{audioname}.rttm", "w", encoding="utf-8"
+        ) as rttm:
+            for annotation in data.annotations:
+                duration = annotation.end - annotation.start
+                rttm.write(
+                    f"SPEAKER {audioname} 1 {annotation.start:.3f} {duration:.3f} <NA> <NA> {annotation.speaker} <NA> <NA>\n"
+                )
 
         return Path(rttm.name)
 
     def preprocess(
         self, payload: ListFiles | FileData | None | AnnotadedAudioData
     ) -> bytes | NamedString | list[bytes | NamedString] | None:
+
         if payload is None:
             return None
+
         if self.file_count == "single":
             if isinstance(payload, AnnotadedAudioData):
                 return payload
             if isinstance(payload, ListFiles):
                 return self._process_single_file(payload[0])
-            else:
-                return self._process_single_file(payload)
-        else:
-            if isinstance(payload, ListFiles):
-                return [self._process_single_file(f) for f in payload]
-            else:
-                return [self._process_single_file(payload)]
+            return self._process_single_file(payload)
 
-    def postprocess(self, value: str | list[str] | Tuple[str | Path, PyannoteAnnotation] | None) -> ListFiles | FileData | None:
+        # if file_count was set to "multiple" or "directory"
+        if isinstance(payload, ListFiles):
+            return [self._process_single_file(f) for f in payload]
+        return [self._process_single_file(payload)]
+
+    def postprocess(
+        self, value: str | list[str] | Tuple[str | Path, PyannoteAnnotation] | None
+    ) -> ListFiles | FileData | None:
+
         if value is None:
             return None
 
         if isinstance(value, tuple):
-            rttm = self._process_rttm(*value)
+            audio, annotations = value
+            file_data = FileData(path=audio)
+            rttm = self._process_rttm(AnnotadedAudioData(file_data, annotations))
             return FileData(
                 path=str(rttm),
                 orig_name=rttm.name,
                 size=rttm.stat().st_size,
             )
-        elif isinstance(value, list):
+
+        if isinstance(value, list):
             return ListFiles(
                 root=[
                     FileData(
@@ -182,25 +190,32 @@ class RTTMHandler(Component):
                     for file in value
                 ]
             )
-        else:
-            return FileData(
-                path=value,
-                orig_name=Path(value).name,
-                size=Path(value).stat().st_size,
-            )
+        return FileData(
+            path=value,
+            orig_name=Path(value).name,
+            size=Path(value).stat().st_size,
+        )
+
+    def on_edit(self, value: Dict) -> FileData | None:
+        if value is None:
+            return value
+        rttm = self._process_rttm(AnnotadedAudioData(**value))
+        return FileData(
+            path=str(rttm),
+            orig_name=rttm.name,
+            size=rttm.stat().st_size,
+        )
 
     def process_example(self, input_data: str | list | None) -> str:
         if input_data is None:
             return ""
-        elif isinstance(input_data, list):
+        if isinstance(input_data, list):
             return ", ".join([Path(file).name for file in input_data])
-        else:
-            return Path(input_data).name
+        return Path(input_data).name
 
     def example_inputs(self) -> Any:
         if self.file_count == "single":
             return "https://github.com/gradio-app/gradio/raw/main/test/test_files/sample_file.pdf"
-        else:
-            return [
-                "https://github.com/gradio-app/gradio/raw/main/test/test_files/sample_file.pdf"
-            ]
+        return [
+            "https://github.com/gradio-app/gradio/raw/main/test/test_files/sample_file.pdf"
+        ]
