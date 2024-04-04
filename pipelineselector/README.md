@@ -1,6 +1,7 @@
 
 # `gradio_pipelineselector`
-<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.0.2%20-%20orange">  
+
+<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.1.0%20-%20orange">
 
 A component allowing a user to select a pipeline from a drop-down list
 
@@ -13,24 +14,29 @@ pip install gradio_pipelineselector
 ## Usage
 
 ```python
-
 import gradio as gr
 from gradio_pipelineselector import PipelineSelector
-from pyannote.audio import Pipeline
-import os
-
 
 example = PipelineSelector().example_inputs()
 
-pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=os.environ["HG_TOKEN"])
+with gr.Blocks() as demo:
+    pipeline_selector = PipelineSelector()
 
-demo = gr.Interface(
-    lambda x:x,
-    PipelineSelector(source="dropdown"), 
-    PipelineSelector(source="instance", pipeline=pipeline)
-    # examples=[[example]],  # uncomment this line to view the "example version" of your component
-)
+    pipeline_selector.select(
+        fn=pipeline_selector.on_select,
+        inputs=pipeline_selector,
+        outputs=pipeline_selector,
+        preprocess=False,
+        postprocess=False,
+    )
 
+    pipeline_selector.change(
+        fn=pipeline_selector.on_change,
+        inputs=pipeline_selector,
+        outputs=pipeline_selector,
+        preprocess=False,
+        postprocess=False,
+    )
 
 if __name__ == "__main__":
     demo.launch()
@@ -52,30 +58,20 @@ if __name__ == "__main__":
 </thead>
 <tbody>
 <tr>
-<td align="left"><code>choices</code></td>
+<td align="left"><code>pipelines</code></td>
 <td align="left" style="width: 25%;">
 
 ```python
-list[str | int | float | tuple[str, str | int | float]]
+pyannote.audio.core.pipeline.Pipeline
+    | list[str]
+    | dict[str, pyannote.audio.core.pipeline.Pipeline]
+    | tuple[str, pyannote.audio.core.pipeline.Pipeline]
     | None
 ```
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">A list of string options to choose from. An option can also be a tuple of the form (name, value), where name is the displayed name of the dropdown choice and value is the value to be passed to the function, or returned by the function.</td>
-</tr>
-
-<tr>
-<td align="left"><code>pipeline</code></td>
-<td align="left" style="width: 25%;">
-
-```python
-pyannote.audio.core.pipeline.Pipeline | None
-```
-
-</td>
-<td align="left"><code>None</code></td>
-<td align="left">An instance of a pipeline to use. A value for this argument must be provied if `source` is set to `pipeline`.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -83,30 +79,12 @@ pyannote.audio.core.pipeline.Pipeline | None
 <td align="left" style="width: 25%;">
 
 ```python
-str
-    | int
-    | float
-    | list[str | int | float]
-    | Callable
-    | None
+str | Callable | None
 ```
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">default value(s) selected in dropdown. If None, no value is selected by default. If callable, the function will be called whenever the app loads to set the initial value of the component.</td>
-</tr>
-
-<tr>
-<td align="left"><code>source</code></td>
-<td align="left" style="width: 25%;">
-
-```python
-"dropdown" | "instance"
-```
-
-</td>
-<td align="left"><code>"dropdown"</code></td>
-<td align="left">None</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -123,32 +101,6 @@ str | None
 </tr>
 
 <tr>
-<td align="left"><code>allow_custom_value</code></td>
-<td align="left" style="width: 25%;">
-
-```python
-bool
-```
-
-</td>
-<td align="left"><code>False</code></td>
-<td align="left">If True, allows user to enter a custom value that is not in the list of choices.</td>
-</tr>
-
-<tr>
-<td align="left"><code>filterable</code></td>
-<td align="left" style="width: 25%;">
-
-```python
-bool
-```
-
-</td>
-<td align="left"><code>True</code></td>
-<td align="left">If True, user will be able to type into the dropdown and filter the choices by typing. Can only be set to False if `allow_custom_value` is False.</td>
-</tr>
-
-<tr>
 <td align="left"><code>label</code></td>
 <td align="left" style="width: 25%;">
 
@@ -158,7 +110,7 @@ str | None
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">The label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -171,7 +123,7 @@ str | None
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">additional component description.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -184,7 +136,7 @@ float | None
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">If `value` is a callable, run the function 'every' number of seconds while the client connection is open. Has no effect otherwise. The event can be accessed (e.g. to cancel it) via this component's .load_event attribute.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -192,12 +144,12 @@ float | None
 <td align="left" style="width: 25%;">
 
 ```python
-bool | None
+bool
 ```
 
 </td>
-<td align="left"><code>None</code></td>
-<td align="left">if True, will display label.</td>
+<td align="left"><code>True</code></td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -210,7 +162,7 @@ bool
 
 </td>
 <td align="left"><code>True</code></td>
-<td align="left">If True, will place the component in a container - providing some extra padding around the border.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -223,7 +175,7 @@ int | None
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">relative size compared to adjacent Components. For example if Components A and B are in a Row, and A has scale=2, and B has scale=1, A will be twice as wide as B. Should be an integer. scale applies in Rows, and to top-level Components in Blocks where fill_height=True.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -236,7 +188,7 @@ int
 
 </td>
 <td align="left"><code>160</code></td>
-<td align="left">minimum pixel width, will wrap if not sufficient screen space to satisfy this value. If a certain scale value results in this Component being narrower than min_width, the min_width parameter will be respected first.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -249,7 +201,7 @@ bool | None
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">if True, choices in this dropdown will be selectable; if False, selection will be disabled. If not provided, this is inferred based on whether the component is used as an input or output.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -262,7 +214,7 @@ bool
 
 </td>
 <td align="left"><code>True</code></td>
-<td align="left">If False, component will be hidden.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -275,7 +227,7 @@ str | None
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">An optional string that is assigned as the id of this component in the HTML DOM. Can be used for targeting CSS styles.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -288,7 +240,7 @@ list[str] | str | None
 
 </td>
 <td align="left"><code>None</code></td>
-<td align="left">An optional list of strings that are assigned as the classes of this component in the HTML DOM. Can be used for targeting CSS styles.</td>
+<td align="left">optional</td>
 </tr>
 
 <tr>
@@ -301,10 +253,9 @@ bool
 
 </td>
 <td align="left"><code>True</code></td>
-<td align="left">If False, component will not be rendered in the Blocks context. Should be used if the intention is to assign event listeners now but render the component later.</td>
+<td align="left">optional</td>
 </tr>
 </tbody></table>
-
 
 ### Events
 
@@ -317,8 +268,6 @@ bool
 | `blur` | This listener is triggered when the PipelineSelector is unfocused/blurred. |
 | `key_up` | This listener is triggered when the user presses a key while the PipelineSelector is focused. |
 
-
-
 ### User function
 
 The impact on the users predict function varies depending on whether the component is used as an input or output for an event (or both).
@@ -328,8 +277,8 @@ The impact on the users predict function varies depending on whether the compone
 
 The code snippet below is accurate in cases where the component is used as both an input and an output.
 
-- **As output:** Is passed, an instanciated pipeline.
-- **As input:** Should return, instanciated pipeline.
+- **As output:** Is passed, an instantiated pipeline.
+- **As input:** Should return, instantiated pipeline.
 
  ```python
  def predict(
@@ -337,4 +286,3 @@ The code snippet below is accurate in cases where the component is used as both 
  ) -> pyannote.audio.core.pipeline.Pipeline | None:
      return value
  ```
- 
