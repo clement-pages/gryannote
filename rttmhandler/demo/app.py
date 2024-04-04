@@ -1,52 +1,67 @@
-import os
-from typing import List
-
 import gradio as gr
 from gradio_annotatedaudio import AnnotatedAudio
+from gradio_pipelineselector import PipelineSelector
 from gradio_rttmhandler import RTTMHandler
-from pyannote.audio.core.pipeline import Pipeline
+from pyannote.audio import Pipeline
+
+example = AnnotatedAudio().example_inputs()
+
+annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
 
 
-def get_available_pipelines() -> List[str]:
-    """Get pipelines list, sorted according to the
-    order in which they were last modified"""
-    from huggingface_hub import HfApi
+def apply_pipeline(pipeline: Pipeline, audio):
+    """Apply specified pipeline on the indicated audio file"""
+    annotations = pipeline(audio)
 
-    available_pipelines = [
-        p.modelId
-        for p in HfApi().list_models(
-            filter="pyannote-audio-pipeline", sort="last_modified", direction=-1
-        )
-    ]
-    return list(filter(lambda p: p.startswith("pyannote/"), available_pipelines))
+    return ((audio, annotations), (audio, annotations))
 
 
-def apply_pipeline(pipeline_name: str, filepath: str):
-    """Apply specified pipeline on the indicated file"""
-    pipeline = Pipeline.from_pretrained(
-        pipeline_name, use_auth_token=os.environ["HG_TOKEN"]
-    )
-    annotations = pipeline(filepath)
-
-    return ((filepath, annotations), (filepath, annotations))
+def update_annotations(data):
+    return rttm_handler.on_edit(data)
 
 
 with gr.Blocks() as demo:
-    pipelines = get_available_pipelines()
-    pipeline_selector = gr.Dropdown(
-        choices=pipelines,
-        value=pipelines[0],
-        label="Choose the pipeline to apply",
+    gr.Markdown(
+        "Welcome to the [pyannote.audio](https://github.com/pyannote/pyannote-audio) app !"
+    )
+    pipeline_selector = PipelineSelector()
+    pipeline_selector.select(
+        fn=pipeline_selector.on_select,
+        inputs=pipeline_selector,
+        outputs=pipeline_selector,
+        preprocess=False,
+        postprocess=False,
+    )
+    pipeline_selector.change(
+        fn=pipeline_selector.on_change,
+        inputs=pipeline_selector,
+        outputs=pipeline_selector,
+        preprocess=False,
+        postprocess=False,
+    )
+    annotated_audio = AnnotatedAudio(
+        type="filepath",
         interactive=True,
     )
-    annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
-    rttm_handler = RTTMHandler()
 
     run_btn = gr.Button("Run pipeline")
+
+    rttm_handler = RTTMHandler()
+
+    annotated_audio.edit(
+        fn=update_annotations,
+        inputs=annotated_audio,
+        outputs=rttm_handler,
+        preprocess=False,
+        postprocess=False,
+    )
+
     run_btn.click(
         fn=apply_pipeline,
         inputs=[pipeline_selector, annotated_audio],
         outputs=[annotated_audio, rttm_handler],
     )
+
+
 if __name__ == "__main__":
     demo.launch()
