@@ -49,6 +49,8 @@
 			} else {
 				value.name = name;
 			}
+			// reset pipeline's parameters
+			value.param_specs = {};
 			// dispatch event to backward
 			gradio.dispatch("select", value);
 			paramsViewNeedUpdate = true;
