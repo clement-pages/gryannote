@@ -105,7 +105,7 @@
 		const dropdown = document.createElement("select");
 		const paramName = container.id;
 
-		addLabel(container, paramName);
+		addLabel(container, paramName.split("-").at(-1));
 
 		// add dropdown label
 		choices.forEach((choice) => {
@@ -135,7 +135,7 @@
 		const paramName = container.id;
 
 		// add slider label
-		addLabel(container, paramName);
+		addLabel(container, paramName.split("-").at(-1));
 
 		// add slider
 		slider.type = "range";
@@ -167,7 +167,7 @@
 		const paramName = container.id;
 
 		// add label
-		addLabel(container, paramName);
+		addLabel(container, paramName.split("-").at(-1));
 
 		boxvalue.type = "number";
 		boxvalue.value = value;
