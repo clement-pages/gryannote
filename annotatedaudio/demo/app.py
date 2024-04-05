@@ -8,15 +8,21 @@ example = AnnotatedAudio().example_inputs()
 annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
 
 
+def get_annotations():
+    audio = ...
+    pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1")
+    annotations = pipeline(audio)
+    return (audio, annotations)
+
+
+value = get_annotations()
+
+
 def apply_pipeline(pipeline: Pipeline, audio):
     """Apply specified pipeline on the indicated audio file"""
     annotations = pipeline(audio)
 
     return (audio, annotations)
-
-
-def update_annotations(data):
-    print(data)
 
 
 with gr.Blocks() as demo:
@@ -41,10 +47,8 @@ with gr.Blocks() as demo:
 
     annotated_audio = AnnotatedAudio(
         type="filepath",
+        # value=value,
         interactive=True,
-    )
-    annotated_audio.edit(
-        fn=update_annotations, inputs=annotated_audio, preprocess=False
     )
 
     run_btn = gr.Button("Run pipeline")

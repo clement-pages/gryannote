@@ -471,6 +471,7 @@
 		adjustTimeCursorPosition(key, shiftKey);
 	}
 
+	$:console.log(value);
 
 	$: if (container !== undefined) {
 		if (waveform !== undefined) waveform.destroy();
@@ -479,11 +480,7 @@
 		playing = false;
 	}
 
-	$: if(waveform){
-		wsRegions = waveform.registerPlugin(RegionsPlugin.create());
-	}
-
-	$: if(value?.annotations !== null && initialAnnotations === null){
+	$: if(value?.annotations !== null && wsRegions && initialAnnotations === null){
 		initRegions();
 	}
 
@@ -499,6 +496,9 @@
 	);
 
 	$: waveform?.on("ready", () => {
+		if(wsRegions === undefined ){
+			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
+		}
 		if (!waveform_settings.autoplay) {
 			waveform?.stop();
 		} else {
