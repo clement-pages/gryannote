@@ -733,10 +733,6 @@
 		color: var(--neutral-400);
 	}
 
-	#trim-duration {
-		color: var(--color-accent);
-		margin-right: var(--spacing-sm);
-	}
 	.waveform-container {
 		display: flex;
 		align-items: center;
