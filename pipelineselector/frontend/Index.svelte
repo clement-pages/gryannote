@@ -150,6 +150,7 @@
 		boxvalue.min = min;
 		boxvalue.max = max;
 		boxvalue.value = value;
+		boxvalue.step = step;
 		boxvalue.contentEditable = "true";
 		boxvalue.addEventListener("input", (event) => {
 			slider.value = boxvalue.value;
@@ -291,7 +292,7 @@
 	div:global(.params-control legend){
 		font-family: inherit;
 		font-size: var(--input-text-size);
-		font-weight: var(--input-text-weight);
+		font-weight: bold;
 	}
 
 	div:global(.params-control .param){
@@ -312,6 +313,10 @@
 	div:global(.params-control input[type="number"]){
 		border-radius: var(--input-radius);
 		border: var(--input-border-width) solid var(--border-color-primary);
+	}
+
+	div:global(.params-control input[type="number"]:invalid){
+		border: var(--input-border-width) solid red;
 	}
 
 	.label {
