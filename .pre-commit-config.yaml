@@ -35,7 +35,9 @@ repos:
     rev: v2.2.6
     hooks:
       - id: codespell
-        exclude: ^site/src/sites.yml$
+        exclude: (?x)^(
+                    .*\.json
+          )$
         args: [--ignore-words-list, 'ons,linz', --check-filenames]
         stages: [commit, commit-msg]
 
