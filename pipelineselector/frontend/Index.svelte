@@ -9,6 +9,7 @@
 	import { Block } from "@gradio/atoms";
 	import { StatusTracker } from "@gradio/statustracker";
 	import PipelineInfo from "./shared/PipelineInfo"
+	import { BaseButton } from "@gradio/button";
 
 	import { type Gradio, type KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
@@ -172,12 +173,18 @@
 
 	function addFormElements(container: HTMLElement, param_specs : Map<string, Map<string, any>>, parent?: string): void {
 		param_specs.forEach((specs, name) => {
+			const id = (parent ? parent + "-" : "") + name;
 			if (specs.values().next().value instanceof Map){
 				// handle nested parameters
-				addFormElements(container, specs, name);
+				const fieldset = document.createElement("fieldset");
+				fieldset.innerHTML = "<legend>" + id + "<legend>";
+				fieldset.id = id;
+				container.appendChild(fieldset);
+				addFormElements(fieldset, specs, name);
 			} else {
 				const element = document.createElement("div");
-				element.id = (parent ? parent : "") + "-" + name;
+				element.id = id
+				element.classList.add("param");
 				container.appendChild(element);
 				switch(specs.get("component")){
 					case "slider": addSlider(element, specs.get("min"), specs.get("max"), specs.get("value"), specs.get("step")); break;
@@ -219,61 +226,92 @@
 	/>
 
 	{#if visible}
+
 		<div class="form">
-			<div class="form-element">
-				<label for="token" class="label"> Enter your Hugging Face token:</label>
-				<input
-					data-testid="textbox"
-					type="text"
-					class="text-area"
-					name="token"
-					id="token"
-					placeholder="hf_xxxxxxx..."
-					aria-label="Enter your Hugging Face token"
-					maxlength="50"
-					disabled={!interactive}
-					bind:value={value.token}
-				/>
-			</div>
-			<div class="form-element">
-				<Dropdown
-					bind:value_is_output
-					choices={pipelines}
-					label={"Select the pipeline to use: "}
-					{info}
-					{show_label}
-					{container}
-					on:input={() => gradio.dispatch("input")}
-					on:select={(e) => handleSelect(e.detail.value)}
-					on:blur={() => gradio.dispatch("blur")}
-					on:focus={() => gradio.dispatch("focus")}
-					on:key_up={(e) => gradio.dispatch("key_up", e.detail)}
-					disabled={!interactive}
-				/>
-			</div>
+		<label for="token" class="label"> Enter your Hugging Face token:</label>
+		<input
+			data-testid="textbox"
+			type="text"
+			class="text-area"
+			name="token"
+			id="token"
+			placeholder="hf_xxxxxxx..."
+			aria-label="Enter your Hugging Face token"
+			maxlength="50"
+			disabled={!interactive}
+			bind:value={value.token}
+		/>
+		<Dropdown
+			bind:value_is_output
+			choices={pipelines}
+			label={"Select the pipeline to use: "}
+			{info}
+			{show_label}
+			{container}
+			on:input={() => gradio.dispatch("input")}
+			on:select={(e) => handleSelect(e.detail.value)}
+			on:blur={() => gradio.dispatch("blur")}
+			on:focus={() => gradio.dispatch("focus")}
+			on:key_up={(e) => gradio.dispatch("key_up", e.detail)}
+			disabled={!interactive}
+		/>
+		{#if value.name !== ""}
 			<div class="params-control" id="params-control"></div>
 			<div class="validation">
-				<button
+				<BaseButton
+					{elem_id}
+					{elem_classes}
+					{scale}
+					{min_width}
+					{visible}
 					on:click={() => gradio.dispatch("change", value)}
 				>
 					Update parameters
-				</button>
+				</BaseButton>
 			</div>
-		</div>
+		{/if}
+	</div>
 	{/if}
 </Block>
 
 
 <style>
-	.form {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-around;
+
+	.params-control{
+		width: 100%;
 	}
 
+	div:global(.params-control fieldset){
+		width: inherit;
+		border-radius: var(--input-radius);
+		border: var(--input-border-width) solid var(--border-color-primary);
+		margin: 10px;
+	}
 
-	.params-control {
-		color: black;
+	div:global(.params-control legend){
+		font-family: inherit;
+		font-size: var(--input-text-size);
+		font-weight: var(--input-text-weight);
+	}
+
+	div:global(.params-control .param){
+		display: flex;
+		justify-content: space-between;
+		padding: 5px;
+	}
+
+	div:global(.params-control label),
+	div:global(.params-control select),
+	div:global(.params-control input[type="number"]){
+		background-color: inherit;
+		font-family: inherit;
+		font-size: var(--input-text-size);
+	}
+
+	div:global(.params-control select),
+	div:global(.params-control input[type="number"]){
+		border-radius: var(--input-radius);
+		border: var(--input-border-width) solid var(--border-color-primary);
 	}
 
 	.label {
@@ -294,13 +332,7 @@
 		font-size: var(--input-text-size);
 		line-height: var(--line-sm);
 		border: var(--input-border-width) solid var(--border-color-primary);
-	}
-
-	.form-element {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		margin-bottom: 2em;
+		border-radius: var(--input-radius);
 	}
 
 	input::placeholder {
