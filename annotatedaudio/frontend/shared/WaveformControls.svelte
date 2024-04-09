@@ -46,8 +46,8 @@
 		window.addEventListener("keydown", (e) =>{
 			switch(e.key){
 				case " ": waveform.playPause(); e.preventDefault(); break;
-				case "ArrowUp": updateZoom(currentZoom + zoomDelta); break;
-				case "ArrowDown": updateZoom(currentZoom - zoomDelta); break;
+				case "ArrowUp": e.preventDefault(); updateZoom(currentZoom + zoomDelta); break;
+				case "ArrowDown": e.preventDefault(); updateZoom(currentZoom - zoomDelta); break;
 				default: //do nothing
 			}
 		})
@@ -59,9 +59,6 @@
 	<div class="control-wrapper">
 		<button
 			class="action icon volume"
-			style:color={show_volume_slider
-				? "var(--color-accent)"
-				: "var(--neutral-400)"}
 			aria-label="Adjust volume"
 			on:click={() => (show_volume_slider = !show_volume_slider)}
 		>
@@ -91,26 +88,24 @@
 		>
 			<span>{playbackSpeed}x</span>
 		</button>
-	</div>
-
-	<div class="zoom-control">
-		<label>
+		<div class="zoom-wrapper">
 			<button
-				on:click={() => showZoomSlider =! showZoomSlider}
+			class="zoom-button icon"
+				on:click={() => showZoomSlider = !	showZoomSlider}
 			>
-				show zoom
+				<Magnifier/>
 			</button>
 			{#if showZoomSlider}
 				<input
-					type="range" 
+					type="range"
 					min={zoomMin}
 					max={zoomMax}
 					bind:value={currentZoom}
 					on:input={(e) => updateZoom(e.target.value)}
 					on:focusout={() => showZoomSlider = false}
 				>
-			{/if}
-		</label>
+				{/if}
+		</div>
 	</div>
 
 	<div class="play-pause-wrapper">
@@ -159,7 +154,7 @@
 
 	.controls {
 		display: grid;
-		grid-template-columns: 1fr 1fr 2fr;
+		grid-template-columns: 1fr 1fr 1fr;
 		margin-top: 5px;
 		align-items: center;
 		position: relative;
@@ -196,6 +191,7 @@
 	}
 	.icon:hover {
 		color: var(--color-accent);
+		fill: var(--color-accent);
 	}
 	.play-pause-wrapper {
 		display: flex;
@@ -242,8 +238,8 @@
 		margin-right: var(--spacing-xl);
 	}
 
-	::part(region-handle-left){
-		border-right-width: 4px !important;
-        border-right-color: #fff000 !important;
+	.zoom-button {
+		width: 1.75em;
+		fill: var(--neutral-400);
 	}
 </style>
