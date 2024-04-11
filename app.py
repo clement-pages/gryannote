@@ -24,6 +24,9 @@ with gr.Blocks() as demo:
     gr.Markdown(
         "Welcome to the [pyannote.audio](https://github.com/pyannote/pyannote-audio) app !"
     )
+
+    login_button = gr.LoginButton()
+
     pipeline_selector = PipelineSelector()
     pipeline_selector.select(
         fn=pipeline_selector.on_select,
