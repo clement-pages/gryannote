@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gradio_pipelineselector"
-version = "0.1.0"
+version = "0.1.1"
 description = "A component allowing a user to select a pipeline from a drop-down list"
 readme = "README.md"
 license = "MIT"
@@ -36,7 +36,7 @@ classifiers = [
 dev = ["build", "twine"]
 
 [tool.hatch.build]
-artifacts = ["/backend/gradio_pipelineselector/templates", "*.pyi", "backend/gradio_pipelineselector/templates", "backend/gradio_pipelineselector/templates", "backend/gradio_pipelineselector/templates", "backend/gradio_pipelineselector/templates"]
+artifacts = ["/backend/gradio_pipelineselector/templates", "*.pyi", "backend/gradio_pipelineselector/templates", "backend/gradio_pipelineselector/templates", "backend/gradio_pipelineselector/templates", "backend/gradio_pipelineselector/templates", "backend/gradio_pipelineselector/templates"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["/backend/gradio_pipelineselector"]

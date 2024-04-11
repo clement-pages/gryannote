@@ -58,6 +58,7 @@ class PipelineSelector(FormComponent):
         info: str | None = None,
         every: float | None = None,
         show_label: bool = True,
+        show_config: bool = True,
         container: bool = True,
         scale: int | None = None,
         min_width: int = 160,
@@ -88,6 +89,8 @@ class PipelineSelector(FormComponent):
             If `value` is a callable, run the function 'every' number of seconds while the client connection is open. Has no effect otherwise. The event can be accessed (e.g. to cancel it) via this component's .load_event attribute.
         show_label: optional
             if True, will display label.
+        show_config: bool, optional
+            if True, will display pipeline configuration parameters. Default to False
         container: optional
             If True, will place the component in a container - providing some extra padding around the border.
         scale: optional
@@ -142,6 +145,7 @@ class PipelineSelector(FormComponent):
 
         # component is visible only if a pipeline was not already set
         visible = getattr(self, "_pipeline", None) is None
+        self.show_config = show_config
 
         super().__init__(
             label=label,

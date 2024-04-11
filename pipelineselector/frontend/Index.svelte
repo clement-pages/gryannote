@@ -22,6 +22,7 @@
 	export let value_is_output = false;
 	export let pipelines: [string, string | number][];
 	export let show_label: boolean;
+	export let show_config: boolean = false;
 	export let container = true;
 	export let scale: number | null = null;
 	export let min_width: number | undefined = undefined;
@@ -197,15 +198,18 @@
 	}
 
 	$: {
-		// if a pipeline was instantiated, and if parameters view need an update
+		// if a pipeline has been instantiated, and if the parameter view needs to be updated
 		if(Object.keys(value.param_specs).length > 0 && paramsViewNeedUpdate){
 			const container = document.getElementById("params-control");
+
+			// reset parameter view
 			container.replaceChildren();
+			if(show_config){
+				let param_specs = object2Map(value.param_specs);
+				addFormElements(container, param_specs);
 
-			let param_specs = object2Map(value.param_specs);
-			addFormElements(container, param_specs);
-
-			paramsViewNeedUpdate = false;
+				paramsViewNeedUpdate = false;
+			}
 		}
 	}
 
@@ -256,22 +260,40 @@
 			on:key_up={(e) => gradio.dispatch("key_up", e.detail)}
 			disabled={!interactive}
 		/>
-		{#if value.name !== ""}
-			<div class="params-control" id="params-control"></div>
-			<div class="validation">
-				<BaseButton
-					{elem_id}
-					{elem_classes}
-					{scale}
-					{min_width}
-					{visible}
-					on:click={() => gradio.dispatch("change", value)}
+		<div class="toggle-config">
+			<p> Show configuration </p>
+			<label
+				class="switch"
+				title={value.name == ""?
+					"Please select a pipeline first":
+					"Show pipeline config"
+				}
+			>
+				<input
+					type="checkbox"
+					disabled={value.name == ""}
+					bind:checked={show_config}
+					on:input={() => {paramsViewNeedUpdate=true; show_config = !show_config }}
 				>
-					Update parameters
-				</BaseButton>
-			</div>
-		{/if}
-	</div>
+				<span class="slider round"></span>
+			</label>
+		</div>
+		<div class="params-control" id="params-control"></div>
+			{#if value.name !== ""}
+				<div class="validation">
+					<BaseButton
+						{elem_id}
+						{elem_classes}
+						{scale}
+						{min_width}
+						visible={show_config}
+						on:click={() => gradio.dispatch("change", value)}
+					>
+						Update parameters
+					</BaseButton>
+				</div>
+			{/if}
+		</div>
 	{/if}
 </Block>
 
@@ -344,4 +366,68 @@
 		color: var(--input-placeholder-color);
 	}
 
+
+	.toggle-config {
+		margin: 1em 1em 1em 0em;
+	}
+
+	.switch {
+		position: relative;
+		display: inline-block;
+		width: 60px;
+		height: 34px;
+	}
+
+	.switch input {
+		opacity: 0;
+		width: 0;
+		height: 0;
+	}
+
+	.slider {
+		position: absolute;
+		cursor: pointer;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: #ccc;
+		-webkit-transition: .4s;
+		transition: 0.4s;
+	}
+
+	.slider:before {
+		position: absolute;
+		content: "";
+		height: 26px;
+		width: 26px;
+		left: 4px;
+		bottom: 4px;
+		background-color: var(--input-background-fill);
+		-webkit-transition: .4s;
+		transition: .4s;
+	}
+
+	input:checked + .slider {
+		background-color: var(--color-accent);
+	}
+
+	input:focus + .slider {
+		box-shadow: 0 0 1px var(--color-accent);
+	}
+
+	input:checked + .slider:before {
+		-webkit-transform: translateX(26px);
+		-ms-transform: translateX(26px);
+		transform: translateX(26px);
+	}
+
+	/* Rounded sliders */
+	.slider.round {
+		border-radius: 34px;
+	}
+
+	.slider.round:before {
+	border-radius: 50%;
+	}
 </style>

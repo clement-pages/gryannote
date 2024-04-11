@@ -1,7 +1,7 @@
 
 # `gradio_pipelineselector`
 
-<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.1.0%20-%20orange">
+<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.1.1%20-%20orange">
 
 A component allowing a user to select a pipeline from a drop-down list
 
@@ -16,8 +16,6 @@ pip install gradio_pipelineselector
 ```python
 import gradio as gr
 from gradio_pipelineselector import PipelineSelector
-
-example = PipelineSelector().example_inputs()
 
 with gr.Blocks() as demo:
     pipeline_selector = PipelineSelector()
@@ -150,6 +148,19 @@ bool
 </td>
 <td align="left"><code>True</code></td>
 <td align="left">optional</td>
+</tr>
+
+<tr>
+<td align="left"><code>show_config</code></td>
+<td align="left" style="width: 25%;">
+
+```python
+bool
+```
+
+</td>
+<td align="left"><code>True</code></td>
+<td align="left">bool, optional</td>
 </tr>
 
 <tr>
