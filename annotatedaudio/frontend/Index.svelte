@@ -23,12 +23,12 @@
 	export let label: string;
 	export let root: string;
 	export let show_label: boolean;
+	export let show_download_button: boolean = true;
 	export let container = true;
 	export let scale: number | null = null;
 	export let min_width: number | undefined = undefined;
 	export let loading_status: LoadingStatus;
 	export let autoplay = false;
-	export let enable_share_button = false;
 	export let editable = true;
 	export let waveform_options: WaveformOptions = {};
 	export let pending: boolean;
@@ -132,7 +132,7 @@
 		<StaticAnnotatedAudio
 			i18n={gradio.i18n}
 			{show_label}
-			enable_share_button={enable_share_button}
+			{show_download_button}
 			{value}
 			{label}
 			{waveform_settings}
@@ -164,6 +164,7 @@
 		<InteractiveAnnotatedAudio
 			{label}
 			{show_label}
+			{show_download_button}
 			{value}
 			on:change={({ detail }) => (value = detail)}
 			on:stream={({ detail }) => {
@@ -176,7 +177,6 @@
 			{active_source}
 			{pending}
 			{streaming}
-			{handle_reset_value}
 			{editable}
 			bind:dragging
 			on:edit={(e) => gradio.dispatch("edit", e.detail)}

@@ -1,18 +1,19 @@
 <script lang="ts">
 	import { uploadToHuggingFace } from "@gradio/utils";
-	import { Empty } from "@gradio/atoms";
+	import { Empty, IconButton } from "@gradio/atoms";
 	import { ShareButton, BlockLabel } from "@gradio/atoms";
-	import { Music } from "@gradio/icons";
+	import { Download, Music } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
 	import AudioPlayerWithAnnotation from "../player/AudioPlayerWithAnnotation.svelte";
 	import { createEventDispatcher } from "svelte";
 	import type { WaveformOptions} from "../shared/types";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
+    import { DownloadLink } from "@gradio/wasm/svelte";
 
 	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
 	export let show_label = true;
-	export let enable_share_button: boolean = true;
+	export let show_download_button: boolean = true;
 	export let i18n: I18nFormatter;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
@@ -39,6 +40,16 @@
 
 {#if value !== null}
 	<div class="icon-buttons">
+		{#if show_download_button && value.file_data !== null}
+			<div class="download-button">
+				<DownloadLink
+					href={value.file_data.url}
+					download={value.file_data.orig_name || value.file_data.path}
+				>
+					<IconButton Icon={Download} label={i18n("common.download")}/>
+				</DownloadLink>
+			</div>
+		{/if}
 		{#if show_share_button}
 			<ShareButton
 				{i18n}
