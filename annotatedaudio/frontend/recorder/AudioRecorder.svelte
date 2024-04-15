@@ -9,6 +9,7 @@
 	import WaveformRecordControls from "../shared/WaveformRecordControls.svelte";
 	import RecordPlugin from "wavesurfer.js/dist/plugins/record.js";
 	import type { WaveformOptions } from "../shared/types";
+	import { format_time } from "@gradio/utils";
 
 	export let mode: string;
 	export let i18n: I18nFormatter;
@@ -20,7 +21,6 @@
 	export let waveform_options: WaveformOptions = {
 		show_recording_waveform: true
 	};
-	export let handle_reset_value: () => void;
 
 	let micWaveform: WaveSurfer;
 	let recordingWaveform: WaveSurfer;
@@ -60,13 +60,6 @@
 		edit: undefined;
 	}>();
 
-	const format_time = (seconds: number): string => {
-		const minutes = Math.floor(seconds / 60);
-		const secondsRemainder = Math.round(seconds) % 60;
-		const paddedSeconds = `0${secondsRemainder}`.slice(-2);
-		return `${minutes}:${paddedSeconds}`;
-	};
-
 	$: record?.on("record-start", () => {
 		start_interval();
 		timing = true;
@@ -81,15 +74,21 @@
 		seconds = 0;
 		timing = false;
 		clearInterval(interval);
-		const array_buffer = await blob.arrayBuffer();
-		const context = new AudioContext();
-		const audio_buffer = await context.decodeAudioData(array_buffer);
-
-		if (audio_buffer)
-			await process_audio(audio_buffer).then(async (audio: Uint8Array) => {
-				await dispatch_blob([audio], "change");
-				await dispatch_blob([audio], "stop_recording");
+		try {
+			const array_buffer = await blob.arrayBuffer();
+			const context = new AudioContext({
+				sampleRate: waveform_settings.sampleRate
 			});
+			const audio_buffer = await context.decodeAudioData(array_buffer);
+			console.log(audio_buffer);
+			if (audio_buffer)
+				await process_audio(audio_buffer).then(async (audio: Uint8Array) => {
+					await dispatch_blob([audio], "change");
+					await dispatch_blob([audio], "stop_recording");
+				});
+		} catch (e) {
+			console.error(e);
+		}
 	});
 
 	$: record?.on("record-pause", () => {
@@ -232,16 +231,9 @@
 	{#if recordingWaveform && recordedAudio}
 		<WaveformControls
 			bind:waveform={recordingWaveform}
-			container={recordingContainer}
 			{playing}
 			{audio_duration}
 			{i18n}
-			interactive={true}
-			{handle_trim_audio}
-			bind:trimDuration
-			bind:mode
-			showRedo
-			{handle_reset_value}
 			{waveform_options}
 		/>
 	{/if}
@@ -255,6 +247,7 @@
 
 	.component-wrapper {
 		padding: var(--size-3);
+		width: 100%;
 	}
 
 	.timestamps {
