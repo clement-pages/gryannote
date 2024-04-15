@@ -9,7 +9,6 @@
 	import InteractiveAnnotatedAudio from "./interactive/InteractiveAnnotatedAudio.svelte";
 	import { StatusTracker } from "@gradio/statustracker";
 	import { Block, UploadText } from "@gradio/atoms";
-	import { normalise_file } from "@gradio/client";
 
 	export let elem_id = "";
 	export let elem_classes: string[] = [];
@@ -24,7 +23,6 @@
 	export let label: string;
 	export let root: string;
 	export let show_label: boolean;
-	export let proxy_url: null | string;
 	export let container = true;
 	export let scale: number | null = null;
 	export let min_width: number | undefined = undefined;
@@ -54,17 +52,6 @@
 	}>;
 
 	let old_value: null | AnnotatedAudioData | string = null;
-	let _value: null | AnnotatedAudioData;
-	$: _value = process_audio_data(value)
-
-	function process_audio_data(audio_data: AnnotatedAudioData | null): AnnotatedAudioData | null{
-		if (audio_data === null){
-			return audio_data;
-		}
-
-		audio_data.file_data = normalise_file(audio_data.file_data, root, proxy_url);
-		return audio_data;
-	}
 
 	let active_source: "microphone" | "upload";
 
@@ -146,7 +133,7 @@
 			i18n={gradio.i18n}
 			{show_label}
 			enable_share_button={enable_share_button}
-			value={_value}
+			{value}
 			{label}
 			{waveform_settings}
 			{waveform_options}
@@ -177,7 +164,7 @@
 		<InteractiveAnnotatedAudio
 			{label}
 			{show_label}
-			value={_value}
+			{value}
 			on:change={({ detail }) => (value = detail)}
 			on:stream={({ detail }) => {
 				value = detail;

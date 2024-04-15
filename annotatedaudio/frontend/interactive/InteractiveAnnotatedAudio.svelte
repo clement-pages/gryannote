@@ -3,8 +3,7 @@
 	import { Upload, ModifyUpload } from "@gradio/upload";
 	import {
 		upload,
-		prepare_files,
-		type FileData,
+		prepare_files, FileData,
 		type upload_files
 	} from "@gradio/client";
 	import { BlockLabel} from "@gradio/atoms";
@@ -102,6 +101,9 @@
 		)[0];
 		if(value === null){
 			value = new AnnotatedAudioData(fileData);
+		}
+		else{
+			value.file_data = fileData;
 		}
 		dispatch(event, value);
 	};
@@ -240,7 +242,6 @@
 				{dispatch_blob}
 				{waveform_settings}
 				{waveform_options}
-				{handle_reset_value}
 			/>
 		{/if}
 	{:else if active_source === "upload"}
