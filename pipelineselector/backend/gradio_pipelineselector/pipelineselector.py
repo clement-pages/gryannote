@@ -58,7 +58,7 @@ class PipelineSelector(FormComponent):
         info: str | None = None,
         every: float | None = None,
         show_label: bool = True,
-        show_config: bool = True,
+        show_config: bool = False,
         container: bool = True,
         scale: int | None = None,
         min_width: int = 160,
