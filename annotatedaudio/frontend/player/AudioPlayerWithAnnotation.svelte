@@ -262,24 +262,17 @@
 	/**
 	 * Set region speaker for the active region with specified
 	 * speaker label
-	 * @param activeCaptionLabel active caption's label
+	 * @param label active caption's label
 	 */
-	function setRegionSpeaker(activeCaptionLabel: CaptionLabel){
-		activeLabel = activeCaptionLabel
+	function setRegionSpeaker(label: CaptionLabel){
 		// get label color
-		let color = value.annotations.find((annotation) => annotation.speaker === activeLabel.speaker).color;
-		// if label does not exist
-		if (color === undefined){
-			return;
-		}
 
 		if(activeRegion !== null) {
 			// update region color
-			activeRegion.color = color;
 			activeRegion.setOptions({
 				start: activeRegion.start,
 				end: activeRegion.end,
-				color: color,
+				color: label.color,
 				drag: true,
 				resize: true,
 			});
@@ -291,8 +284,8 @@
 
 			// update corresponding annotation color
 			let activeAnnotation = regionsMap.get(activeRegion.id);
-			activeAnnotation.color = color;
-			activeAnnotation.speaker = activeLabel.speaker;
+			activeAnnotation.color = label.color;
+			activeAnnotation.speaker = label.speaker;
 			updateAnnotations();
 		}
 	}
@@ -470,8 +463,6 @@
 		// else update time cursor position
 		adjustTimeCursorPosition(key, shiftKey);
 	}
-
-	$:console.log(value);
 
 	$: if (container !== undefined) {
 		if (waveform !== undefined) waveform.destroy();
@@ -668,6 +659,7 @@
 				<Caption
 					value={value.annotations}
 					on:select={(e) => setRegionSpeaker(e.detail)}
+					on:select={(e) => activeLabel = e.detail}
 				/>
 			{/if}
 		{/if}

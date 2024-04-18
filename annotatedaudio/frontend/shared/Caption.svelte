@@ -1,103 +1,150 @@
 <script lang="ts">
     import type { Annotation, CaptionLabel } from "./types";
+    import Plus from "./icons/Plus.svelte";
     import { createEventDispatcher, onMount} from "svelte";
 
     export let value: Annotation[] | null = null;
 
-    let captionLabels: CaptionLabel[] = [];
+    let container: HTMLDivElement;
+
+    let labels: CaptionLabel[] = [];
     let activeLabel = null;
 
+    let speakerIdx: number = 0;
+
+    const colorList = ["rgba(255, 215, 0, 0.5)", "rgba(0, 0, 255, 0.5)", "rgba(255, 0, 0, 0.5)", "rgba(0, 255, 0, 0.5)"];
     const dispatch = createEventDispatcher<{
         select: CaptionLabel;
     }>();
 
-    function selectActiveLabel(key: string): void {
-        if(key === "Escape" && activeLabel){
-            // reset active label
-            document.getElementById(activeLabel.shortcut).classList.remove("active-button");
-            activeLabel = null;
-        }
-        else{
-            let label = captionLabels.find((_label) => _label.shortcut === key.toUpperCase());
-            // if current key does not correspond to any label, do nothing
-            if(label === undefined){
-                return;
-            }
+    function createLabelElement(label: CaptionLabel): void {
+        const labelButton = document.createElement("button");
+        labelButton.style.backgroundColor = label.color;
+        labelButton.classList.add("captionLabel");
+        labelButton.id = label.shortcut;
+        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.speaker;
+        labelButton.addEventListener("focusin", () => {selectActiveLabel(label.shortcut)});
+        labelButton.addEventListener("focusout", () => {selectActiveLabel("Escape")});
 
-            // update active label
-            if(activeLabel){
-                document.getElementById(activeLabel.shortcut).classList.remove("active-button");
+        container.appendChild(labelButton);
+    }
+
+
+    function createLabel(speaker?: string, color?: string, shortcut?: string): CaptionLabel {
+        // if maximum number of labels has been reached, do nothing
+        if(labels.length === 26){
+            return;
+        }
+        if(!speaker){
+            speaker = "SPEAKER_" + speakerIdx.toString().padStart(2, "0");
+        }
+        if(!color){
+            color = colorList[speakerIdx % colorList.length];
+        }
+        if(!shortcut){
+            shortcut = "A";
+            //take the first available letter
+            while((labels.some(label => label.shortcut === shortcut)) && shortcut !== "Z"){
+                shortcut = String.fromCharCode(shortcut.charCodeAt(0) + 1);
             }
+        }
+
+        const label: CaptionLabel = {
+            speaker: speaker,
+            color: color,
+            shortcut: shortcut,
+        };
+        labels.push(label);
+
+        createLabelElement(label);
+
+        speakerIdx++;
+
+        return label;
+    }
+
+    function selectActiveLabel(key: string): void {
+        // reset active label
+        if(activeLabel){
+            document.getElementById(activeLabel.shortcut).classList.remove("active-button");
+        }
+
+        if(key !== "Escape"){
+            let label = labels.find((_label) => _label.shortcut === key.toUpperCase());
+            // if current key does not correspond to any label, create a new one
+            if(!label){
+                label = createLabel(undefined, undefined , key.toUpperCase());
+            }
+            // update active label
             activeLabel = label;
             document.getElementById(activeLabel.shortcut).classList.add("active-button");
-            }
-        dispatch("select", activeLabel);
+            dispatch("select", activeLabel);
+        }
     }
 
     $:{
-        // retrieve speaker list and corresponding annotation color
-        let shortcut = "A";
-        value.forEach(annotation => {
-            if(!captionLabels.some(label => label.speaker === annotation.speaker)){
-                let label = {
-                    speaker: annotation.speaker,
-                    color: annotation.color,
-                    shortcut: shortcut,
+        if(container && value){
+            // retrieve speaker list and corresponding annotation color
+            value.forEach(annotation => {
+                // if annotation has a label that does not already exist in the caption,
+                // create a new label
+                if(!labels.some(label => label.speaker === annotation.speaker)){
+                    createLabel(annotation.speaker, annotation.color);
                 }
-                captionLabels = [...captionLabels, label];
-                shortcut = String.fromCharCode(shortcut.charCodeAt(0) + 1);
-            }
-        });
-        captionLabels = captionLabels.sort((i1, i2) => i1.shortcut.localeCompare(i2.shortcut));
+            });
+            labels = labels.sort((i1, i2) => i1.shortcut.localeCompare(i2.shortcut));
+        }
     }
 
     onMount(() => {
         window.addEventListener("keydown", (e): void => {
-            selectActiveLabel(e.key);
+            if(e.key.match(/^[a-zA-Z]$/) || e.key === "Escape"){
+                selectActiveLabel(e.key);
+            }
         });
     });
 </script>
 
-<div class="caption-component">
-    {#each captionLabels as label }
-        <div class="caption-label-component">
-            <button 
-                style="background-color: {label.color}"
-                class="caption-label"
-                id={label.shortcut}
-                on:focusin={() => selectActiveLabel(label.shortcut)}
-                on:focusout={() => selectActiveLabel("Escape")}
-            >
-                <span class="shortcut-letter">{label.shortcut}</span>{": " + label.speaker}
-            </button>
-        </div>
-    {/each}
+<div class="caption-container">
+    <div class="caption" bind:this={container}></div>
+    <div class="action-buttons">
+        <button class="create-label" on:click={() => createLabel()}>
+             <Plus/>
+        </button>
+    </div>
 </div>
 
 <style>
+
+.caption-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 1em;
+}
+
+div:global(.caption-container button){
+    display: inline-block;
+    padding: 0.0em 0.5em;
+    margin: 0.2em 0.5em;
+}
+
+div:global(.caption-container button):hover{
+    border-color: var(--color-accent);
+}
 
 :global(button.active-button) {
     border-width: 2px;
     border-color: var(--color-accent);
 }
 
-.caption-component {
-    justify-content: center;
-    display: flex;
+.create-label{
+    width: 2.25em;
+    height: 2.25em;
+    fill: var(--neutral-400);
 }
 
-.caption-label-component {
-    display: inline-block;
-    margin: 0.5em;
-}
-
-.caption-label{
-    padding-left: 0.5em;
-    padding-right: 0.5em;
-}
-
-.shortcut-letter  {
-    font-weight: bold;
+.create-label:hover{
+    fill: var(--color-accent);
 }
 
 </style>
