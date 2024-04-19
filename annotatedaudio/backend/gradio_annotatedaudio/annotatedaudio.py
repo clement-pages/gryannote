@@ -32,6 +32,7 @@ class WaveformOptions:
         show_recording_waveform: Whether to show the waveform when recording audio. Defaults to True.
         show_controls: Whether to show the standard HTML audio player below the waveform when recording audio or playing recorded audio. Defaults to False.
         skip_length: The percentage (between 0 and 100) of the audio to skip when clicking on the skip forward / skip backward buttons. Defaults to 5.
+        sample_rate: The output sample rate (in Hz) of the audio after editing. Defaults to 44100.
     """
 
     waveform_color: str = "#9ca3af"
@@ -39,6 +40,7 @@ class WaveformOptions:
     show_recording_waveform: bool = True
     show_controls: bool = False
     skip_length: int | float = 5
+    sample_rate: int = 44100
 
 
 @document()
@@ -68,14 +70,16 @@ class AnnotatedAudio(
         Events.pause_recording,
         Events.stop_recording,
         Events.upload,
-        Events.edit
+        Events.edit,
     ]
 
     data_model = AnnotadedAudioData
 
     def __init__(
         self,
-        value: str | Path | Tuple[int, np.ndarray] | Callable | None = None,
+        value: Tuple[str | Path | Tuple[int, np.ndarray], PyannoteAnnotation]
+        | Callable
+        | None = None,
         *,
         sources: list[Literal["upload", "microphone"]] | None = None,
         type: Literal["numpy", "filepath"] = "numpy",
@@ -102,7 +106,7 @@ class AnnotatedAudio(
     ):
         """
         Parameters:
-            value: A path, URL, or [sample_rate, numpy array] tuple (sample rate in Hz, audio data as a float or int numpy array) for the default value that AnnotatedAudio component is going to take. If callable, the function will be called whenever the app loads to set the initial value of the component.
+            value: A [audio path, pyannote annotations] tuple for the default value that AnnotatedAudio component is going to take. If callable, the function will be called whenever the app loads to set the initial value of the component.
             sources: A list of sources permitted for audio. "upload" creates a box where user can drop an audio file, "microphone" creates a microphone input. The first element in the list will be used as the default source. If None, defaults to ["upload", "microphone"], or ["microphone"] if `streaming` is True.
             type: The format the audio file is converted to before being passed into the prediction function. "numpy" converts the audio to a tuple consisting of: (int sample rate, numpy.array for the data), "filepath" passes a str path to a temporary file containing the audio.
             label: The label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.
@@ -172,12 +176,6 @@ class AnnotatedAudio(
         self.min_length = min_length
         self.max_length = max_length
 
-        if isinstance(value, Tuple) and isinstance(value[1], list):
-            self.speech_turns = value[1]
-            value = value[0]
-        else:
-            self.speech_turns = None
-
         super().__init__(
             label=label,
             every=every,
@@ -203,7 +201,6 @@ class AnnotatedAudio(
             return payload
 
         file_data = payload.file_data
-        annotations = payload.annotations
 
         assert file_data.path
         # Need a unique name for the file to avoid re-using the same audio file if
@@ -226,13 +223,13 @@ class AnnotatedAudio(
             )
 
         if self.type == "numpy":
-            return (sample_rate, data), annotations
+            return (sample_rate, data)
         elif self.type == "filepath":
             output_file = str(Path(output_file_name).with_suffix(f".{self.format}"))
             processing_utils.audio_to_file(
                 sample_rate, data, output_file, format=self.format
             )
-            return output_file, annotations
+            return output_file
         else:
             raise ValueError(
                 "Unknown type: "
@@ -286,9 +283,7 @@ class AnnotatedAudio(
 
         file_data = FileData(path=str(audio_path), orig_name=orig_name)
 
-        return AnnotadedAudioData(
-            file_data=file_data, annotations=annotations
-        )
+        return AnnotadedAudioData(file_data=file_data, annotations=annotations)
 
     def stream_output(
         self, value, output_id: str, first_chunk: bool

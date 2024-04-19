@@ -3,11 +3,10 @@
 	import { Upload, ModifyUpload } from "@gradio/upload";
 	import {
 		upload,
-		prepare_files,
-		type FileData,
+		prepare_files, FileData,
 		type upload_files
 	} from "@gradio/client";
-	import { BlockLabel} from "@gradio/atoms";
+	import { BlockLabel } from "@gradio/atoms";
 	import { Music } from "@gradio/icons";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData"
 	import type { IBlobEvent, IMediaRecorder } from "extendable-media-recorder";
@@ -22,6 +21,7 @@
 	export let label: string;
 	export let root: string;
 	export let show_label = true;
+	export let show_download_button: boolean = true;
 	export let sources:
 		| ["microphone"]
 		| ["upload"]
@@ -34,7 +34,6 @@
 	export let waveform_options: WaveformOptions = {};
 	export let dragging: boolean;
 	export let active_source: "microphone" | "upload";
-	export let handle_reset_value: () => void = () => {};
 	export let editable = true;
 
 	// Needed for wasm support
@@ -51,7 +50,6 @@
 	let pending_stream: Uint8Array[] = [];
 	let submit_pending_stream_on_pending_end = false;
 	let inited = false;
-	let show_download_button: boolean = false;
 
 	const STREAM_TIMESLICE = 500;
 	const NUM_HEADER_BYTES = 44;
@@ -95,12 +93,17 @@
 	): Promise<void> => {
 		let _audio_blob = new File(blobs, "audio.wav");
 		const val = await prepare_files([_audio_blob], event === "stream");
-		value.file_data = (
+		let fileData = (
 			(await upload(val, root, undefined, upload_fn))?.filter(
 				Boolean
 			) as FileData[]
 		)[0];
-
+		if(value === null){
+			value = new AnnotatedAudioData(fileData);
+		}
+		else{
+			value.file_data = fileData;
+		}
 		dispatch(event, value);
 	};
 
@@ -238,7 +241,6 @@
 				{dispatch_blob}
 				{waveform_settings}
 				{waveform_options}
-				{handle_reset_value}
 			/>
 		{/if}
 	{:else if active_source === "upload"}
@@ -256,6 +258,7 @@
 {:else}
 	<ModifyUpload
 		{i18n}
+		download={show_download_button ? value.file_data.url : null}
 		on:clear={clear}
 		on:edit={() => (mode = "edit")}
 		absolute={true}
