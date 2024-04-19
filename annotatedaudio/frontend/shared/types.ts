@@ -12,6 +12,12 @@ export type Annotation = {
 	end: number
 	speaker: string
 	color: string
-	level: number
-	numLevels: number
+	level?: number | undefined
+	numLevels?: number | undefined
+}
+
+export type CaptionLabel = {
+	speaker: string
+	color: string
+	shortcut: string
 }

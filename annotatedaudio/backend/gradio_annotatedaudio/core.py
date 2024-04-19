@@ -1,7 +1,8 @@
-from typing import ClassVar, Dict, List, Optional, Text
-import networkx as nx
-from gradio.data_classes import GradioModel, FileData
 from random import randint
+from typing import ClassVar, Dict, List, Optional, Text
+
+import networkx as nx
+from gradio.data_classes import FileData, GradioModel
 from pyannote.core import Annotation as PyannoteAnnotation
 
 
@@ -18,17 +19,17 @@ class Annotation(GradioModel):
     # annotation speaker color
     color: Text
     # css style level of the annotation
-    level: int
+    level: Optional[int]
     # total num level
-    num_levels: int
+    num_levels: Optional[int]
 
     def __init__(
         self,
         start: float,
         end: float,
         speaker: Text,
-        level: int,
-        num_levels: int,
+        level: Optional[int] = None,
+        num_levels: Optional[int] = None,
         **kwargs,
     ):
         color = self.get_annotation_color(speaker)
@@ -44,9 +45,9 @@ class Annotation(GradioModel):
     @classmethod
     def get_annotation_color(cls, speaker: Text):
         if speaker not in Annotation.speakers_color:
-            Annotation.speakers_color[speaker] = (
-                f"rgba({randint(0, 255)}, {randint(0, 255)}, {randint(0, 255)}, 0.5)"
-            )
+            Annotation.speakers_color[
+                speaker
+            ] = f"rgba({randint(0, 255)}, {randint(0, 255)}, {randint(0, 255)}, 0.5)"
         return Annotation.speakers_color[speaker]
 
 
@@ -54,11 +55,16 @@ class AnnotadedAudioData(GradioModel):
     file_data: FileData
     annotations: Optional[List[Annotation]] = None
 
-    def __init__(self, file_data : FileData, annotations: Optional[PyannoteAnnotation | List[Annotation]]=None, **kwargs):
+    def __init__(
+        self,
+        file_data: FileData,
+        annotations: Optional[PyannoteAnnotation | List[Annotation]] = None,
+        **kwargs,
+    ):
 
         if isinstance(annotations, PyannoteAnnotation):
             annotations = self._prepare_annotations(annotations)
-        
+
         super().__init__(
             file_data=file_data,
             annotations=annotations,

@@ -1,11 +1,15 @@
 <script lang="ts">
-	import type { WaveformOptions } from "../shared/types";
+	import type { Annotation, WaveformOptions , CaptionLabel} from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 
 	import { onMount } from "svelte";
-	import { Music } from "@gradio/icons";
+	import { Music, Undo, Trim } from "@gradio/icons";
+	import Gum from "../shared/icons/Gum.svelte";
 	import WaveSurfer from "wavesurfer.js";
-	import { skip_audio, process_audio } from "../shared/utils";
+	import RegionsPlugin, {
+		type Region,
+		type RegionParams,
+	} from "wavesurfer.js/dist/plugins/regions.js";
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
@@ -25,17 +29,26 @@
 
 	let container: HTMLDivElement;
 	let waveform: WaveSurfer | undefined;
-	let playing = false;
+	let wsRegions: RegionsPlugin;
+	let activeRegion: Region | null = null;
+	let leftRegionHandle: HTMLDivElement | null;
+	let rightRegionHandle: HTMLDivElement | null;
+	let activeHandle = "";
 
 	let timeRef: HTMLTimeElement;
 	let durationRef: HTMLTimeElement;
 	let audio_duration: number;
-
-	let trimDuration = 0;
+	let playing = false;
 
 	let show_volume_slider = false;
+	let showRedo = interactive;
 
-	let captionList = [];
+	let initialAnnotations: Annotation[] | null = null;
+	// correspondence between a Region and an Annotation
+	let regionsMap: Map<string, Annotation> = new Map();
+
+	let defaultLabel: CaptionLabel | null = null;
+	let activeLabel: CaptionLabel | null = null;
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
@@ -45,14 +58,14 @@
 		end: undefined;
 	}>();
 
-	const formatTime = (seconds: number): string => {
+	function formatTime(seconds: number): string {
 		const minutes = Math.floor(seconds / 60);
 		const secondsRemainder = Math.round(seconds) % 60;
 		const paddedSeconds = `0${secondsRemainder}`.slice(-2);
 		return `${minutes}:${paddedSeconds}`;
 	};
 
-	const create_waveform = (): void => {
+	function create_waveform(): void {
 		waveform = WaveSurfer.create({
 			container: container,
 			...waveform_settings
@@ -62,13 +75,404 @@
 				return waveform.load(resolved_src);
 			}
 		});
+
+		waveform.on("dblclick", () => {
+			// allow the user to add a region only after the pipeline has been applied
+			if(value?.annotations){
+				handleRegionAdd(waveform.getCurrentTime());
+			}
+		});
 	};
+
+	/**
+	 * Print regions on waveform given annotation data provided by the pipeline.
+	 * A region can be view as a visual representation of an annotation.
+	 */
+	function initRegions(): void {
+
+		let annotations = value.annotations;
+
+		// keep initial annotations in memory, for future retrieval
+		if (initialAnnotations === null){
+			initialAnnotations = []
+
+			// defines a label that will be activated by default if the user selects none
+			// this label is set to the first annotation's speaker, if there is at least one
+			// annotation, or none otherwise.
+			if(annotations.length === 0){
+				return;
+			}
+			defaultLabel = {speaker: annotations[0].speaker, color: annotations[0].color, shortcut: "A"};
+			annotations.forEach(
+				annotation => initialAnnotations.push(Object.assign({}, annotation))
+			);
+		}
+
+		value.annotations.forEach(annotation => {
+			let region = addRegion({
+				start: annotation.start,
+				end: annotation.end,
+				color: annotation.color,
+				drag: true,
+				resize: true,
+			}, annotation.speaker);
+			region.element.style.top = (annotation.level * 10).toString() + "%";
+			region.element.style.height = (100 - (annotation.numLevels + 1) * 10 ).toString() + "%";
+
+		});
+	}
+
+	/**
+	 * update annotations with current regions' state
+	 */
+	 function updateAnnotations(): void {
+		value.annotations = Array.from(regionsMap.values());
+		dispatch("edit", value);
+	}
+
+
+	/**
+	 * Add a region on the waveform given its parameters and speaker label
+	 * @param options region's params (start, end, color)
+	 * @param speaker region's label
+	 *
+	 * @returns the added region
+	 */
+	function addRegion(options: RegionParams, speaker: string): Region {
+		let region = wsRegions.addRegion(options);
+		regionsMap.set(region.id, {
+			start: region.start,
+			end: region.end,
+			speaker: speaker,
+			color: region.color,
+		});
+		updateAnnotations();
+
+		return region;
+	}
+
+	/**
+	 * Handle add region event. The new added region become the active region.
+	 * @param relativeY mouse y-coordinate relative to waveform start
+	 */
+	function handleRegionAdd(relativeY: number): void{
+		let regionLabel = (activeLabel !== null ? activeLabel : defaultLabel);
+		// if annotations were not initialized, do nothing
+		if (regionLabel === null){
+			return;
+		}
+		let region = addRegion({
+			start: relativeY - 1.0,
+			end: relativeY + 1.0,
+			color: regionLabel.color,
+			drag: true,
+			resize: true,
+		}, regionLabel.speaker);
+
+		// set region as active one
+		setActiveRegion(region);
+	}
+
+	/**
+	 * Remove specified region from waveform as well as
+	 * the linked annotation
+	 * @param region region to remove
+	 */
+	function removeRegion(region: Region): void {
+		// if region to remove is the active one, first unselect it:
+		if(region === activeRegion){
+			setActiveRegion(null);
+		}
+		regionsMap.delete(region.id)
+		region.remove();
+		updateAnnotations();
+	}
+
+	/**
+	 * Handle the region removal event, and remove the active region. According to `key` and
+	 * `shiftKey` value, the new active region is the one set before or after the removed region.
+	 * Do nothing if there is no active region.
+	 * @param key shortcut name. Help to determine which region to select after the removal.
+	 * @param shiftKey indicates whether shift key was pressed. Help to determine which region to select
+	 */
+	function handleRegionRemoval(key: string, shiftKey: boolean): void {
+		// if there is no active region, do nothing
+		if(!activeRegion){
+			return;
+		}
+
+		let region2remove = wsRegions.getRegions().find((region) => region.id === activeRegion.id);
+		// remove active region and set the next region as the active one
+		if(key === "Delete" || (key == "Backspace" && shiftKey)){
+			selectNextRegion(false);
+		}
+		// remove region and set the previous region as the active one
+		else {
+			selectNextRegion(true);
+		}
+
+		removeRegion(region2remove);
+	}
+
+	/**
+	 * Reset regions to their initial state, ie from annotations
+	 * data provided by pipeline
+	 */
+	function resetRegions(): void {
+		clearRegions();
+		initialAnnotations.forEach(
+				annotation => value.annotations.push(Object.assign({}, annotation))
+		);
+		initRegions();
+		dispatch("edit", value);
+	}
+
+	/**
+	 * Clear all the regions from waveform, as well as
+	 * annotation data given by pipeline
+	 */
+	function clearRegions(): void {
+		setActiveRegion(null);
+		wsRegions?.clearRegions();
+		value.annotations = [];
+		regionsMap.clear();
+	};
+
+	/**
+	 * Set active region with specified one.
+	 * @param region the region to activate
+	 */
+	function setActiveRegion(region: Region): void {
+		if(activeRegion !== null){
+			activeRegion.element.style.background = activeRegion.color;
+		}
+
+		if(region === null){
+			activeRegion = region;
+			return;
+		}
+		activeRegion = region;
+		activeRegion.element.style.background = "repeating-linear-gradient(45deg,"
+						+ region.color
+						+ " ,"
+						+ region.color
+						+ " 10px, #ffffff 10px ,#ffffff 15px)";
+	}
+
+	/**
+	 * Set region speaker for the active region with specified
+	 * speaker label
+	 * @param label active caption's label
+	 */
+	function setRegionSpeaker(label: CaptionLabel){
+		// get label color
+
+		if(activeRegion !== null) {
+			// update region color
+			activeRegion.setOptions({
+				start: activeRegion.start,
+				end: activeRegion.end,
+				color: label.color,
+				drag: true,
+				resize: true,
+			});
+			activeRegion.element.style.background = "repeating-linear-gradient(45deg,"
+						+ activeRegion.color
+						+ " ,"
+						+ activeRegion.color
+						+ " 10px, #ffffff 10px ,#ffffff 15px)";
+
+			// update corresponding annotation color
+			let activeAnnotation = regionsMap.get(activeRegion.id);
+			activeAnnotation.color = label.color;
+			activeAnnotation.speaker = label.speaker;
+			updateAnnotations();
+		}
+	}
+
+	/**
+	 * Select the region next (in terms of time) to the current
+	 * active one. If active region is the last one,
+	 * the next region to be activated is the first one
+	 * on the waveform.
+	 * @param shiftKey: go back if true, go ahead otherwise
+	 */
+	function selectNextRegion(shiftKey: boolean): void {
+		// go back if shift was pressed, else go ahead:
+		var direction = shiftKey ? -1 : 1;
+		var regions = wsRegions.getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
+		// if there is no active region, active the first one
+		if(activeRegion === null){
+			setActiveRegion(regions[0]);
+		}
+		else{
+			var activeRegionIdx = regions.indexOf(activeRegion);
+			setActiveRegion(regions.at((activeRegionIdx + direction) % regions.length));
+		}
+	};
+
+	/**
+	 * Split the specified region at indicated split time, and set
+	 * active region to the resulting right region.
+	 * @param region region to split
+	 * @param splitTime split position. Must be inside region's boundaries
+	 */
+	function splitRegion(region: Region, splitTime: number){
+		if (splitTime < region.start || splitTime > region.end){
+			throw new RangeError("split time out of region bounds");
+		}
+
+		let speaker = regionsMap.get(region.id).speaker;
+
+		let regionLeft = addRegion({
+			start: region.start,
+			end: splitTime,
+			color: region.color,
+			drag: region.drag,
+			resize: region.resize,
+		}, speaker);
+
+		let regionRight = addRegion({
+			start: splitTime,
+			end: region.end,
+			color: region.color,
+			drag: region.drag,
+			resize: region.resize,
+		}, speaker);
+
+		// update active region
+		setActiveRegion(regionRight);
+		// remove split region
+		removeRegion(region);
+
+	}
+
+	/**
+	 * Split a region into two distinct regions. There are two cases (sorted by priority):
+	 * - if there is an active region, split this region
+	 * - else, split the region in which the time cursor is
+	 * - if the cursor is out on any region, do nothing
+	 * @param currentTime position of the cursor on the waveform
+	 */
+	function handleRegionSplit(currentTime: number): void {
+		// get region in which the cursor in currently located
+		let region = wsRegions.getRegions().find(
+			(_region) => _region.start < currentTime && _region.end > currentTime
+		);
+		if(region === undefined){
+			// if cursor is not in a region, use active region, if available
+			if(activeRegion === null){
+				return;
+			}
+			region = activeRegion;
+			currentTime = region.start + (region.end - region.start) / 2.;
+		}
+		splitRegion(region, currentTime);
+	}
+
+	/**
+	 * Adjust region start and end time bounds
+	 * @param key shortcut name. Indicates direction: forward or backward.
+	 * @param shiftKey indicates whether shift key was pressed. If true, move faster
+	 * @param altKey indicates whether alt key was pressed. If true, move end bound,
+	 * else start bound
+	 */
+	function adjustRegionBounds(key: string, shiftKey: boolean, altKey: boolean): void {
+		let newStart: number;
+		let newEnd: number;
+		let delta: number = 0.05; //TODO do not hardcore this and adapt it according to relative size of the waveform
+
+		// if alt is pressed, go faster
+		if(shiftKey){
+			delta = delta * 4.0;
+		}
+
+		// edit active region end time
+		if (!altKey) {
+			if (key === "ArrowLeft") {
+				newStart = activeRegion.start - delta;
+				newEnd = activeRegion.end;
+			} else {
+				newStart = activeRegion.start + delta;
+				newEnd = activeRegion.end;
+			}
+		// edit active region start time
+		} else {
+			if (key === "ArrowLeft") {
+				newStart = activeRegion.start;
+				newEnd = activeRegion.end - delta;
+			} else {
+				newStart = activeRegion.start;
+				newEnd = activeRegion.end + delta;
+			}
+		}
+
+		// saturate region bound
+		if(newStart > activeRegion.end){
+			newStart = activeRegion.end - 0.1;
+		}
+		if(newEnd < activeRegion.start){
+			newEnd = activeRegion.start + 0.1;
+		}
+
+		activeRegion.setOptions({
+			start: newStart,
+			end: newEnd
+		});
+	};
+
+	/**
+	 * Adjust position of the cursor on the waveform
+	 * @param key shortcut name. Indicates direction: forward or backward.
+	 * @param shiftKey indicates whether shift key was pressed. If true, move faster
+	 */
+	function adjustTimeCursorPosition(key: string, shiftKey: boolean): void {
+		let currentTime = waveform.getCurrentTime();
+		let newTime: number;
+		let delta = 0.05; //TODO do not hardcore this and adapt it according to relative size of the waveform
+
+		// if alt is pressed, go faster
+		if(shiftKey){
+			delta = delta * 4.0;
+		}
+
+		if(key === "ArrowLeft"){
+			newTime = currentTime - delta;
+		}else {
+			newTime = currentTime + delta;
+		}
+
+		waveform.setTime(newTime);
+	}
+
+	/**
+	 * Handle time adjustment shortcuts. There are two cases whether there is
+	 * an active region set. If yes, region bounds are adjusted. Otherwise, time
+	 * cursor position is updated.
+	 * @param key shortcut name. Indicates direction: forward or backward.
+	 * @param shiftKey indicates whether shift key was pressed. If true, move faster
+	 * @param altKey indicates whether alt key was pressed. If true, move end bound,
+	 * else start bound. No effect when updating time cursor.
+	 */
+	function handleTimeAdjustement(key: string, shiftKey: boolean, altKey: boolean): void {
+		// if there is an active region, update region bounds
+		if(activeRegion){
+			adjustRegionBounds(key, shiftKey, altKey);
+			return;
+		}
+		// else update time cursor position
+		adjustTimeCursorPosition(key, shiftKey);
+	}
 
 	$: if (container !== undefined) {
 		if (waveform !== undefined) waveform.destroy();
 		container.innerHTML = "";
 		create_waveform();
 		playing = false;
+	}
+
+	$: if(value?.annotations !== null && wsRegions && initialAnnotations === null){
+		initRegions();
 	}
 
 	$: waveform?.on("decode", (duration: any) => {
@@ -83,6 +487,9 @@
 	);
 
 	$: waveform?.on("ready", () => {
+		if(wsRegions === undefined ){
+			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
+		}
 		if (!waveform_settings.autoplay) {
 			waveform?.stop();
 		} else {
@@ -94,14 +501,55 @@
 		playing = false;
 		dispatch("stop");
 	});
+
 	$: waveform?.on("pause", () => {
 		playing = false;
 		dispatch("pause");
 	});
+
 	$: waveform?.on("play", () => {
 		playing = true;
 		dispatch("play");
 	});
+
+	$: wsRegions?.on("region-updated", (region) => {
+		var updatedAnnotation = regionsMap.get(region.id);
+		updatedAnnotation.start = region.start;
+		updatedAnnotation.end = region.end;
+		updateAnnotations();
+	});
+
+	$: wsRegions?.on("region-clicked", (region, e) => {
+		switch(mode){
+			case "remove": removeRegion(region); break;
+			case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
+			default: setActiveRegion(region); region.play();
+		}
+	});
+
+	$: if (activeRegion) {
+		const shadowRoot = container.children[0]!.shadowRoot!;
+
+		rightRegionHandle = shadowRoot.querySelector('[data-resize="right"]');
+		leftRegionHandle = shadowRoot.querySelector('[data-resize="left"]');
+
+		if (leftRegionHandle && rightRegionHandle) {
+			leftRegionHandle.setAttribute("role", "button");
+			rightRegionHandle.setAttribute("role", "button");
+			leftRegionHandle?.setAttribute("aria-label", "Drag to adjust start time");
+			rightRegionHandle?.setAttribute("aria-label", "Drag to adjust end time");
+			leftRegionHandle?.setAttribute("tabindex", "0");
+			rightRegionHandle?.setAttribute("tabindex", "0");
+
+			leftRegionHandle.addEventListener("focus", () => {
+				if (wsRegions) activeHandle = "left";
+			});
+
+			rightRegionHandle.addEventListener("focus", () => {
+				if (wsRegions) activeHandle = "right";
+			});
+		}
+	}
 
 	async function load_audio(data: string): Promise<void> {
 		await resolve_wasm_src(data).then((resolved_src) => {
@@ -114,11 +562,22 @@
 
 	onMount(() => {
 		window.addEventListener("keydown", (e) => {
-			if (!waveform || show_volume_slider) return;
-			if (e.key === "ArrowRight" && mode !== "edit") {
-				skip_audio(waveform, 0.1);
-			} else if (e.key === "ArrowLeft" && mode !== "edit") {
-				skip_audio(waveform, -0.1);
+			switch(e.key){
+				case "ArrowLeft": handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
+				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
+				case "Escape": setActiveRegion(null); break;
+				case "Tab": e.preventDefault(); selectNextRegion(e.shiftKey); break;
+				case "Delete": handleRegionRemoval("Delete", e.shiftKey); break;
+				case "Backspace": handleRegionRemoval("Backspace", e.shiftKey); break;
+				case "Enter":
+					e.preventDefault();
+					if(e.shiftKey){
+						handleRegionSplit(waveform.getCurrentTime());
+					} else {
+						handleRegionAdd(waveform.getCurrentTime());
+					}
+					break;
+				default: //do nothing
 			}
 		});
 	});
@@ -147,33 +606,60 @@
 		<div class="timestamps">
 			<time bind:this={timeRef} id="time">0:00</time>
 			<div>
-				{#if mode === "edit" && trimDuration > 0}
-					<time id="trim-duration">{formatTime(trimDuration)}</time>
-				{/if}
 				<time bind:this={durationRef} id="duration">0:00</time>
 			</div>
 		</div>
 
 		{#if waveform}
-			<WaveformControls
-                value={value}
-				{container}
-				{waveform}
-				{playing}
-				{audio_duration}
-				{i18n}
-				{interactive}
-				bind:mode
-				bind:trimDuration
-				bind:show_volume_slider
-				showRedo={interactive}
-				{waveform_options}
-				{editable}
-				on:edit={(e) => dispatch("edit", e.detail)}
-			/>
+			<div class="commands">
+				<div class="waveform-controls">
+					<WaveformControls
+						{waveform}
+						{playing}
+						{audio_duration}
+						{i18n}
+						bind:show_volume_slider
+						{waveform_options}
+					/>
+				</div>
+				<div class="regions-actions">
+					{#if editable && interactive && value.annotations}
+					{#if showRedo}
+						<button
+							class="action icon"
+							aria-label="Reset annotations"
+							title={i18n("Reset annotations")}
+							on:click={resetRegions}
+						>
+							<Undo/>
+						</button>
+					{/if}
+					<button
+						class="action icon remove-button"
+						aria-label="Remove an annotation"
+						title={i18n("Remove an annotation")}
+						on:focusin={() => mode = "remove"}
+						on:focusout={() => mode = ""}
+					>
+						<Gum/>
+					</button>
+					<button
+						class="action icon trim-button"
+						aria-label="Split an annotation"
+						title={i18n("Split an annotation")}
+						on:focusin={() => mode = "split"}
+						on:focusout={() => mode = ""}
+					>
+						<Trim/>
+					</button>
+				{/if}
+				</div>
+			</div>
 			{#if value?.annotations}
 				<Caption
 					value={value.annotations}
+					on:select={(e) => setRegionSpeaker(e.detail)}
+					on:select={(e) => activeLabel = e.detail}
 				/>
 			{/if}
 		{/if}
@@ -181,8 +667,42 @@
 {/if}
 
 <style>
+	.action {
+		width: var(--size-5);
+		width: var(--size-5);
+		color: var(--neutral-400);
+		margin-left: var(--spacing-md);
+	}
+
+	.regions-actions {
+		display: flex;
+		justify-self: self-end;
+		align-items: center;
+	}
+
+	.commands {
+		display: flex;
+		justify-content: space-between;
+	}
+
 	.component-wrapper {
 		padding: 4em;
+	}
+
+	.icon:hover {
+		color: var(--color-accent);
+	}
+
+	.remove-button, .trim-button {
+		fill: #9ca3af;
+	}
+
+	.remove-button:hover, .remove-button:focus {
+		fill: var(--color-accent);
+	}
+
+	.trim-button:hover, .trim-button:focus {
+		fill: var(--color-accent);
 	}
 
 	:global(::part(wrapper)) {
@@ -205,15 +725,15 @@
 		color: var(--neutral-400);
 	}
 
-	#trim-duration {
-		color: var(--color-accent);
-		margin-right: var(--spacing-sm);
-	}
 	.waveform-container {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		width: var(--size-full);
+	}
+
+	.waveform-controls {
+		width: 80em;
 	}
 
 	#waveform {
