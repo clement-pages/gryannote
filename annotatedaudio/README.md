@@ -1,44 +1,31 @@
-# ANNOTATED AUDIO GRADIO COMPONENT
-
-This repository regroups `pyannote` custom `gradio` components.
+# GRYANNOTE-AUDIO: AUDIO LABELING GRADIO COMPONENT
 
 ## Installation
 
-To install components (still in devlopment) contained in this reposetory, follow these instructions.
-
-0 - Create a virtual environment (for example using `micromamba`) and activate it
 ```shell
-micromamba create -n pyannote-gradio
-micromamba activate pyannote-gradio
+pip install gryannote-audio
 ```
 
-1 - Install python 3.8+:
-```shell
-micromamba install python=3.10 -c conda-forge
+## Component usage example
+
+```python
+import gradio as gr
+from gryannote_audio import AnnotatedAudio
+from pyannote.audio import Pipeline
+
+annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
+
+
+def apply_pipeline(audio):
+    pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1")
+    annotations = pipeline(audio)
+    return (audio, annotations)
+
+demo = gr.Interface(apply_pipeline, inputs=annotated_audio, outputs=annotated_audio)
+
+demo.launch()
 ```
 
-2 - Install `pyannote-audio` and `gradio`:
-```shell
-pip install -U pyannote.audio gradio
-```
-
-3 - Install npm 9+ and node.js v16.14+
-```shell
-nvm install node
-npm install -g npm
-```
-
-4 - Clone this repository in your favorite directory
-```shell
-git clone git@github.com:clement-pages/pyannote-gradio.git
-cd pyannote-gradio/annotatedaudio
-```
-
-Then, you can use the component in development mode:
-```shell
-gradio cc install
-gradio cc dev
-```
 
 
 ## Keyboard shortcuts
