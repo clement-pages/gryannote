@@ -1,5 +1,5 @@
 import gradio as gr
-from gradio_annotatedaudio import AnnotatedAudio
+from gryannote_audio import AnnotatedAudio
 from gradio_pipelineselector import PipelineSelector
 from gradio_rttmhandler import RTTMHandler
 from pyannote.audio import Pipeline
@@ -25,7 +25,7 @@ with gr.Blocks() as demo:
         "Welcome to the [pyannote.audio](https://github.com/pyannote/pyannote-audio) app !"
     )
 
-    login_button = gr.LoginButton()
+    #login_button = gr.LoginButton()
 
     pipeline_selector = PipelineSelector()
     pipeline_selector.select(
