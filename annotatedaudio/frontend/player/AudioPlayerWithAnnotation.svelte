@@ -15,7 +15,7 @@
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
 	import { createEventDispatcher } from "svelte";
-	import Caption from "../shared/Caption.svelte"
+	import Caption  from "../shared/Caption.svelte"
 
 	export let value: null | AnnotatedAudioData = null;
 	$: url = value.file_data?.url;
@@ -47,6 +47,7 @@
 	// correspondence between a Region and an Annotation
 	let regionsMap: Map<string, Annotation> = new Map();
 
+	let caption: Caption;
 	let defaultLabel: CaptionLabel | null = null;
 	let activeLabel: CaptionLabel | null = null;
 
@@ -77,10 +78,7 @@
 		});
 
 		waveform.on("dblclick", () => {
-			// allow the user to add a region only after the pipeline has been applied
-			if(value?.annotations){
-				handleRegionAdd(waveform.getCurrentTime());
-			}
+			handleRegionAdd(waveform.getCurrentTime());
 		});
 	};
 
@@ -159,6 +157,7 @@
 		let regionLabel = (activeLabel !== null ? activeLabel : defaultLabel);
 		// if annotations were not initialized, do nothing
 		if (regionLabel === null){
+			window.alert("First create a label by clicking on \"+\" or by pressing A-Z");
 			return;
 		}
 		let region = addRegion({
@@ -623,7 +622,7 @@
 					/>
 				</div>
 				<div class="regions-actions">
-					{#if editable && interactive && value.annotations}
+					{#if editable && interactive && value}
 					{#if showRedo}
 						<button
 							class="action icon"
@@ -655,11 +654,12 @@
 				{/if}
 				</div>
 			</div>
-			{#if value?.annotations}
+			{#if value}
 				<Caption
 					value={value.annotations}
+					bind:this={caption}
 					on:select={(e) => setRegionSpeaker(e.detail)}
-					on:select={(e) => activeLabel = e.detail}
+					on:select={(e) => {activeLabel = e.detail; console.log(activeLabel)}}
 				/>
 			{/if}
 		{/if}

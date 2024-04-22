@@ -23,14 +23,14 @@
         labelButton.classList.add("captionLabel");
         labelButton.id = label.shortcut;
         labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.speaker;
-        labelButton.addEventListener("focusin", () => {selectActiveLabel(label.shortcut)});
-        labelButton.addEventListener("focusout", () => {selectActiveLabel("Escape")});
+        labelButton.addEventListener("focusin", () => {handleKeyboardSelection(label.shortcut)});
+        labelButton.addEventListener("focusout", () => {handleKeyboardSelection("Escape")});
 
         container.appendChild(labelButton);
     }
 
 
-    function createLabel(speaker?: string, color?: string, shortcut?: string): CaptionLabel {
+    export function createLabel(speaker?: string, color?: string, shortcut?: string): CaptionLabel {
         // if maximum number of labels has been reached, do nothing
         if(labels.length === 26){
             return;
@@ -63,23 +63,29 @@
         return label;
     }
 
-    function selectActiveLabel(key: string): void {
+    function setActiveLabel(label: CaptionLabel): void {
         // reset active label
         if(activeLabel){
             document.getElementById(activeLabel.shortcut).classList.remove("active-button");
         }
 
+        // update active label
+        activeLabel = label;
+        document.getElementById(activeLabel.shortcut).classList.add("active-button");
+        dispatch("select", activeLabel);
+    }
+
+    function handleKeyboardSelection(key: string): void {
+        let label = null
+
         if(key !== "Escape"){
-            let label = labels.find((_label) => _label.shortcut === key.toUpperCase());
+            label = labels.find((_label) => _label.shortcut === key.toUpperCase());
             // if current key does not correspond to any label, create a new one
             if(!label){
                 label = createLabel(undefined, undefined , key.toUpperCase());
             }
-            // update active label
-            activeLabel = label;
-            document.getElementById(activeLabel.shortcut).classList.add("active-button");
-            dispatch("select", activeLabel);
         }
+        setActiveLabel(label);
     }
 
     $:{
@@ -99,7 +105,7 @@
     onMount(() => {
         window.addEventListener("keydown", (e): void => {
             if(e.key.match(/^[a-zA-Z]$/) || e.key === "Escape"){
-                selectActiveLabel(e.key);
+                handleKeyboardSelection(e.key);
             }
         });
     });
@@ -108,7 +114,10 @@
 <div class="caption-container">
     <div class="caption" bind:this={container}></div>
     <div class="action-buttons">
-        <button class="create-label" on:click={() => createLabel()}>
+        <button class="create-label" on:click={() => {
+                const label = createLabel();
+                setActiveLabel(label);
+            }}>
              <Plus/>
         </button>
     </div>
