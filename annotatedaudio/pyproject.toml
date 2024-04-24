@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gryannote_audio"
-version = "0.1.3"
+version = "0.1.5"
 description = "audio component with speaker annotations"
 readme = "README.md"
 license = "MIT"
@@ -23,8 +23,6 @@ classifiers = [
   'Operating System :: OS Independent',
   'Programming Language :: Python :: 3',
   'Programming Language :: Python :: 3 :: Only',
-  'Programming Language :: Python :: 3.8',
-  'Programming Language :: Python :: 3.9',
   'Programming Language :: Python :: 3.10',
   'Programming Language :: Python :: 3.11',
   'Topic :: Scientific/Engineering',
@@ -36,7 +34,7 @@ classifiers = [
 dev = ["build", "twine"]
 
 [tool.hatch.build]
-artifacts = ["/backend/gryannote_audio/templates", "*.pyi",]
+artifacts = ["/backend/gryannote_audio/templates", "*.pyi"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["/backend/gryannote_audio"]
