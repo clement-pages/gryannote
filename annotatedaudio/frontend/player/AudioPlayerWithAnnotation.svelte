@@ -525,6 +525,7 @@
 			case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
 			default: setActiveRegion(region); region.play();
 		}
+		mode = "";
 	});
 
 	$: if (activeRegion) {
@@ -638,8 +639,7 @@
 						class="action icon remove-button"
 						aria-label="Remove an annotation"
 						title={i18n("Remove an annotation")}
-						on:focusin={() => mode = "remove"}
-						on:focusout={() => mode = ""}
+						on:click={() => mode = "remove"}
 					>
 						<Gum/>
 					</button>
@@ -647,8 +647,7 @@
 						class="action icon trim-button"
 						aria-label="Split an annotation"
 						title={i18n("Split an annotation")}
-						on:focusin={() => mode = "split"}
-						on:focusout={() => mode = ""}
+						on:click={() => mode = "split"}
 					>
 						<Trim/>
 					</button>
@@ -695,7 +694,7 @@
 	}
 
 	.remove-button, .trim-button {
-		fill: #9ca3af;
+		fill: var(--neutral-400);
 	}
 
 	.remove-button:hover, .remove-button:focus {
@@ -704,10 +703,6 @@
 
 	.trim-button:hover, .trim-button:focus {
 		fill: var(--color-accent);
-	}
-
-	:global(::part(wrapper)) {
-		margin-bottom: var(--size-2);
 	}
 
 	.timestamps {
