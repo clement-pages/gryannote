@@ -30,9 +30,7 @@ class PipelineInfo(GradioModel):
 
 class PipelineSelector(FormComponent):
     """
-    Creates a dropdown of choices from which a single entry or multiple entries can be selected (as an input component) or displayed (as an output component).
-
-    Demos: sentence_builder, titanic_survival
+    Enable the user to select a pipeline and edit its hyperparameters
     """
 
     data_model = PipelineInfo
@@ -59,6 +57,7 @@ class PipelineSelector(FormComponent):
         every: float | None = None,
         show_label: bool = True,
         show_config: bool = False,
+        enable_edition: bool = False,
         container: bool = True,
         scale: int | None = None,
         min_width: int = 160,
@@ -74,39 +73,59 @@ class PipelineSelector(FormComponent):
         pipelines: optional
             Can be a:
                 - instantiated pyannote pipeline
-                - list of possible pipeline name. This list must be subset of pyannote pipelines available on Hugging Face
+                - list of possible pipeline name. This list must be subset of pyannote pipelines
+                   available on Hugging Face
                 - list of (pipeline name, pipeline instance)
                 - dict {pipeline name : pipeline instance}
-            By default, the component ask the user to select a pipeline from a dropdown with available pyannote pipeline on Hugging Face
+            By default, the component ask the user to select a pipeline from a dropdown with
+            available pyannote pipeline on Hugging Face
         value: optional
             default value selected in dropdown. If None, no value is selected by default.
-            If callable, the function will be called whenever the app loads to set the initial value of the component.
+            If callable, the function will be called whenever the app loads to set the initial value
+            of the component.
         label: optional
-            The label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.
+            The label for this component. Appears above the component and is also used as the header
+            if there are a table of examples for this component. If None and used in a `gr.Interface`,
+            the label will be the name of the parameter this component is assigned to.
         info: optional
             additional component description.
         every: optional
-            If `value` is a callable, run the function 'every' number of seconds while the client connection is open. Has no effect otherwise. The event can be accessed (e.g. to cancel it) via this component's .load_event attribute.
+            If `value` is a callable, run the function 'every' number of seconds while the client
+            connection is open. Has no effect otherwise. The event can be accessed (e.g. to cancel it)
+            via this component's .load_event attribute.
         show_label: optional
-            if True, will display label.
+            If True, will display label.
         show_config: bool, optional
-            if True, will display pipeline configuration parameters. Default to False
+            If True, will display pipeline hyperparameters configuration interface as soon as a pipeline
+            has been loaded. Has no effect if `enable_edition` is set to False. Default to False.
+        enable_edition: bool, optional
+            If True, let the user to update pipeline's hyperparameters
         container: optional
-            If True, will place the component in a container - providing some extra padding around the border.
+            If True, will place the component in a container - providing some extra padding around
+            the border.
         scale: optional
-            relative size compared to adjacent Components. For example if Components A and B are in a Row, and A has scale=2, and B has scale=1, A will be twice as wide as B. Should be an integer. scale applies in Rows, and to top-level Components in Blocks where fill_height=True.
+            relative size compared to adjacent Components. For example if Components A and B are in
+            a Row, and A has scale=2, and B has scale=1, A will be twice as wide as B. Should be an
+            integer. scale applies in Rows, and to top-level Components in Blocks where
+            fill_height=True.
         min_width: optional
-            minimum pixel width, will wrap if not sufficient screen space to satisfy this value. If a certain scale value results in this Component being narrower than min_width, the min_width parameter will be respected first.
+            minimum pixel width, will wrap if not sufficient screen space to satisfy this value.
+            If a certain scale value results in this Component being narrower than min_width,
+            the min_width parameter will be respected first.
         interactive: optional
-            if True, choices in this dropdown will be selectable; if False, selection will be disabled. If not provided, this is inferred based on whether the component is used as an input or output.
+            if True, choices in this dropdown will be selectable; if False, selection will be disabled.
+            If not provided, this is inferred based on whether the component is used as an input or output.
         visible: optional
             If False, component will be hidden. Default to True.
         elem_id: optional
-            An optional string that is assigned as the id of this component in the HTML DOM. Can be used for targeting CSS styles.
+            An optional string that is assigned as the id of this component in the HTML DOM.
+            Can be used for targeting CSS styles.
         elem_classes: optional
-            An optional list of strings that are assigned as the classes of this component in the HTML DOM. Can be used for targeting CSS styles.
+            An optional list of strings that are assigned as the classes of this component in the HTML DOM.
+            Can be used for targeting CSS styles.
         render: optional
-            If False, component will not be rendered in the Blocks context. Should be used if the intention is to assign event listeners now but render the component later.
+            If False, component will not be rendered in the Blocks context.
+            Should be used if the intention is to assign event listeners now but render the component later.
         """
 
         self._pipeline_map: Dict[str, Pipeline] = None
@@ -145,7 +164,10 @@ class PipelineSelector(FormComponent):
 
         # component is visible only if a pipeline was not already set
         visible = getattr(self, "_pipeline", None) is None
+
+
         self.show_config = show_config
+        self.enable_edition = enable_edition
 
         super().__init__(
             label=label,
