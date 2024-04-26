@@ -15,7 +15,7 @@
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
 	import { createEventDispatcher } from "svelte";
-	import Caption  from "../shared/Caption.svelte"
+	import Caption from "../shared/Caption.svelte"
 
 	export let value: null | AnnotatedAudioData = null;
 	$: url = value.file_data?.url;
