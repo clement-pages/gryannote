@@ -243,15 +243,15 @@
 	 * @param region the region to activate
 	 */
 	function setActiveRegion(region: Region): void {
-		if(activeRegion !== null){
+		if(activeRegion){
 			activeRegion.element.style.background = activeRegion.color;
 		}
 
-		if(region === null){
-			activeRegion = region;
+		activeRegion = region;
+		if(!activeRegion){
 			return;
 		}
-		activeRegion = region;
+
 		activeRegion.element.style.background = "repeating-linear-gradient(45deg,"
 						+ region.color
 						+ " ,"
@@ -489,6 +489,23 @@
 	$: waveform?.on("ready", () => {
 		if(wsRegions === undefined ){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
+
+			// add region-clicked event listener
+			wsRegions?.on("region-clicked", (region, e) => {
+				switch(mode){
+					case "remove": removeRegion(region); break;
+					case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
+					default: setActiveRegion(region); region.play();
+				}
+				mode = "";
+			});
+
+			wsRegions?.on("region-updated", (region) => {
+				var updatedAnnotation = regionsMap.get(region.id);
+				updatedAnnotation.start = region.start;
+				updatedAnnotation.end = region.end;
+				updateAnnotations();
+			});
 		}
 		if (!waveform_settings.autoplay) {
 			waveform?.stop();
@@ -510,22 +527,6 @@
 	$: waveform?.on("play", () => {
 		playing = true;
 		dispatch("play");
-	});
-
-	$: wsRegions?.on("region-updated", (region) => {
-		var updatedAnnotation = regionsMap.get(region.id);
-		updatedAnnotation.start = region.start;
-		updatedAnnotation.end = region.end;
-		updateAnnotations();
-	});
-
-	$: wsRegions?.on("region-clicked", (region, e) => {
-		switch(mode){
-			case "remove": removeRegion(region); break;
-			case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
-			default: setActiveRegion(region); region.play();
-		}
-		mode = "";
 	});
 
 	$: if (activeRegion) {
@@ -703,6 +704,10 @@
 
 	.trim-button:hover, .trim-button:focus {
 		fill: var(--color-accent);
+	}
+
+	:global(::part(wrapper)) {
+			margin-bottom: var(--size-2);
 	}
 
 	.timestamps {
