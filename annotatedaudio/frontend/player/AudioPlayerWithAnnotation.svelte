@@ -42,11 +42,12 @@
 
 	let show_volume_slider = false;
 	let showRedo = interactive;
-
+	// keep initial annotations in memory
 	let initialAnnotations: Annotation[] | null = null;
 	// correspondence between a Region and an Annotation
 	let regionsMap: Map<string, Annotation> = new Map();
 
+	let caption: Caption;
 	let defaultLabel: CaptionLabel | null = null;
 	let activeLabel: CaptionLabel | null = null;
 
@@ -77,10 +78,7 @@
 		});
 
 		waveform.on("dblclick", () => {
-			// allow the user to add a region only after the pipeline has been applied
-			if(value?.annotations){
-				handleRegionAdd(waveform.getCurrentTime());
-			}
+			handleRegionAdd(waveform.getCurrentTime());
 		});
 	};
 
@@ -88,27 +86,27 @@
 	 * Print regions on waveform given annotation data provided by the pipeline.
 	 * A region can be view as a visual representation of an annotation.
 	 */
-	function initRegions(): void {
+	function createRegions(annotations: Annotation[]): void {
 
-		let annotations = value.annotations;
-
-		// keep initial annotations in memory, for future retrieval
-		if (initialAnnotations === null){
-			initialAnnotations = []
-
-			// defines a label that will be activated by default if the user selects none
-			// this label is set to the first annotation's speaker, if there is at least one
-			// annotation, or none otherwise.
-			if(annotations.length === 0){
-				return;
-			}
-			defaultLabel = {speaker: annotations[0].speaker, color: annotations[0].color, shortcut: "A"};
-			annotations.forEach(
-				annotation => initialAnnotations.push(Object.assign({}, annotation))
-			);
+		if (!initialAnnotations){
+			initialAnnotations = [...annotations];
 		}
+		if(annotations.length === 0){
+			return;
+		}
+		// defines a label that will be activated by default if the user selects none
+		// this label is set to the first annotation's speaker, if there is at least one
+		// annotation, or none otherwise.
+		defaultLabel = {speaker: annotations[0].speaker, color: annotations[0].color, shortcut: "A"};
 
-		value.annotations.forEach(annotation => {
+		const currentAnnotations = Array.from(regionsMap.values());
+		annotations = annotations.filter(annotation => !currentAnnotations.some(currentAnnotation =>
+			annotation.start === currentAnnotation.start &&
+			annotation.end === currentAnnotation.end &&
+			annotation.speaker === currentAnnotation.speaker
+		))
+
+		annotations.forEach(annotation => {
 			let region = addRegion({
 				start: annotation.start,
 				end: annotation.end,
@@ -140,12 +138,13 @@
 	 */
 	function addRegion(options: RegionParams, speaker: string): Region {
 		let region = wsRegions.addRegion(options);
-		regionsMap.set(region.id, {
-			start: region.start,
-			end: region.end,
-			speaker: speaker,
-			color: region.color,
-		});
+		const annotation = {start: region.start, end: region.end, speaker: speaker, color: region.color};
+		regionsMap.set(region.id, annotation);
+
+		// if this is the first region added on the waveform
+		if(!initialAnnotations){
+			initialAnnotations = [annotation];
+		}
 		updateAnnotations();
 
 		return region;
@@ -156,18 +155,19 @@
 	 * @param relativeY mouse y-coordinate relative to waveform start
 	 */
 	function handleRegionAdd(relativeY: number): void{
-		let regionLabel = (activeLabel !== null ? activeLabel : defaultLabel);
+		let label = (activeLabel !== null ? activeLabel : defaultLabel);
 		// if annotations were not initialized, do nothing
-		if (regionLabel === null){
+		if (label === null){
+			window.alert("First create a label by clicking on \"+\" or by pressing A-Z");
 			return;
 		}
 		let region = addRegion({
 			start: relativeY - 1.0,
 			end: relativeY + 1.0,
-			color: regionLabel.color,
+			color: label.color,
 			drag: true,
 			resize: true,
-		}, regionLabel.speaker);
+		}, label.speaker);
 
 		// set region as active one
 		setActiveRegion(region);
@@ -223,7 +223,7 @@
 		initialAnnotations.forEach(
 				annotation => value.annotations.push(Object.assign({}, annotation))
 		);
-		initRegions();
+		createRegions(value.annotations);
 		dispatch("edit", value);
 	}
 
@@ -243,15 +243,15 @@
 	 * @param region the region to activate
 	 */
 	function setActiveRegion(region: Region): void {
-		if(activeRegion !== null){
+		if(activeRegion){
 			activeRegion.element.style.background = activeRegion.color;
 		}
 
-		if(region === null){
-			activeRegion = region;
+		activeRegion = region;
+		if(!activeRegion){
 			return;
 		}
-		activeRegion = region;
+
 		activeRegion.element.style.background = "repeating-linear-gradient(45deg,"
 						+ region.color
 						+ " ,"
@@ -471,8 +471,8 @@
 		playing = false;
 	}
 
-	$: if(value?.annotations !== null && wsRegions && initialAnnotations === null){
-		initRegions();
+	$: if(value?.annotations !== null && wsRegions){
+		createRegions(value.annotations);
 	}
 
 	$: waveform?.on("decode", (duration: any) => {
@@ -489,6 +489,23 @@
 	$: waveform?.on("ready", () => {
 		if(wsRegions === undefined ){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
+
+			// add region-clicked event listener
+			wsRegions?.on("region-clicked", (region, e) => {
+				switch(mode){
+					case "remove": removeRegion(region); break;
+					case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
+					default: setActiveRegion(region); region.play();
+				}
+				mode = "";
+			});
+
+			wsRegions?.on("region-updated", (region) => {
+				var updatedAnnotation = regionsMap.get(region.id);
+				updatedAnnotation.start = region.start;
+				updatedAnnotation.end = region.end;
+				updateAnnotations();
+			});
 		}
 		if (!waveform_settings.autoplay) {
 			waveform?.stop();
@@ -510,21 +527,6 @@
 	$: waveform?.on("play", () => {
 		playing = true;
 		dispatch("play");
-	});
-
-	$: wsRegions?.on("region-updated", (region) => {
-		var updatedAnnotation = regionsMap.get(region.id);
-		updatedAnnotation.start = region.start;
-		updatedAnnotation.end = region.end;
-		updateAnnotations();
-	});
-
-	$: wsRegions?.on("region-clicked", (region, e) => {
-		switch(mode){
-			case "remove": removeRegion(region); break;
-			case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
-			default: setActiveRegion(region); region.play();
-		}
 	});
 
 	$: if (activeRegion) {
@@ -623,7 +625,7 @@
 					/>
 				</div>
 				<div class="regions-actions">
-					{#if editable && interactive && value.annotations}
+					{#if editable && interactive && value}
 					{#if showRedo}
 						<button
 							class="action icon"
@@ -638,8 +640,7 @@
 						class="action icon remove-button"
 						aria-label="Remove an annotation"
 						title={i18n("Remove an annotation")}
-						on:focusin={() => mode = "remove"}
-						on:focusout={() => mode = ""}
+						on:click={() => mode = "remove"}
 					>
 						<Gum/>
 					</button>
@@ -647,17 +648,17 @@
 						class="action icon trim-button"
 						aria-label="Split an annotation"
 						title={i18n("Split an annotation")}
-						on:focusin={() => mode = "split"}
-						on:focusout={() => mode = ""}
+						on:click={() => mode = "split"}
 					>
 						<Trim/>
 					</button>
 				{/if}
 				</div>
 			</div>
-			{#if value?.annotations}
+			{#if value}
 				<Caption
 					value={value.annotations}
+					bind:this={caption}
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:select={(e) => activeLabel = e.detail}
 				/>
@@ -694,7 +695,7 @@
 	}
 
 	.remove-button, .trim-button {
-		fill: #9ca3af;
+		fill: var(--neutral-400);
 	}
 
 	.remove-button:hover, .remove-button:focus {
@@ -706,7 +707,7 @@
 	}
 
 	:global(::part(wrapper)) {
-		margin-bottom: var(--size-2);
+			margin-bottom: var(--size-2);
 	}
 
 	.timestamps {
