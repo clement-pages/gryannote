@@ -23,6 +23,7 @@
 	export let pipelines: [string, string | number][];
 	export let show_label: boolean;
 	export let show_config: boolean = false;
+	export let enable_edition: boolean = false;
 	export let container = true;
 	export let scale: number | null = null;
 	export let min_width: number | undefined = undefined;
@@ -260,24 +261,26 @@
 			on:key_up={(e) => gradio.dispatch("key_up", e.detail)}
 			disabled={!interactive}
 		/>
-		<div class="toggle-config">
-			<p> Show configuration </p>
-			<label
-				class="switch"
-				title={value.name == ""?
-					"Please select a pipeline first":
-					"Show pipeline config"
-				}
-			>
-				<input
-					type="checkbox"
-					disabled={value.name == ""}
-					bind:checked={show_config}
-					on:input={() => {paramsViewNeedUpdate=true; show_config = !show_config }}
+		{#if enable_edition}
+			<div class="toggle-config">
+				<p> Show configuration </p>
+				<label
+					class="switch"
+					title={value.name == ""?
+						"Please select a pipeline first":
+						"Show pipeline config"
+					}
 				>
-				<span class="slider round"></span>
-			</label>
-		</div>
+					<input
+						type="checkbox"
+						disabled={value.name == ""}
+						bind:checked={show_config}
+						on:input={() => {paramsViewNeedUpdate=true; show_config = !show_config }}
+					>
+					<span class="slider round"></span>
+				</label>
+			</div>
+		{/if}
 		<div class="params-control" id="params-control"></div>
 			{#if value.name !== ""}
 				<div class="validation">
