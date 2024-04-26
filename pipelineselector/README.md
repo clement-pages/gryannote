@@ -1,7 +1,6 @@
 
 # `gradio_pipelineselector`
-
-<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.1.1%20-%20orange">
+<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.1.2%20-%20orange">  
 
 A component allowing a user to select a pipeline from a drop-down list
 
@@ -159,7 +158,20 @@ bool
 ```
 
 </td>
-<td align="left"><code>True</code></td>
+<td align="left"><code>False</code></td>
+<td align="left">bool, optional</td>
+</tr>
+
+<tr>
+<td align="left"><code>enable_edition</code></td>
+<td align="left" style="width: 25%;">
+
+```python
+bool
+```
+
+</td>
+<td align="left"><code>False</code></td>
 <td align="left">bool, optional</td>
 </tr>
 
@@ -268,6 +280,7 @@ bool
 </tr>
 </tbody></table>
 
+
 ### Events
 
 | name | description |
@@ -278,6 +291,8 @@ bool
 | `focus` | This listener is triggered when the PipelineSelector is focused. |
 | `blur` | This listener is triggered when the PipelineSelector is unfocused/blurred. |
 | `key_up` | This listener is triggered when the user presses a key while the PipelineSelector is focused. |
+
+
 
 ### User function
 
@@ -297,3 +312,4 @@ The code snippet below is accurate in cases where the component is used as both 
  ) -> pyannote.audio.core.pipeline.Pipeline | None:
      return value
  ```
+ 
