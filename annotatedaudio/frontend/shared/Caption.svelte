@@ -3,7 +3,7 @@
     import Plus from "./icons/Plus.svelte";
     import { createEventDispatcher, onMount} from "svelte";
 
-    export let value: Annotation[] | null = null;
+    export let annotations: Annotation[] | null = null;
 
     let container: HTMLDivElement;
 
@@ -36,7 +36,7 @@
             return;
         }
         if(!speaker){
-            speaker = "SPEAKER_" + speakerIdx.toString().padStart(2, "0");
+            speaker = "LABEL_" + speakerIdx.toString().padStart(2, "0");
         }
         if(!color){
             color = colorList[speakerIdx % colorList.length];
@@ -89,9 +89,9 @@
     }
 
     $:{
-        if(container && value){
+        if(container && annotations){
             // retrieve speaker list and corresponding annotation color
-            value.forEach(annotation => {
+            annotations.forEach(annotation => {
                 // if annotation has a label that does not already exist in the caption,
                 // create a new label
                 if(!labels.some(label => label.speaker === annotation.speaker)){

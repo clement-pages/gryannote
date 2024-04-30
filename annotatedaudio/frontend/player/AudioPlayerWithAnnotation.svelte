@@ -155,11 +155,10 @@
 	 * @param relativeY mouse y-coordinate relative to waveform start
 	 */
 	function handleRegionAdd(relativeY: number): void{
-		let label = (activeLabel !== null ? activeLabel : defaultLabel);
+		let label = (activeLabel ? activeLabel : defaultLabel);
 		// if annotations were not initialized, do nothing
-		if (label === null){
-			window.alert("First create a label by clicking on \"+\" or by pressing A-Z");
-			return;
+		if (!label){
+			label = caption.createLabel();
 		}
 		let region = addRegion({
 			start: relativeY - 1.0,
@@ -657,8 +656,8 @@
 			</div>
 			{#if value}
 				<Caption
-					value={value.annotations}
 					bind:this={caption}
+					bind:annotations={value.annotations}
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:select={(e) => activeLabel = e.detail}
 				/>
