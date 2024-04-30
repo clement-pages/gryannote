@@ -656,8 +656,8 @@
 			</div>
 			{#if value}
 				<Caption
-					value={value.annotations}
 					bind:this={caption}
+					bind:annotations={value.annotations}
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:select={(e) => activeLabel = e.detail}
 				/>
