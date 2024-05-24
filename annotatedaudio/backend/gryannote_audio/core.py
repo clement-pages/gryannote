@@ -1,4 +1,3 @@
-from random import randint
 from typing import ClassVar, Dict, List, Optional, Text
 
 import networkx as nx
@@ -16,8 +15,6 @@ class Annotation(GradioModel):
     end: float
     # annotation speaker label
     speaker: Text
-    # annotation speaker color
-    color: Text
     # css style level of the annotation
     level: Optional[int]
     # total num level
@@ -32,23 +29,13 @@ class Annotation(GradioModel):
         num_levels: Optional[int] = None,
         **kwargs,
     ):
-        color = self.get_annotation_color(speaker)
         super().__init__(
             start=start,
             end=end,
             speaker=speaker,
-            color=color,
             level=level,
             num_levels=num_levels,
         )
-
-    @classmethod
-    def get_annotation_color(cls, speaker: Text):
-        if speaker not in Annotation.speakers_color:
-            Annotation.speakers_color[
-                speaker
-            ] = f"rgba({randint(0, 255)}, {randint(0, 255)}, {randint(0, 255)}, 0.5)"
-        return Annotation.speakers_color[speaker]
 
 
 class AnnotadedAudioData(GradioModel):

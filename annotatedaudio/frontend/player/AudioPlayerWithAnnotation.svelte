@@ -94,10 +94,6 @@
 		if(annotations.length === 0){
 			return;
 		}
-		// defines a label that will be activated by default if the user selects none
-		// this label is set to the first annotation's speaker, if there is at least one
-		// annotation, or none otherwise.
-		defaultLabel = {speaker: annotations[0].speaker, color: annotations[0].color, shortcut: "A"};
 
 		const currentAnnotations = Array.from(regionsMap.values());
 		annotations = annotations.filter(annotation => !currentAnnotations.some(currentAnnotation =>
@@ -107,10 +103,11 @@
 		))
 
 		annotations.forEach(annotation => {
+			let label = caption.createLabel(annotation.speaker)
 			let region = addRegion({
 				start: annotation.start,
 				end: annotation.end,
-				color: annotation.color,
+				color: label.color,
 				drag: true,
 				resize: true,
 			}, annotation.speaker);
@@ -283,7 +280,6 @@
 
 			// update corresponding annotation color
 			let activeAnnotation = regionsMap.get(activeRegion.id);
-			activeAnnotation.color = label.color;
 			activeAnnotation.speaker = label.speaker;
 			updateAnnotations();
 		}
@@ -657,7 +653,8 @@
 			{#if value}
 				<Caption
 					bind:this={caption}
-					bind:annotations={value.annotations}
+					bind:defaultLabel
+					bind:activeLabel
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:select={(e) => activeLabel = e.detail}
 				/>
