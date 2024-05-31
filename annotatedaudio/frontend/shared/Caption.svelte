@@ -3,12 +3,12 @@
     import Plus from "./icons/Plus.svelte";
     import { createEventDispatcher, onMount} from "svelte";
 
-    export let annotations: Annotation[] | null = null;
+    export let defaultLabel: CaptionLabel | null = null;
+    export let activeLabel: CaptionLabel | null = null;
 
     let container: HTMLDivElement;
 
     let labels: CaptionLabel[] = [];
-    let activeLabel = null;
 
     let speakerIdx: number = 0;
 
@@ -17,6 +17,10 @@
         select: CaptionLabel;
     }>();
 
+    /**
+     * Create label user interface component
+     * @param label
+     */
     function createLabelElement(label: CaptionLabel): void {
         const labelButton = document.createElement("button");
         labelButton.style.backgroundColor = label.color;
@@ -29,7 +33,15 @@
         container.appendChild(labelButton);
     }
 
-
+    /**
+     *  Create and add a new label to the caption with specified speaker, color and shortcut. The new
+     * label is return by this method. In the case a label for the specified speaker already exists,
+     * this method does not create a new label and returns the existing one.
+     * @param speaker label name, optional. If not provided, label will be set to LABEL_xx.
+     * @param color label color, optional.
+     * @param shortcut label shortcut, optional. If not provided, will be set to the first available
+     * letter in alphabetic order.
+     */
     export function createLabel(speaker?: string, color?: string, shortcut?: string): CaptionLabel {
         // if maximum number of labels has been reached, do nothing
         if(labels.length === 26){
@@ -38,12 +50,17 @@
         if(!speaker){
             speaker = "LABEL_" + speakerIdx.toString().padStart(2, "0");
         }
+        // if a label for speaker already exists, do not create a new one
+        if(getLabel(speaker)){
+            return getLabel(speaker);
+        }
+
         if(!color){
             color = colorList[speakerIdx % colorList.length];
         }
         if(!shortcut){
             shortcut = "A";
-            //take the first available letter
+            // take the first available letter
             while((labels.some(label => label.shortcut === shortcut)) && shortcut !== "Z"){
                 shortcut = String.fromCharCode(shortcut.charCodeAt(0) + 1);
             }
@@ -60,9 +77,24 @@
 
         speakerIdx++;
 
+        labels = labels.sort((i1, i2) => i1.shortcut.localeCompare(i2.shortcut));
+
         return label;
     }
 
+    /**
+     *  Get the caption label mapped to the speafied speaker. Return `undefined` if no correspondance
+     * was found.
+     * @param speaker
+     */
+    export function getLabel(speaker: string): CaptionLabel {
+        return labels.find(label => label.speaker === speaker);
+    }
+
+    /**
+     * Set the specified label as the active one
+     * @param label label to be set as active
+     */
     function setActiveLabel(label: CaptionLabel): void {
         // reset active label
         if(activeLabel){
@@ -71,10 +103,16 @@
 
         // update active label
         activeLabel = label;
-        document.getElementById(activeLabel.shortcut).classList.add("active-button");
+        if(activeLabel){
+            document.getElementById(activeLabel.shortcut).classList.add("active-button");
+        }
         dispatch("select", activeLabel);
     }
 
+    /**
+     * Handle keyboard shortcut event
+     * @param key key pressed by the user
+     */
     function handleKeyboardSelection(key: string): void {
         let label = null
 
@@ -88,18 +126,8 @@
         setActiveLabel(label);
     }
 
-    $:{
-        if(container && annotations){
-            // retrieve speaker list and corresponding annotation color
-            annotations.forEach(annotation => {
-                // if annotation has a label that does not already exist in the caption,
-                // create a new label
-                if(!labels.some(label => label.speaker === annotation.speaker)){
-                    createLabel(annotation.speaker, annotation.color);
-                }
-            });
-            labels = labels.sort((i1, i2) => i1.shortcut.localeCompare(i2.shortcut));
-        }
+    $: if(labels.length > 0){
+        defaultLabel = labels[0];
     }
 
     onMount(() => {

@@ -11,7 +11,6 @@ export type Annotation = {
 	start: number
 	end: number
 	speaker: string
-	color: string
 	level?: number | undefined
 	numLevels?: number | undefined
 }
