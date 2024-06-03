@@ -7,14 +7,14 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "gryannote_audio"
-version = "0.1.6"
-description = "audio component with speaker annotations"
+name = "gryannote_pipeline"
+version = "0.1.2"
+description = "A component allowing a user to select a pipeline from a drop-down list"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [{ name = "Clément Pagés", email = "clement.pages@irit.fr" }]
-keywords = ["gradio-custom-component", "gradio-template-Audio", "pyannote.audio", "speaker diarization"]
+keywords = ["gradio-custom-component", "gradio-template-Dropdown", "pyannote.audio", "pyannote", "diarization"]
 # Add dependencies here
 dependencies = ["gradio>=4.0,<5.0"]
 classifiers = [
@@ -34,7 +34,7 @@ classifiers = [
 dev = ["build", "twine"]
 
 [tool.hatch.build]
-artifacts = ["/backend/gryannote_audio/templates", "*.pyi"]
+artifacts = ["/backend/gryannote_pipeline/templates", "*.pyi"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["/backend/gryannote_audio"]
+packages = ["/backend/gryannote_pipeline"]

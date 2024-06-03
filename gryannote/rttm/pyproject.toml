@@ -7,14 +7,14 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "gradio_pipelineselector"
-version = "0.1.2"
-description = "A component allowing a user to select a pipeline from a drop-down list"
+name = "gryannote_rttm"
+version = "0.1.0"
+description = "Component to load, display and download RTTM files"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.8"
-authors = [{ name = "YOUR NAME", email = "YOUREMAIL@domain.com" }]
-keywords = ["gradio-custom-component", "gradio-template-Dropdown", "pyannote.audio", "pyannote", "diarization"]
+requires-python = ">=3.10"
+authors = [{ name = "Clément Pagés", email = "clement.pages@irit.fr" }]
+keywords = ["gradio-custom-component", "gradio-template-File", "pyannote-audio", "diarization", "rttm", "interactive diarization"]
 # Add dependencies here
 dependencies = ["gradio>=4.0,<5.0"]
 classifiers = [
@@ -23,8 +23,6 @@ classifiers = [
   'Operating System :: OS Independent',
   'Programming Language :: Python :: 3',
   'Programming Language :: Python :: 3 :: Only',
-  'Programming Language :: Python :: 3.8',
-  'Programming Language :: Python :: 3.9',
   'Programming Language :: Python :: 3.10',
   'Programming Language :: Python :: 3.11',
   'Topic :: Scientific/Engineering',
@@ -36,7 +34,7 @@ classifiers = [
 dev = ["build", "twine"]
 
 [tool.hatch.build]
-artifacts = ["/backend/gradio_pipelineselector/templates", "*.pyi"]
+artifacts = ["/backend/gryannote_rttm/templates", "*.pyi",]
 
 [tool.hatch.build.targets.wheel]
-packages = ["/backend/gradio_pipelineselector"]
+packages = ["/backend/gryannote_rttm"]

@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gryannote"
+version = "0.1.0"
+description = "Provide Gradio custom components to make the diarization-based audio annotation process easier"
+readme = "README.md"
+authors = [{name = "Clément Pagés", email = "clement.pages@irit.fr"}]
+license = { file = "LICENSE" }
+classifiers = [
+  'Development Status :: 3 - Alpha',
+  'License :: OSI Approved :: Apache Software License',
+  'Operating System :: OS Independent',
+  'Programming Language :: Python :: 3',
+  'Programming Language :: Python :: 3 :: Only',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.11',
+  'Topic :: Scientific/Engineering',
+  'Topic :: Scientific/Engineering :: Artificial Intelligence',
+  'Topic :: Scientific/Engineering :: Visualization'
+]
+keywords = ["gradio-custom-component", "speaker-diarization", "pyannote", "annotation-tool", "audio"]
+dependencies = [
+    "gradio>=4.0,<5.0",
+    "pyannote.audio>=3.1.1",
+    "pyannote.core>=5.0.0",
+    "networkx>=3.2.1",
+]
+requires-python = ">=3.10"
+
+
+[project.optional-dependencies]
+dev = ["build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/clement-pages/gryannote"

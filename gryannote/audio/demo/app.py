@@ -1,5 +1,5 @@
 import gradio as gr
-from gryannote_audio import AnnotatedAudio
+from gryannote.audio import AnnotatedAudio
 from pyannote.audio import Pipeline
 
 annotated_audio = AnnotatedAudio(type="filepath", interactive=True)

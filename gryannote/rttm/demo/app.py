@@ -1,7 +1,7 @@
 import gradio as gr
-from gradio_annotatedaudio import AnnotatedAudio
-from gradio_pipelineselector import PipelineSelector
-from gradio_rttmhandler import RTTMHandler
+from gryannote.audio import AnnotatedAudio
+from gryannote.pipeline import PipelineSelector
+from gryannote.rttm import RTTMHandler
 from pyannote.audio import Pipeline
 
 example = AnnotatedAudio().example_inputs()

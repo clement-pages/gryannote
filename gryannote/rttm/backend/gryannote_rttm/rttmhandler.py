@@ -8,7 +8,7 @@ from gradio.components.base import Component
 from gradio.data_classes import FileData, ListFiles
 from gradio.events import Events
 from gradio.utils import NamedString
-from gradio_annotatedaudio.core import AnnotadedAudioData
+from gryannote.audio.backend.gryannote_audio.core import AnnotadedAudioData
 from gradio_client.documentation import document, set_documentation_group
 from pyannote.core import Annotation as PyannoteAnnotation
 
