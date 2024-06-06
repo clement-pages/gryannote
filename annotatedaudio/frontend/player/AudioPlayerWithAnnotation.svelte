@@ -87,8 +87,9 @@
 			}
 		});
 
-		// resolve graph coloring problem
-		let graphColoring = regionsGraph.greedyColoring();
+		// resolve graph coloring problem on graph connected component to which the region belongs
+		let regionConnectedComponent = regionsGraph.getConnectedComponent(region)
+		let graphColoring = regionConnectedComponent.greedyColoring();
 		let numColors = Math.max(...Array.from(graphColoring.values())) + 1;
 		// update regions alignement
 		wsRegions.getRegions().forEach(region => {

@@ -1,5 +1,5 @@
 export default class Graph {
-    edges: Map<string, string[]>
+    edges: Map<string, string[]>;
     numNodes: number = 0;
 
     constructor(){
@@ -11,10 +11,10 @@ export default class Graph {
     }
 
     public getNodesList(): string[] {
-        return Array.from(this.edges.keys())
+        return Array.from(this.edges.keys());
     }
 
-    public getAdj(node: string): string[] | undefined{
+    public getAdjNodes(node: string): string[] | undefined{
         return this.edges.get(node);
     }
 
@@ -23,7 +23,7 @@ export default class Graph {
     }
 
     public isEdgeInGraph(node1: string, node2: string){
-        let adjNodes = this.edges.get(node1);
+        let adjNodes = this.getAdjNodes(node1);
         if(adjNodes === undefined){
             return false;
         }
@@ -58,12 +58,12 @@ export default class Graph {
             this.addNode(node2);
         }
         // non-oriented graph
-        this.edges.get(node1)?.push(node2);
-        this.edges.get(node2)?.push(node1);
+        this.getAdjNodes(node1)?.push(node2);
+        this.getAdjNodes(node2)?.push(node1);
     }
 
     public removeNode(node: string): boolean {
-        let adjNodes = this.edges.get(node);
+        let adjNodes = this.getAdjNodes(node);
         if(adjNodes !== undefined){
             // remove all the corresponding edges
             adjNodes.forEach(adjNode => {
@@ -83,8 +83,8 @@ export default class Graph {
             // if one of the specified node not in graph, do nothing
             return;
         }
-        this.edges.get(node1)?.splice(Number(this.edges.get(node1)?.indexOf(node2)), 1)
-        this.edges.get(node2)?.splice(Number(this.edges.get(node1)?.indexOf(node1)), 1)
+        this.getAdjNodes(node1)?.splice(Number(this.getAdjNodes(node1)?.indexOf(node2)), 1);
+        this.getAdjNodes(node2)?.splice(Number(this.getAdjNodes(node1)?.indexOf(node1)), 1);
     }
 
     public greedyColoring(){
@@ -93,7 +93,7 @@ export default class Graph {
         let isColorAvailable = new Array(this.numNodes).fill(true);
         
         this.getNodesList().forEach(node => {
-            this.getAdj(node)?.forEach(adjNode =>{
+            this.getAdjNodes(node)?.forEach(adjNode =>{
                 // get color of adjacent nodes and remove them from available color
                 let nodeColor = nodesColor.get(adjNode);
                 if(nodeColor !== undefined){
@@ -106,10 +106,30 @@ export default class Graph {
             }
             nodesColor.set(node, color);
             // reset available color for the next iteration
-            isColorAvailable.fill(true)
+            isColorAvailable.fill(true);
         });
 
         return nodesColor;
+    }
+
+    private getConnectedComponentHelper(node: string, visitedNodes: string[], connectedComponent: Graph): void{
+        visitedNodes.push(node);
+        connectedComponent.addNode(node);
+        this.getAdjNodes(node)?.forEach(adjNode => {
+            connectedComponent.addEdge(node, adjNode);
+            if(visitedNodes.find(visitedNode => visitedNode === adjNode) === undefined){
+                this.getConnectedComponentHelper(adjNode, visitedNodes, connectedComponent);
+            }
+        });
+    }
+
+    public getConnectedComponent(node: string): Graph {
+        let visitedNodes: string[] = [];
+        let connectedComponent: Graph = new Graph();
+
+        this.getConnectedComponentHelper(node, visitedNodes, connectedComponent);
+        
+        return connectedComponent;
     }
 
 }
