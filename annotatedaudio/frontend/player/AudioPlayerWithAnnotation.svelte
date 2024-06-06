@@ -104,8 +104,13 @@
 		regionsGraph.removeNode(region);
 	}
 
+	/**
+	 * Update region vertical alignement on the waveform
+	 * @param region region to be updated
+	 * @param regionColor color of the region in the overlapping graph
+	 * @param numColors total number of colors in the overlapping graph
+	 */
 	function updateRegionAlignement(region: Region, regionColor: number, numColors: number){
-		// update region alignement style:
 		let top = 0;
 		let height = 0;
 		if(numColors > 4){
@@ -115,6 +120,8 @@
 			top = (regionColor + 1) * 10;
 			height = (100 - (numColors + 1) * 10)
 		}
+
+		// update region alignement style:
 		region.element.style.top = top.toString() + "%";
 		region.element.style.height = height.toString() + "%";
 	}
