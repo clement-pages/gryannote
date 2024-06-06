@@ -67,7 +67,7 @@
 	 * Update region overlapping graph
 	 * @param region region ID to update
 	 */
-	function updateGraph(region: string): Map<string, number> {
+	function updateRegionsOverlapping(region: string): void{
 		// if region not in the graph, add it
 		if(!regionsGraph.isNodeInGraph(region)){
 			regionsGraph.addNode(region);
@@ -88,7 +88,12 @@
 		});
 
 		// resolve graph coloring problem
-		return regionsGraph.greedyColoring();
+		let graphColoring = regionsGraph.greedyColoring();
+		let numColors = Math.max(...Array.from(graphColoring.values())) + 1;
+		// update regions alignement
+		wsRegions.getRegions().forEach(region => {
+			updateRegionAlignement(region, graphColoring.get(region.id), numColors);
+		});
 	}
 
 	/**
@@ -99,17 +104,15 @@
 		regionsGraph.removeNode(region);
 	}
 
-	function updateRegionStyle(region: Region, graphColoring: Map<string, number>){
-		let numColors = Math.max(...Array.from(graphColoring.values())) + 1;
-
+	function updateRegionAlignement(region: Region, regionColor: number, numColors: number){
 		// update region alignement style:
 		let top = 0;
 		let height = 0;
 		if(numColors > 4){
-			top = ((graphColoring.get(region.id) % 4) + 1) * 10;
+			top = ((regionColor % 4) + 1) * 10;
 			height = 100 - 4 * 10;
 		}else{
-			top = (graphColoring.get(region.id) + 1) * 10;
+			top = (regionColor + 1) * 10;
 			height = (100 - (numColors + 1) * 10)
 		}
 		region.element.style.top = top.toString() + "%";
@@ -192,8 +195,7 @@
 		let region = wsRegions.addRegion(options);
 		const annotation = {start: region.start, end: region.end, speaker: speaker, color: region.color};
 		regionsMap.set(region.id, annotation);
-		let graphColoring = updateGraph(region.id);
-		updateRegionStyle(region, graphColoring);
+		updateRegionsOverlapping(region.id);
 
 		// if this is the first region added on the waveform
 		if(!initialAnnotations){
@@ -558,8 +560,7 @@
 				let updatedAnnotation = regionsMap.get(region.id);
 				updatedAnnotation.start = region.start;
 				updatedAnnotation.end = region.end;
-				const graphColoring = updateGraph(region.id);
-				updateRegionStyle(region, graphColoring);
+				updateRegionsOverlapping(region.id);
 				updateAnnotations();
 			});
 		}
