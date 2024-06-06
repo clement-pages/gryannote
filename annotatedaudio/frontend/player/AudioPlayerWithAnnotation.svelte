@@ -53,7 +53,7 @@
 	let activeLabel: CaptionLabel | null = null;
 
 	// nodes = regions (id), edges = overlap between linked regions
-	let regionsGraph: Graph = new Graph()
+	let regionsGraph: Graph<string> = new Graph()
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;

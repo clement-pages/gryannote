@@ -1,9 +1,9 @@
-export default class Graph {
-    edges: Map<string, string[]>;
+export default class Graph<N> {
+    edges: Map<N, N[]>;
     numNodes: number = 0;
 
     constructor(){
-        this.edges = new Map<string, string[]>();
+        this.edges = new Map<N, N[]>();
     }
 
     /**
@@ -18,7 +18,7 @@ export default class Graph {
      * Get the list of nodes in this graph
      * @returns list of nodes
      */
-    public getNodesList(): string[] {
+    public getNodesList(): N[] {
         return Array.from(this.edges.keys());
     }
 
@@ -27,7 +27,7 @@ export default class Graph {
      * @param node
      * @returns adjacent nodes in this graph
      */
-    public getAdjNodes(node: string): string[] | undefined{
+    public getAdjNodes(node: N): N[] | undefined{
         return this.edges.get(node);
     }
 
@@ -36,7 +36,7 @@ export default class Graph {
      * @param node node to be be checked
      * @returns true if the specified node is in this graph, false otherwise
      */
-    public isNodeInGraph(node: string) {
+    public isNodeInGraph(node: N) {
         return this.edges.get(node) !== undefined;
     }
 
@@ -47,7 +47,7 @@ export default class Graph {
      * @param node2 edge's second node
      * @returns true if the edge is in this graph, false otherwise
      */
-    public isEdgeInGraph(node1: string, node2: string){
+    public isEdgeInGraph(node1: N, node2: N){
         let adjNodes = this.getAdjNodes(node1);
         if(adjNodes === undefined){
             return false;
@@ -62,7 +62,7 @@ export default class Graph {
      * Add specified node to this graph
      * @param node node to be added
      */
-    public addNode(node: string): void{
+    public addNode(node: N): void{
         if(!this.isNodeInGraph(node)){
             this.edges.set(node, []);
             this.numNodes += 1;
@@ -75,7 +75,7 @@ export default class Graph {
      * @param node1 edge's first node
      * @param node2 edge's second node
      */
-    public addEdge(node1:string, node2: string): void{
+    public addEdge(node1: N, node2: N): void{
         // do not create an edge if nodes are the same
         if(node1 === node2){
             return;
@@ -102,7 +102,7 @@ export default class Graph {
      * @param node node to be removed
      * @returns true if the node has been successfully removed, false otherwise
      */
-    public removeNode(node: string): boolean {
+    public removeNode(node: N): boolean {
         let adjNodes = this.getAdjNodes(node);
         if(adjNodes !== undefined){
             // remove all the corresponding edges
@@ -124,7 +124,7 @@ export default class Graph {
      * @param node1 edge's first node
      * @param node2 edge's second node
      */
-    public removeEdge(node1:string, node2: string): void{
+    public removeEdge(node1: N, node2: N): void{
         if(!this.isEdgeInGraph(node1, node2)){
             // if one of the specified node not in graph, do nothing
             return;
@@ -139,7 +139,7 @@ export default class Graph {
      */
     public greedyColoring(){
         // map associating a color at each graph node:
-        let nodesColor = new Map<string, number>()
+        let nodesColor = new Map<N, number>()
         let isColorAvailable = new Array(this.numNodes).fill(true);
         
         this.getNodesList().forEach(node => {
@@ -167,16 +167,16 @@ export default class Graph {
      * @param node 
      * @returns A graph representing the connected component of the specified node.
      */
-    public getConnectedComponent(node: string): Graph {
-        let visitedNodes: string[] = [];
-        let connectedComponent: Graph = new Graph();
+    public getConnectedComponent(node: N): Graph<N> {
+        let visitedNodes: N[] = [];
+        let connectedComponent: Graph<N> = new Graph();
 
         this.getConnectedComponentHelper(node, visitedNodes, connectedComponent);
         
         return connectedComponent;
     }
 
-    private getConnectedComponentHelper(node: string, visitedNodes: string[], connectedComponent: Graph): void{
+    private getConnectedComponentHelper(node: N, visitedNodes: N[], connectedComponent: Graph<N>): void{
         visitedNodes.push(node);
         connectedComponent.addNode(node);
         this.getAdjNodes(node)?.forEach(adjNode => {
