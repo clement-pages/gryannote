@@ -53,7 +53,7 @@ class AnnotadedAudioData(GradioModel):
 
         prepared_annotations: List[Annotation] = []
 
-        for segment, _ , label in annotations.itertrack(yield_label=True) :
+        for segment, _ , label in annotations.itertracks(yield_label=True) :
             prepared_annotations.append(
                 Annotation(
                     start=segment.start,
