@@ -6,22 +6,47 @@ export default class Graph {
         this.edges = new Map<string, string[]>();
     }
 
+    /**
+     * Get the number of node in this graph
+     * @returns number of node in this graph
+     */
     public getNumNodes(): number {
         return this.numNodes;
     }
-
+    
+    /**
+     * Get the list of nodes in this graph
+     * @returns list of nodes
+     */
     public getNodesList(): string[] {
         return Array.from(this.edges.keys());
     }
 
+    /**
+     * Get nodes adjacent to the specified one
+     * @param node
+     * @returns adjacent nodes in this graph
+     */
     public getAdjNodes(node: string): string[] | undefined{
         return this.edges.get(node);
     }
 
+    /**
+     *  Check whether the specified node is in this graph
+     * @param node node to be be checked
+     * @returns true if the specified node is in this graph, false otherwise
+     */
     public isNodeInGraph(node: string) {
         return this.edges.get(node) !== undefined;
     }
 
+    /**
+     * Check whether the edge (node1, node2) is in this graph. Calling this method for
+     * the edge (node2, node1) will return the same result, as the graph is non-oriented.
+     * @param node1 edge's first node
+     * @param node2 edge's second node
+     * @returns true if the edge is in this graph, false otherwise
+     */
     public isEdgeInGraph(node1: string, node2: string){
         let adjNodes = this.getAdjNodes(node1);
         if(adjNodes === undefined){
@@ -33,6 +58,10 @@ export default class Graph {
         return true;
     }
 
+    /**
+     * Add specified node to this graph
+     * @param node node to be added
+     */
     public addNode(node: string): void{
         if(!this.isNodeInGraph(node)){
             this.edges.set(node, []);
@@ -40,6 +69,12 @@ export default class Graph {
         }
     }
 
+    /**
+     * Add an edge between the two specified node
+     * Note: (node1, node2) === (node2, node1)
+     * @param node1 edge's first node
+     * @param node2 edge's second node
+     */
     public addEdge(node1:string, node2: string): void{
         // do not create an edge if nodes are the same
         if(node1 === node2){
@@ -62,6 +97,11 @@ export default class Graph {
         this.getAdjNodes(node2)?.push(node1);
     }
 
+    /**
+     * Remove the specified node from this graph
+     * @param node node to be removed
+     * @returns true if the node has been successfully removed, false otherwise
+     */
     public removeNode(node: string): boolean {
         let adjNodes = this.getAdjNodes(node);
         if(adjNodes !== undefined){
@@ -78,6 +118,12 @@ export default class Graph {
         return false;
     }
 
+    /**
+     * Remove the edge (node1, node2) from this graph. Calling this method for edge
+     * (node2, node1) will give the same result.
+     * @param node1 edge's first node
+     * @param node2 edge's second node
+     */
     public removeEdge(node1:string, node2: string): void{
         if(!this.isEdgeInGraph(node1, node2)){
             // if one of the specified node not in graph, do nothing
@@ -87,6 +133,10 @@ export default class Graph {
         this.getAdjNodes(node2)?.splice(Number(this.getAdjNodes(node1)?.indexOf(node1)), 1);
     }
 
+    /**
+     * 
+     * @returns 
+     */
     public greedyColoring(){
         // map associating a color at each graph node:
         let nodesColor = new Map<string, number>()
@@ -112,6 +162,20 @@ export default class Graph {
         return nodesColor;
     }
 
+    /**
+     * Get the connected component of the graph to which the specified node belongs.
+     * @param node 
+     * @returns A graph representing the connected component of the specified node.
+     */
+    public getConnectedComponent(node: string): Graph {
+        let visitedNodes: string[] = [];
+        let connectedComponent: Graph = new Graph();
+
+        this.getConnectedComponentHelper(node, visitedNodes, connectedComponent);
+        
+        return connectedComponent;
+    }
+
     private getConnectedComponentHelper(node: string, visitedNodes: string[], connectedComponent: Graph): void{
         visitedNodes.push(node);
         connectedComponent.addNode(node);
@@ -121,15 +185,6 @@ export default class Graph {
                 this.getConnectedComponentHelper(adjNode, visitedNodes, connectedComponent);
             }
         });
-    }
-
-    public getConnectedComponent(node: string): Graph {
-        let visitedNodes: string[] = [];
-        let connectedComponent: Graph = new Graph();
-
-        this.getConnectedComponentHelper(node, visitedNodes, connectedComponent);
-        
-        return connectedComponent;
     }
 
 }
