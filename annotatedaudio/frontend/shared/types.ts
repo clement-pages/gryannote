@@ -11,8 +11,6 @@ export type Annotation = {
 	start: number
 	end: number
 	speaker: string
-	level?: number | undefined
-	numLevels?: number | undefined
 }
 
 export type CaptionLabel = {
