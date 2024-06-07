@@ -1,5 +1,15 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
+
 # Distribution / packaging
 *.egg-info
+.eggs/
+
+dist/
+*.pyc
+*.py[cod]
+*$py.class
+__tmp/*
+*.pyi
+node_modules/
