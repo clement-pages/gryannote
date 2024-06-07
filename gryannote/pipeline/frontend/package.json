@@ -1,10 +1,10 @@
 {
-  "name": "gradio_pipelineselector",
+  "name": "gryannote_pipeline",
   "version": "0.6.2",
   "description": "Gradio UI packages",
   "type": "module",
-  "author": "",
-  "license": "ISC",
+  "author": "Clément Pagés [clement.pages@irit.fr]",
+  "license": "MIT",
   "private": false,
   "main_changeset": true,
   "exports": {

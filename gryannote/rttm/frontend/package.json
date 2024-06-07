@@ -1,10 +1,10 @@
 {
-  "name": "gradio_rttmhanlder",
+  "name": "gryannote_rttm",
   "version": "0.4.7",
   "description": "Gradio UI packages",
   "type": "module",
-  "author": "",
-  "license": "ISC",
+  "author": "Clément Pagés [clement.pages@irit.fr]",
+  "license": "MIT",
   "private": false,
   "dependencies": {
     "@gradio/atoms": "0.4.1",
