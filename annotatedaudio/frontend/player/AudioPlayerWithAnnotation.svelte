@@ -72,7 +72,7 @@
 		if(!regionsGraph.isNodeInGraph(region)){
 			regionsGraph.addNode(region);
 		}
-		
+
 		// get linked annotation
 		let annotation = regionsMap.get(region);
 		regionsGraph.getNodesList().forEach(node => {
@@ -87,13 +87,15 @@
 			}
 		});
 
-		// resolve graph coloring problem on graph connected component to which the region belongs
+		// resolve graph coloring problem on connected component to which the region belongs
 		let regionConnectedComponent = regionsGraph.getConnectedComponent(region)
 		let graphColoring = regionConnectedComponent.greedyColoring();
 		let numColors = Math.max(...Array.from(graphColoring.values())) + 1;
-		// update regions alignement
+		// update regions alignment
 		wsRegions.getRegions().forEach(region => {
-			updateRegionAlignement(region, graphColoring.get(region.id), numColors);
+			if(graphColoring.get(region.id) !== undefined){
+				updateRegionalignment(region, graphColoring.get(region.id), numColors);
+			}
 		});
 	}
 
@@ -106,23 +108,16 @@
 	}
 
 	/**
-	 * Update region vertical alignement on the waveform
+	 * Update region vertical alignment on the waveform
 	 * @param region region to be updated
 	 * @param regionColor color of the region in the overlapping graph
 	 * @param numColors total number of colors in the overlapping graph
 	 */
-	function updateRegionAlignement(region: Region, regionColor: number, numColors: number){
-		let top = 0;
-		let height = 0;
-		if(numColors > 4){
-			top = ((regionColor % 4) + 1) * 10;
-			height = 100 - 4 * 10;
-		}else{
-			top = (regionColor + 1) * 10;
-			height = (100 - (numColors + 1) * 10)
-		}
+	function updateRegionalignment(region: Region, regionColor: number, numColors: number){
+		let top = regionColor * (100. / numColors);
+		let height = 100. / numColors;
 
-		// update region alignement style:
+		// update region alignment style:
 		region.element.style.top = top.toString() + "%";
 		region.element.style.height = height.toString() + "%";
 	}
