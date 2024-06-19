@@ -10,7 +10,7 @@
 
     let labels: CaptionLabel[] = [];
 
-    let speakerIdx: number = 0;
+    let labelIdx: number = 0;
 
     const colorList = ["rgba(255, 215, 0, 0.5)", "rgba(0, 0, 255, 0.5)", "rgba(255, 0, 0, 0.5)", "rgba(0, 255, 0, 0.5)"];
     const dispatch = createEventDispatcher<{
@@ -26,7 +26,7 @@
         labelButton.style.backgroundColor = label.color;
         labelButton.classList.add("captionLabel");
         labelButton.id = label.shortcut;
-        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.speaker;
+        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.name;
         labelButton.addEventListener("focusin", () => {setActiveLabel(label.shortcut)});
         labelButton.addEventListener("focusout", () => {setActiveLabel()});
 
@@ -34,29 +34,29 @@
     }
 
     /**
-     *  Create and add a new label to the caption with specified speaker, color and shortcut. The new
-     * label is return by this method. In the case a label for the specified speaker already exists,
+     *  Create and add a new label to the caption with specified name, color and shortcut. The new
+     * label is return by this method. In the case a label for the specified name already exists,
      * this method does not create a new label and returns the existing one.
-     * @param speaker label name, optional. If not provided, label will be set to LABEL_xx.
+     * @param name label name, optional. If not provided, label will be set to LABEL_xx.
      * @param color label color, optional.
      * @param shortcut label shortcut, optional. If not provided, will be set to the first available
      * letter in alphabetic order.
      */
-    export function createLabel(options: {speaker?: string, color?: string, shortcut?: string}): CaptionLabel {
+    export function createLabel(options: {name?: string, color?: string, shortcut?: string}): CaptionLabel {
         // if maximum number of labels has been reached, do nothing
         if(labels.length === 26){
             return;
         }
-        if(!options.speaker){
-            options.speaker = "LABEL_" + speakerIdx.toString().padStart(2, "0");
+        if(!options.name){
+            options.name = "LABEL_" + labelIdx.toString().padStart(2, "0");
         }
-        // if a label for speaker already exists, do not create a new one
-         if(getLabel("speaker", options.speaker)){
-            return getLabel("speaker", options.speaker);
+        // if a label with specified name already exists, do not create a new one
+         if(getLabel("name", options.name)){
+            return getLabel("name", options.name);
         }
     
         if(!options.color){
-            options.color = colorList[speakerIdx % colorList.length];
+            options.color = colorList[labelIdx % colorList.length];
         }
         if(!options.shortcut){
             options.shortcut = "A";
@@ -67,14 +67,14 @@
         }
 
         const label: CaptionLabel = {
-            speaker: options.speaker,
+            name: options.name,
             color: options.color,
             shortcut: options.shortcut,
         };
         labels.push(label);
         createLabelElement(label);
 
-        speakerIdx++;
+        labelIdx++;
 
         labels = labels.sort((i1, i2) => i1.shortcut.localeCompare(i2.shortcut));
 
@@ -82,11 +82,13 @@
     }
 
     /**
-     * Get label mapped to specified attribute value. If there is no correspondance, a new label is created
+     * Get label mapped to specified attribute value. If there is no correspondance, a new label is 
+     * created
      * if `create` was set to `true`, otherwise returns `undefined`
      * @param attribute attribute to search
      * @param value attribute value
-     * @param create whether to create a label if no correspondance found for specified speaker
+     * @param create whether to create a label if no correspondance found for specified attribute
+     * value
      * 
      * @returns a caption label or `undefined`
      */

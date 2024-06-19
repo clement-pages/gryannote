@@ -167,7 +167,7 @@
 		))
 
 		annotations.forEach(annotation => {
-			let label = caption.createLabel({speaker: annotation.speaker})
+			let label = caption.createLabel({name: annotation.speaker})
 			let region = addRegion({
 				start: annotation.start,
 				end: annotation.end,
@@ -225,7 +225,7 @@
 			color: label.color,
 			drag: true,
 			resize: true,
-		}, label.speaker);
+		}, label.name);
 
 		// set region as active one
 		setActiveRegion(region);
@@ -344,7 +344,7 @@
 
 			// update corresponding annotation color
 			let activeAnnotation = regionsMap.get(activeRegion.id);
-			activeAnnotation.speaker = label.speaker;
+			activeAnnotation.speaker = label.name;
 			updateAnnotations();
 		}
 	}
