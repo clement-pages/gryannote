@@ -13,8 +13,8 @@ export type Annotation = {
 	speaker: string
 }
 
-export type CaptionLabel = {
-	speaker: string
+export type Label = {
+	name: string
 	color: string
 	shortcut: string
 }

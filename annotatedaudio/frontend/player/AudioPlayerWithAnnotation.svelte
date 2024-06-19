@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Annotation, WaveformOptions , CaptionLabel} from "../shared/types";
+	import type { Annotation, WaveformOptions , Label} from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 
 	import { onMount } from "svelte";
@@ -49,8 +49,8 @@
 	let regionsMap: Map<string, Annotation> = new Map();
 
 	let caption: Caption;
-	let defaultLabel: CaptionLabel | null = null;
-	let activeLabel: CaptionLabel | null = null;
+	let defaultLabel: Label | null = null;
+	let activeLabel: Label | null = null;
 
 	// nodes = regions (id), edges = overlap between linked regions
 	let regionsGraph: Graph<string> = new Graph()
@@ -167,7 +167,7 @@
 		))
 
 		annotations.forEach(annotation => {
-			let label = caption.createLabel(annotation.speaker)
+			let label = caption.createLabel({name: annotation.speaker})
 			let region = addRegion({
 				start: annotation.start,
 				end: annotation.end,
@@ -215,9 +215,9 @@
 	 */
 	function handleRegionAdd(relativeY: number): void{
 		let label = (activeLabel ? activeLabel : defaultLabel);
-		// if annotations were not initialized, do nothing
+		// if annotations were not initialized, create a new label
 		if (!label){
-			label = caption.createLabel();
+			label = caption.createLabel({});
 		}
 		let region = addRegion({
 			start: relativeY - 1.0,
@@ -225,7 +225,7 @@
 			color: label.color,
 			drag: true,
 			resize: true,
-		}, label.speaker);
+		}, label.name);
 
 		// set region as active one
 		setActiveRegion(region);
@@ -324,7 +324,7 @@
 	 * speaker label
 	 * @param label active caption's label
 	 */
-	function setRegionSpeaker(label: CaptionLabel){
+	function setRegionSpeaker(label: Label){
 		// get label color
 
 		if(activeRegion !== null) {
@@ -344,7 +344,7 @@
 
 			// update corresponding annotation color
 			let activeAnnotation = regionsMap.get(activeRegion.id);
-			activeAnnotation.speaker = label.speaker;
+			activeAnnotation.speaker = label.name;
 			updateAnnotations();
 		}
 	}
@@ -721,7 +721,6 @@
 					bind:defaultLabel
 					bind:activeLabel
 					on:select={(e) => setRegionSpeaker(e.detail)}
-					on:select={(e) => activeLabel = e.detail}
 				/>
 			{/if}
 		{/if}
