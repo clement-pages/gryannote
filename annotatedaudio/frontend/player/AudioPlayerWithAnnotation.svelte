@@ -167,7 +167,7 @@
 		))
 
 		annotations.forEach(annotation => {
-			let label = caption.createLabel(annotation.speaker)
+			let label = caption.createLabel({speaker: annotation.speaker})
 			let region = addRegion({
 				start: annotation.start,
 				end: annotation.end,
@@ -215,9 +215,9 @@
 	 */
 	function handleRegionAdd(relativeY: number): void{
 		let label = (activeLabel ? activeLabel : defaultLabel);
-		// if annotations were not initialized, do nothing
+		// if annotations were not initialized, create a new label
 		if (!label){
-			label = caption.createLabel();
+			label = caption.createLabel({});
 		}
 		let region = addRegion({
 			start: relativeY - 1.0,

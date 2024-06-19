@@ -42,37 +42,36 @@
      * @param shortcut label shortcut, optional. If not provided, will be set to the first available
      * letter in alphabetic order.
      */
-    export function createLabel(speaker?: string, color?: string, shortcut?: string): CaptionLabel {
+    export function createLabel(options: {speaker?: string, color?: string, shortcut?: string}): CaptionLabel {
         // if maximum number of labels has been reached, do nothing
         if(labels.length === 26){
             return;
         }
-        if(!speaker){
-            speaker = "LABEL_" + speakerIdx.toString().padStart(2, "0");
+        if(!options.speaker){
+            options.speaker = "LABEL_" + speakerIdx.toString().padStart(2, "0");
         }
         // if a label for speaker already exists, do not create a new one
-        if(getLabel(speaker) !== undefined){
-            return getLabel(speaker);
+         if(getLabel("speaker", options.speaker)){
+            return getLabel("speaker", options.speaker);
         }
-
-        if(!color){
-            color = colorList[speakerIdx % colorList.length];
+    
+        if(!options.color){
+            options.color = colorList[speakerIdx % colorList.length];
         }
-        if(!shortcut){
-            shortcut = "A";
+        if(!options.shortcut){
+            options.shortcut = "A";
             // take the first available letter
-            while((labels.some(label => label.shortcut === shortcut)) && shortcut !== "Z"){
-                shortcut = String.fromCharCode(shortcut.charCodeAt(0) + 1);
+            while((labels.some(label => label.shortcut === options.shortcut)) && options.shortcut !== "Z"){
+                options.shortcut = String.fromCharCode(options.shortcut.charCodeAt(0) + 1);
             }
         }
 
         const label: CaptionLabel = {
-            speaker: speaker,
-            color: color,
-            shortcut: shortcut,
+            speaker: options.speaker,
+            color: options.color,
+            shortcut: options.shortcut,
         };
         labels.push(label);
-
         createLabelElement(label);
 
         speakerIdx++;
@@ -83,12 +82,27 @@
     }
 
     /**
-     *  Get the caption label mapped to the specified speaker. Return `undefined` if no correspondance
-     * was found.
-     * @param speaker
+     * Get label mapped to specified attribute value. If there is no correspondance, a new label is created
+     * if `create` was set to `true`, otherwise returns `undefined`
+     * @param attribute attribute to search
+     * @param value attribute value
+     * @param create whether to create a label if no correspondance found for specified speaker
+     * 
+     * @returns a caption label or `undefined`
      */
-    export function getLabel(speaker: string): CaptionLabel {
-        return labels.find(label => label.speaker === speaker);
+    export function getLabel(attribute: string, value: string, create?: boolean): CaptionLabel {
+        if(create === undefined){
+            create = false;
+        }
+
+        let label = labels.find(label => label[attribute] === value);
+        if(label == undefined && create){
+            const options = {};
+            options[attribute] = value;
+            label = createLabel(options);
+        }
+
+        return label
     }
 
     /**
@@ -100,13 +114,9 @@
     function setActiveLabel(shortcut?: string): void {
         let label = null;
 
-        // retrieve label
+        // retrieve label and create it if not found
         if(shortcut !== undefined){
-            label = labels.find((_label) => _label.shortcut === shortcut.toUpperCase());
-            // if shortcut does not correspond to any label, create a new one and assign the shortcut
-            if(label === undefined){
-                label = createLabel(undefined, undefined , shortcut.toUpperCase());
-            }
+            label = getLabel("shortcut", shortcut.toUpperCase(), true);
         }
 
         // reset active label
@@ -142,7 +152,7 @@
     <div class="caption" bind:this={container}></div>
     <div class="action-buttons">
         <button class="create-label" on:click={() => {
-                const label = createLabel();
+                const label = createLabel({});
                 setActiveLabel(label.shortcut);
             }}>
              <Plus/>
