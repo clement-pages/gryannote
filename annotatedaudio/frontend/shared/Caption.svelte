@@ -27,8 +27,8 @@
         labelButton.classList.add("captionLabel");
         labelButton.id = label.shortcut;
         labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.speaker;
-        labelButton.addEventListener("focusin", () => {handleKeyboardSelection(label.shortcut)});
-        labelButton.addEventListener("focusout", () => {handleKeyboardSelection("Escape")});
+        labelButton.addEventListener("focusin", () => {setActiveLabel(label.shortcut)});
+        labelButton.addEventListener("focusout", () => {setActiveLabel()});
 
         container.appendChild(labelButton);
     }
@@ -51,7 +51,7 @@
             speaker = "LABEL_" + speakerIdx.toString().padStart(2, "0");
         }
         // if a label for speaker already exists, do not create a new one
-        if(getLabel(speaker)){
+        if(getLabel(speaker) !== undefined){
             return getLabel(speaker);
         }
 
@@ -83,7 +83,7 @@
     }
 
     /**
-     *  Get the caption label mapped to the speafied speaker. Return `undefined` if no correspondance
+     *  Get the caption label mapped to the specified speaker. Return `undefined` if no correspondance
      * was found.
      * @param speaker
      */
@@ -92,10 +92,23 @@
     }
 
     /**
-     * Set the specified label as the active one
-     * @param label label to be set as active
+     * Set the label mapped to specified shorcut as the active one
+     * @param shortcut shortcut mapped to the label to activate. If shortcut does not correspond
+     * to any existing label, a new one will be created and assigned to this shortcut. If not value
+     * is specified, will deselect active label, if any.
      */
-    function setActiveLabel(label: CaptionLabel): void {
+    function setActiveLabel(shortcut?: string): void {
+        let label = null;
+
+        // retrieve label
+        if(shortcut !== undefined){
+            label = labels.find((_label) => _label.shortcut === shortcut.toUpperCase());
+            // if shortcut does not correspond to any label, create a new one and assign the shortcut
+            if(label === undefined){
+                label = createLabel(undefined, undefined , shortcut.toUpperCase());
+            }
+        }
+
         // reset active label
         if(activeLabel){
             document.getElementById(activeLabel.shortcut).classList.remove("active-button");
@@ -105,25 +118,8 @@
         activeLabel = label;
         if(activeLabel){
             document.getElementById(activeLabel.shortcut).classList.add("active-button");
+            dispatch("select", activeLabel);
         }
-        dispatch("select", activeLabel);
-    }
-
-    /**
-     * Handle keyboard shortcut event
-     * @param key key pressed by the user
-     */
-    function handleKeyboardSelection(key: string): void {
-        let label = null
-
-        if(key !== "Escape"){
-            label = labels.find((_label) => _label.shortcut === key.toUpperCase());
-            // if current key does not correspond to any label, create a new one
-            if(!label){
-                label = createLabel(undefined, undefined , key.toUpperCase());
-            }
-        }
-        setActiveLabel(label);
     }
 
     $: if(labels.length > 0){
@@ -132,8 +128,11 @@
 
     onMount(() => {
         window.addEventListener("keydown", (e): void => {
-            if(e.key.match(/^[a-zA-Z]$/) || e.key === "Escape"){
-                handleKeyboardSelection(e.key);
+            if(e.key.match(/^[a-zA-Z]$/)){
+                setActiveLabel(e.key);
+            }
+            else if(e.key === "Escape"){
+                setActiveLabel();
             }
         });
     });
@@ -144,7 +143,7 @@
     <div class="action-buttons">
         <button class="create-label" on:click={() => {
                 const label = createLabel();
-                setActiveLabel(label);
+                setActiveLabel(label.shortcut);
             }}>
              <Plus/>
         </button>

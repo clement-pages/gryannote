@@ -721,7 +721,6 @@
 					bind:defaultLabel
 					bind:activeLabel
 					on:select={(e) => setRegionSpeaker(e.detail)}
-					on:select={(e) => activeLabel = e.detail}
 				/>
 			{/if}
 		{/if}
