@@ -302,7 +302,6 @@
 
 	:global(::part(region)) {
 		border-radius: var(--radius-md);
-		height: 98% !important;
 		border: 1px solid var(--color-accent);
 		border-width: 0px 0px;
 	}
