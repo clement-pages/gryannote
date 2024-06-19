@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Annotation, WaveformOptions , CaptionLabel} from "../shared/types";
+	import type { Annotation, WaveformOptions , Label} from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 
 	import { onMount } from "svelte";
@@ -49,8 +49,8 @@
 	let regionsMap: Map<string, Annotation> = new Map();
 
 	let caption: Caption;
-	let defaultLabel: CaptionLabel | null = null;
-	let activeLabel: CaptionLabel | null = null;
+	let defaultLabel: Label | null = null;
+	let activeLabel: Label | null = null;
 
 	// nodes = regions (id), edges = overlap between linked regions
 	let regionsGraph: Graph<string> = new Graph()
@@ -324,7 +324,7 @@
 	 * speaker label
 	 * @param label active caption's label
 	 */
-	function setRegionSpeaker(label: CaptionLabel){
+	function setRegionSpeaker(label: Label){
 		// get label color
 
 		if(activeRegion !== null) {

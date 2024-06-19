@@ -1,30 +1,29 @@
 <script lang="ts">
-    import type { Annotation, CaptionLabel } from "./types";
+    import type { Label } from "./types";
     import Plus from "./icons/Plus.svelte";
     import { createEventDispatcher, onMount} from "svelte";
 
-    export let defaultLabel: CaptionLabel | null = null;
-    export let activeLabel: CaptionLabel | null = null;
+    export let defaultLabel: Label | null = null;
+    export let activeLabel: Label | null = null;
 
     let container: HTMLDivElement;
 
-    let labels: CaptionLabel[] = [];
+    let labels: Label[] = [];
 
     let labelIdx: number = 0;
 
     const colorList = ["rgba(255, 215, 0, 0.5)", "rgba(0, 0, 255, 0.5)", "rgba(255, 0, 0, 0.5)", "rgba(0, 255, 0, 0.5)"];
     const dispatch = createEventDispatcher<{
-        select: CaptionLabel;
+        select: Label;
     }>();
 
     /**
      * Create label user interface component
      * @param label
      */
-    function createLabelElement(label: CaptionLabel): void {
+    function createLabelElement(label: Label): void {
         const labelButton = document.createElement("button");
         labelButton.style.backgroundColor = label.color;
-        labelButton.classList.add("captionLabel");
         labelButton.id = label.shortcut;
         labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.name;
         labelButton.addEventListener("focusin", () => {setActiveLabel(label.shortcut)});
@@ -42,7 +41,7 @@
      * @param shortcut label shortcut, optional. If not provided, will be set to the first available
      * letter in alphabetic order.
      */
-    export function createLabel(options: {name?: string, color?: string, shortcut?: string}): CaptionLabel {
+    export function createLabel(options: {name?: string, color?: string, shortcut?: string}): Label {
         // if maximum number of labels has been reached, do nothing
         if(labels.length === 26){
             return;
@@ -66,7 +65,7 @@
             }
         }
 
-        const label: CaptionLabel = {
+        const label: Label = {
             name: options.name,
             color: options.color,
             shortcut: options.shortcut,
@@ -92,7 +91,7 @@
      * 
      * @returns a caption label or `undefined`
      */
-    export function getLabel(attribute: string, value: string, create?: boolean): CaptionLabel {
+    export function getLabel(attribute: string, value: string, create?: boolean): Label {
         if(create === undefined){
             create = false;
         }
