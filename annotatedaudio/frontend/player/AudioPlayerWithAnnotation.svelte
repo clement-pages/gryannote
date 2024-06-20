@@ -681,6 +681,7 @@
 			<div class="commands">
 				<div class="waveform-controls">
 					<WaveformControls
+						{isDialogOpen}
 						{waveform}
 						{playing}
 						{audio_duration}

@@ -16,6 +16,7 @@
 	export let waveform_options: WaveformOptions = {};
 	export let show_volume_slider = false;
 	export let showZoomSlider = false;
+	export let isDialogOpen = false;
 
 	let playbackSpeeds = [0.5, 1, 1.5, 2];
 	let playbackSpeed = playbackSpeeds[1];
@@ -44,6 +45,9 @@
 
 	onMount(() => {
 		window.addEventListener("keydown", (e) =>{
+			// do not process keyboard shortcuts when a dialog popup is open
+			if(isDialogOpen) return;
+
 			switch(e.key){
 				case " ": waveform.playPause(); e.preventDefault(); break;
 				case "ArrowUp": e.preventDefault(); updateZoom(currentZoom + zoomDelta); break;
