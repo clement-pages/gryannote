@@ -55,6 +55,8 @@
 	// nodes = regions (id), edges = overlap between linked regions
 	let regionsGraph: Graph<string> = new Graph()
 
+	let isDialogOpen: boolean;
+
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
 		play: undefined;
@@ -624,6 +626,9 @@
 
 	onMount(() => {
 		window.addEventListener("keydown", (e) => {
+			// do not process keyboard shortcuts when a dialog popup is open
+			if(isDialogOpen) return;
+
 			switch(e.key){
 				case "ArrowLeft": handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
 				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
@@ -720,6 +725,7 @@
 					bind:this={caption}
 					bind:defaultLabel
 					bind:activeLabel
+					bind:isDialogOpen
 					on:select={(e) => setRegionSpeaker(e.detail)}
 				/>
 			{/if}

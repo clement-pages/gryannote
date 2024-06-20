@@ -1,16 +1,20 @@
 <script lang="ts">
     import type { Label } from "./types";
     import Plus from "./icons/Plus.svelte";
+    import Dialog from "./Dialog.svelte";
     import { createEventDispatcher, onMount} from "svelte";
 
     export let defaultLabel: Label | null = null;
     export let activeLabel: Label | null = null;
+    export let isDialogOpen: boolean = false;
 
     let container: HTMLDivElement;
 
     let labels: Label[] = [];
 
     let labelIdx: number = 0;
+
+    let dialog: Dialog;
 
     const colorList = ["rgba(255, 215, 0, 0.5)", "rgba(0, 0, 255, 0.5)", "rgba(255, 0, 0, 0.5)", "rgba(0, 255, 0, 0.5)"];
     const dispatch = createEventDispatcher<{
@@ -23,13 +27,14 @@
      */
     function createLabelElement(label: Label): void {
         const labelButton = document.createElement("button");
-        labelButton.style.backgroundColor = label.color;
         labelButton.id = label.shortcut;
-        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.name;
+
         labelButton.addEventListener("focusin", () => {setActiveLabel(label.shortcut)});
         labelButton.addEventListener("focusout", () => {setActiveLabel()});
 
         container.appendChild(labelButton);
+
+        updateLabelInterface(label);
     }
 
     /**
@@ -107,6 +112,35 @@
     }
 
     /**
+     * 
+     * @param label
+     */
+    function updateLabelInterface(label): void {
+        let labelButton = document.getElementById(label.shortcut);
+        labelButton.style.backgroundColor = label.color;
+        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.name;
+    }
+
+    /**
+     * Update label with specified options inplace
+     * @param label
+     * @param options new values for name, color and shortcut
+     */
+    function updateLabel(label: Label, options: Partial<Label> = {}): void {
+        const {name = label.name, color = label.color, shortcut = label.shortcut} = options;
+        label.name = name;
+        label.color = color;
+        // Do not update label's shortcut if another label already use the new value for this prop
+        if(!labels.find(_label => _label.shortcut === shortcut)){
+            let labelButton = document.getElementById(label.shortcut);
+            label.shortcut = shortcut;
+            // update label element id
+            labelButton.id = label.shortcut;
+        }
+        updateLabelInterface(label);
+    }
+ 
+    /**
      * Set the label mapped to specified shorcut as the active one
      * @param shortcut shortcut mapped to the label to activate. If shortcut does not correspond
      * to any existing label, a new one will be created and assigned to this shortcut. If not value
@@ -117,7 +151,7 @@
 
         // retrieve label and create it if not found
         if(shortcut !== undefined){
-            label = getLabel("shortcut", shortcut.toUpperCase(), true);
+            label = getLabel("shortcut", shortcut, true);
         }
 
         // reset active label
@@ -139,8 +173,18 @@
 
     onMount(() => {
         window.addEventListener("keydown", (e): void => {
+        // do not process keyboard shortcuts when a dialog popup is open
+		if(isDialogOpen) return;
+
             if(e.key.match(/^[a-zA-Z]$/)){
-                setActiveLabel(e.key);
+                let shortcut = e.key.toUpperCase();
+                if(e.altKey){
+                    if(labels.find(_label => _label.shortcut === shortcut)){
+                        dialog.openDialog(shortcut);
+                    }
+                } else {
+                    setActiveLabel(shortcut);
+                }
             }
             else if(e.key === "Escape"){
                 setActiveLabel();
@@ -160,6 +204,16 @@
         </button>
     </div>
 </div>
+
+<Dialog
+    title={"Type a new name for the label:"}
+    bind:this={dialog}
+    bind:isOpen={isDialogOpen}
+    on:submit={(e) => {
+        let label = labels.find(_label => _label.shortcut === e.detail.shortcut);
+        updateLabel(label, e.detail);
+    }}
+/>
 
 <style>
 
