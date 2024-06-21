@@ -728,6 +728,13 @@
 					bind:activeLabel
 					bind:isDialogOpen
 					on:select={(e) => setRegionSpeaker(e.detail)}
+					on:color_update={(e) => {
+						wsRegions.getRegions().forEach(region => {
+							if(regionsMap.get(region.id).speaker === e.detail.name){
+								region.setOptions({color:e.detail.color});
+							}
+						});
+					}}
 				/>
 			{/if}
 		{/if}

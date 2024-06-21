@@ -19,6 +19,7 @@
     const colorList = ["rgba(255, 215, 0, 0.5)", "rgba(0, 0, 255, 0.5)", "rgba(255, 0, 0, 0.5)", "rgba(0, 255, 0, 0.5)"];
     const dispatch = createEventDispatcher<{
         select: Label;
+        color_update: Label;
     }>();
 
     /**
@@ -38,7 +39,7 @@
     }
 
     /**
-     *  Create and add a new label to the caption with specified name, color and shortcut. The new
+     * Create and add a new label to the caption with specified name, color and shortcut. The new
      * label is return by this method. In the case a label for the specified name already exists,
      * this method does not create a new label and returns the existing one.
      * @param name label name, optional. If not provided, label will be set to LABEL_xx.
@@ -58,7 +59,7 @@
          if(getLabel("name", options.name)){
             return getLabel("name", options.name);
         }
-    
+
         if(!options.color){
             options.color = colorList[labelIdx % colorList.length];
         }
@@ -86,14 +87,14 @@
     }
 
     /**
-     * Get label mapped to specified attribute value. If there is no correspondance, a new label is 
+     * Get label mapped to specified attribute value. If there is no correspondence, a new label is
      * created
      * if `create` was set to `true`, otherwise returns `undefined`
      * @param attribute attribute to search
      * @param value attribute value
-     * @param create whether to create a label if no correspondance found for specified attribute
+     * @param create whether to create a label if no correspondence found for specified attribute
      * value
-     * 
+     *
      * @returns a caption label or `undefined`
      */
     export function getLabel(attribute: string, value: string, create?: boolean): Label {
@@ -112,13 +113,13 @@
     }
 
     /**
-     * 
+     *
      * @param label
      */
     function updateLabelInterface(label): void {
         let labelButton = document.getElementById(label.shortcut);
         labelButton.style.backgroundColor = label.color;
-        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.name;
+        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" + label.shortcut + "</span>: " + label.name;
     }
 
     /**
@@ -129,7 +130,11 @@
     function updateLabel(label: Label, options: Partial<Label> = {}): void {
         const {name = label.name, color = label.color, shortcut = label.shortcut} = options;
         label.name = name;
-        label.color = color;
+        if(label.color !== color){
+            label.color = color;
+            // update regions color
+            dispatch("color_update", label);
+        }
         // Do not update label's shortcut if another label already use the new value for this prop
         if(!labels.find(_label => _label.shortcut === shortcut)){
             let labelButton = document.getElementById(label.shortcut);
@@ -139,9 +144,9 @@
         }
         updateLabelInterface(label);
     }
- 
+
     /**
-     * Set the label mapped to specified shorcut as the active one
+     * Set the label mapped to specified shortcut as the active one
      * @param shortcut shortcut mapped to the label to activate. If shortcut does not correspond
      * to any existing label, a new one will be created and assigned to this shortcut. If not value
      * is specified, will deselect active label, if any.

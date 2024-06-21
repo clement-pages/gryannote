@@ -29,8 +29,22 @@
     }
 
     function onSubmit(): void {
+        if (color !== undefined){
+            color = hex2rgba(color);
+        }
         dispatch("submit", {name, color, shortcut});
         onClose();
+    }
+
+    function hex2rgba(hexaColor: string): string{
+        hexaColor = hexaColor.replace("#", "");
+
+        let intValue = parseInt(hexaColor, 16);
+        let r = (intValue >> 16) & 255;
+        let g = (intValue >> 8) & 255;
+        let b = intValue & 255;
+
+        return `rgba(${r}, ${g}, ${b}, 0.5)`
     }
 
     onMount(() => {
@@ -48,7 +62,9 @@
 <dialog bind:this={dialog} class="dialog-box" id="dialog-box" hidden>
     <h2> {title} </h2>
     <input type="text" maxlength="30" bind:value={name}>
-    <div class="dialog-buttons">
+    <h2> Select a color for the label </h2>
+    <input type="color" bind:value={color}>
+    <div class="dialog-buttons" id="color">
         <button on:click={onClose} id="cancel" >Cancel</button>
         <button on:click={onSubmit} id="submit">Submit</button>
     </div>
