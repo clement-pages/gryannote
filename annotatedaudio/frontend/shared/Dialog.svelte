@@ -43,6 +43,7 @@
             if(isOpen){
                 switch(e.key){
                     case "Enter": onSubmit(); break;
+                    case "Escape": onClose(); break;
                 }
             }
         });
