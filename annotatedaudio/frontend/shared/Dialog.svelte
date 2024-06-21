@@ -14,17 +14,25 @@
         submit: {name?:string, color?: string, shortcut?:string};
     }>();
 
+    /**
+     * open the label setup dialog pop-up
+     * @param label label for which dialog pop-up is called. Dialog fields
+     * will be initialized with label values.
+     */
     export function openDialog(label: Label): void {
         name = label.name;
         color = label.color.slice(0, label.color.length - 2);
 
-        // open dialog box
+        // open dialog pop-up
         dialog.showModal();
         document.getElementById("dialog-box").hidden = false;
         document.getElementById("name").focus();
         isOpen = true;
     }
 
+    /**
+     * Method called when closing event is triggered
+     */
     function onClose(): void {
         dialog.close();
         name = color = shortcut = undefined;
@@ -32,6 +40,9 @@
         isOpen = false;
     }
 
+    /**
+     * Method call when submission event is triggered
+     */
     function onSubmit(): void {
         // color + "80" => set opacity color to 0.5
         dispatch("submit", {name, color: color + "80", shortcut});
