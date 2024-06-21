@@ -35,7 +35,7 @@
 
         container.appendChild(labelButton);
 
-        updateLabelInterface(label);
+        updateLabelUI(label);
     }
 
     /**
@@ -113,10 +113,10 @@
     }
 
     /**
-     *
-     * @param label
+     * Update the User Interface of the specified label.
+     * @param label label to update
      */
-    function updateLabelInterface(label): void {
+    function updateLabelUI(label): void {
         let labelButton = document.getElementById(label.shortcut);
         labelButton.style.backgroundColor = label.color;
         labelButton.innerHTML = "<span style=\"font-weight: bold;\">" + label.shortcut + "</span>: " + label.name;
@@ -142,7 +142,7 @@
             // update label element id
             labelButton.id = label.shortcut;
         }
-        updateLabelInterface(label);
+        updateLabelUI(label);
     }
 
     /**
