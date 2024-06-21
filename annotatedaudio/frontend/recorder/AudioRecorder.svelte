@@ -80,7 +80,6 @@
 				sampleRate: waveform_settings.sampleRate
 			});
 			const audio_buffer = await context.decodeAudioData(array_buffer);
-			console.log(audio_buffer);
 			if (audio_buffer)
 				await process_audio(audio_buffer).then(async (audio: Uint8Array) => {
 					await dispatch_blob([audio], "change");

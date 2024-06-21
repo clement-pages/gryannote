@@ -1,10 +1,12 @@
 <script lang="ts">
     import type { Label } from "./types";
     import Plus from "./icons/Plus.svelte";
+    import Dialog from "./Dialog.svelte";
     import { createEventDispatcher, onMount} from "svelte";
 
     export let defaultLabel: Label | null = null;
     export let activeLabel: Label | null = null;
+    export let isDialogOpen: boolean = false;
 
     let container: HTMLDivElement;
 
@@ -12,9 +14,12 @@
 
     let labelIdx: number = 0;
 
-    const colorList = ["rgba(255, 215, 0, 0.5)", "rgba(0, 0, 255, 0.5)", "rgba(255, 0, 0, 0.5)", "rgba(0, 255, 0, 0.5)"];
+    let dialog: Dialog;
+
+    const colorList = ["#ffd70080", "#0000ff80", "#ff000080", "#00ff0080"];
     const dispatch = createEventDispatcher<{
         select: Label;
+        color_update: Label;
     }>();
 
     /**
@@ -23,17 +28,18 @@
      */
     function createLabelElement(label: Label): void {
         const labelButton = document.createElement("button");
-        labelButton.style.backgroundColor = label.color;
         labelButton.id = label.shortcut;
-        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" +  label.shortcut + "</span>: " + label.name;
+
         labelButton.addEventListener("focusin", () => {setActiveLabel(label.shortcut)});
         labelButton.addEventListener("focusout", () => {setActiveLabel()});
 
         container.appendChild(labelButton);
+
+        updateLabelUI(label);
     }
 
     /**
-     *  Create and add a new label to the caption with specified name, color and shortcut. The new
+     * Create and add a new label to the caption with specified name, color and shortcut. The new
      * label is return by this method. In the case a label for the specified name already exists,
      * this method does not create a new label and returns the existing one.
      * @param name label name, optional. If not provided, label will be set to LABEL_xx.
@@ -53,7 +59,7 @@
          if(getLabel("name", options.name)){
             return getLabel("name", options.name);
         }
-    
+
         if(!options.color){
             options.color = colorList[labelIdx % colorList.length];
         }
@@ -81,14 +87,14 @@
     }
 
     /**
-     * Get label mapped to specified attribute value. If there is no correspondance, a new label is 
+     * Get label mapped to specified attribute value. If there is no correspondence, a new label is
      * created
      * if `create` was set to `true`, otherwise returns `undefined`
      * @param attribute attribute to search
      * @param value attribute value
-     * @param create whether to create a label if no correspondance found for specified attribute
+     * @param create whether to create a label if no correspondence found for specified attribute
      * value
-     * 
+     *
      * @returns a caption label or `undefined`
      */
     export function getLabel(attribute: string, value: string, create?: boolean): Label {
@@ -107,7 +113,40 @@
     }
 
     /**
-     * Set the label mapped to specified shorcut as the active one
+     * Update the User Interface of the specified label.
+     * @param label label to update
+     */
+    function updateLabelUI(label): void {
+        let labelButton = document.getElementById(label.shortcut);
+        labelButton.style.backgroundColor = label.color;
+        labelButton.innerHTML = "<span style=\"font-weight: bold;\">" + label.shortcut + "</span>: " + label.name;
+    }
+
+    /**
+     * Update label with specified options inplace
+     * @param label
+     * @param options new values for name, color and shortcut
+     */
+    function updateLabel(label: Label, options: Partial<Label> = {}): void {
+        const {name = label.name, color = label.color, shortcut = label.shortcut} = options;
+        label.name = name;
+        if(label.color !== color){
+            label.color = color;
+            // update regions color
+            dispatch("color_update", label);
+        }
+        // Do not update label's shortcut if another label already use the new value for this prop
+        if(!labels.find(_label => _label.shortcut === shortcut)){
+            let labelButton = document.getElementById(label.shortcut);
+            label.shortcut = shortcut;
+            // update label element id
+            labelButton.id = label.shortcut;
+        }
+        updateLabelUI(label);
+    }
+
+    /**
+     * Set the label mapped to specified shortcut as the active one
      * @param shortcut shortcut mapped to the label to activate. If shortcut does not correspond
      * to any existing label, a new one will be created and assigned to this shortcut. If not value
      * is specified, will deselect active label, if any.
@@ -117,7 +156,7 @@
 
         // retrieve label and create it if not found
         if(shortcut !== undefined){
-            label = getLabel("shortcut", shortcut.toUpperCase(), true);
+            label = getLabel("shortcut", shortcut, true);
         }
 
         // reset active label
@@ -139,8 +178,19 @@
 
     onMount(() => {
         window.addEventListener("keydown", (e): void => {
+        // do not process keyboard shortcuts when a dialog popup is open
+		if(isDialogOpen) return;
+
             if(e.key.match(/^[a-zA-Z]$/)){
-                setActiveLabel(e.key);
+                let shortcut = e.key.toUpperCase();
+                if(e.altKey){
+                    let label = labels.find(_label => _label.shortcut === shortcut);
+                    if(label){
+                        dialog.openDialog(label);
+                    }
+                } else {
+                    setActiveLabel(shortcut);
+                }
             }
             else if(e.key === "Escape"){
                 setActiveLabel();
@@ -160,6 +210,15 @@
         </button>
     </div>
 </div>
+
+<Dialog
+    bind:this={dialog}
+    bind:isOpen={isDialogOpen}
+    on:submit={(e) => {
+        let label = labels.find(_label => _label.shortcut === e.detail.shortcut);
+        updateLabel(label, e.detail);
+    }}
+/>
 
 <style>
 
