@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher, onMount} from "svelte";
+    import type {Label} from "./types"
 
-    export let title: string = "";
     export let isOpen: boolean = false;
 
     let name: string;
@@ -14,10 +14,14 @@
         submit: {name?:string, color?: string, shortcut?:string};
     }>();
 
-    export function openDialog(labelID: string): void {
+    export function openDialog(label: Label): void {
+        name = label.name;
+        color = label.color.slice(0, label.color.length - 2);
+
+        // open dialog box
         dialog.showModal();
-        shortcut = labelID;
         document.getElementById("dialog-box").hidden = false;
+        document.getElementById("name").focus();
         isOpen = true;
     }
 
@@ -29,22 +33,9 @@
     }
 
     function onSubmit(): void {
-        if (color !== undefined){
-            color = hex2rgba(color);
-        }
-        dispatch("submit", {name, color, shortcut});
+        // color + "80" => set opacity color to 0.5
+        dispatch("submit", {name, color: color + "80", shortcut});
         onClose();
-    }
-
-    function hex2rgba(hexaColor: string): string{
-        hexaColor = hexaColor.replace("#", "");
-
-        let intValue = parseInt(hexaColor, 16);
-        let r = (intValue >> 16) & 255;
-        let g = (intValue >> 8) & 255;
-        let b = intValue & 255;
-
-        return `rgba(${r}, ${g}, ${b}, 0.5)`
     }
 
     onMount(() => {
@@ -60,10 +51,10 @@
 </script>
 
 <dialog bind:this={dialog} class="dialog-box" id="dialog-box" hidden>
-    <h2> {title} </h2>
-    <input type="text" maxlength="30" bind:value={name}>
-    <h2> Select a color for the label </h2>
-    <input type="color" bind:value={color}>
+    <label for="name">Label name:</label>
+    <input type="text" maxlength="30" bind:value={name} id="name" name="name">
+    <label for="color">Label color:</label>
+    <input type="color" bind:value={color} id="color" name="color">
     <div class="dialog-buttons" id="color">
         <button on:click={onClose} id="cancel" >Cancel</button>
         <button on:click={onSubmit} id="submit">Submit</button>
@@ -94,8 +85,9 @@
         background: rgba(0, 0, 0, 0.3);
     }
 
-    h2 {
+    label {
         color: var(--button-secondary-text-color);
+        font-family: inherit;
     }
 
     input {

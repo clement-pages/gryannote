@@ -16,7 +16,7 @@
 
     let dialog: Dialog;
 
-    const colorList = ["rgba(255, 215, 0, 0.5)", "rgba(0, 0, 255, 0.5)", "rgba(255, 0, 0, 0.5)", "rgba(0, 255, 0, 0.5)"];
+    const colorList = ["#ffd70080", "#0000ff80", "#ff000080", "#00ff0080"];
     const dispatch = createEventDispatcher<{
         select: Label;
         color_update: Label;
@@ -184,8 +184,9 @@
             if(e.key.match(/^[a-zA-Z]$/)){
                 let shortcut = e.key.toUpperCase();
                 if(e.altKey){
-                    if(labels.find(_label => _label.shortcut === shortcut)){
-                        dialog.openDialog(shortcut);
+                    let label = labels.find(_label => _label.shortcut === shortcut);
+                    if(label){
+                        dialog.openDialog(label);
                     }
                 } else {
                     setActiveLabel(shortcut);
@@ -211,7 +212,6 @@
 </div>
 
 <Dialog
-    title={"Type a new name for the label:"}
     bind:this={dialog}
     bind:isOpen={isDialogOpen}
     on:submit={(e) => {
