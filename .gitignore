@@ -13,3 +13,7 @@ dist/
 __tmp/*
 *.pyi
 node_modules/
+
+
+# gradio build
+**/templates/
