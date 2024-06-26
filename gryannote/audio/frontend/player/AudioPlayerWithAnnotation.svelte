@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Annotation, WaveformOptions , CaptionLabel} from "../shared/types";
+	import type { Annotation, WaveformOptions , Label} from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 
 	import { onMount } from "svelte";
@@ -16,6 +16,7 @@
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
 	import { createEventDispatcher } from "svelte";
 	import Caption from "../shared/Caption.svelte"
+	import Graph from "../shared/graph"
 
 	export let value: null | AnnotatedAudioData = null;
 	$: url = value.file_data?.url;
@@ -48,8 +49,13 @@
 	let regionsMap: Map<string, Annotation> = new Map();
 
 	let caption: Caption;
-	let defaultLabel: CaptionLabel | null = null;
-	let activeLabel: CaptionLabel | null = null;
+	let defaultLabel: Label | null = null;
+	let activeLabel: Label | null = null;
+
+	// nodes = regions (id), edges = overlap between linked regions
+	let regionsGraph: Graph<string> = new Graph()
+
+	let isDialogOpen: boolean;
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
@@ -58,6 +64,65 @@
 		edit: typeof value;
 		end: undefined;
 	}>();
+
+	/**
+	 * Update region overlapping graph
+	 * @param region region ID to update
+	 */
+	function updateRegionsOverlapping(region: string): void{
+		// if region not in the graph, add it
+		if(!regionsGraph.isNodeInGraph(region)){
+			regionsGraph.addNode(region);
+		}
+
+		// get linked annotation
+		let annotation = regionsMap.get(region);
+		regionsGraph.getNodesList().forEach(node => {
+			let nodeAnnotation = regionsMap.get(node)
+			// if there is an overlap between the two annotations, add a edge between them in the grap
+			if(annotation.start <= nodeAnnotation.end && nodeAnnotation.start <= annotation.end){
+				regionsGraph.addEdge(region, node);
+			}
+			else{
+				// if there is an edge between the two annotations, remove it from the graph
+				regionsGraph.removeEdge(region, node);
+			}
+		});
+
+		// resolve graph coloring problem on connected component to which the region belongs
+		let regionConnectedComponent = regionsGraph.getConnectedComponent(region)
+		let graphColoring = regionConnectedComponent.greedyColoring();
+		let numColors = Math.max(...Array.from(graphColoring.values())) + 1;
+		// update regions alignment
+		wsRegions.getRegions().forEach(region => {
+			if(graphColoring.get(region.id) !== undefined){
+				updateRegionalignment(region, graphColoring.get(region.id), numColors);
+			}
+		});
+	}
+
+	/**
+	 * Remove specified region from the overlapping graph.
+	 * @param region ID of the region to remove
+	 */
+	function removeRegionFromGraph(region: string){
+		regionsGraph.removeNode(region);
+	}
+
+	/**
+	 * Update region vertical alignment on the waveform
+	 * @param region region to be updated
+	 * @param regionColor color of the region in the overlapping graph
+	 * @param numColors total number of colors in the overlapping graph
+	 */
+	function updateRegionalignment(region: Region, regionColor: number, numColors: number){
+		let top = regionColor * (100. / numColors);
+		let height = 100. / numColors;
+
+		// update region alignment style:
+		region.element.style.top = top.toString() + "%";
+		region.element.style.height = height.toString() + "%";
+	}
 
 	function formatTime(seconds: number): string {
 		const minutes = Math.floor(seconds / 60);
@@ -95,6 +160,7 @@
 			return;
 		}
 
+		// only add new regions
 		const currentAnnotations = Array.from(regionsMap.values());
 		annotations = annotations.filter(annotation => !currentAnnotations.some(currentAnnotation =>
 			annotation.start === currentAnnotation.start &&
@@ -103,7 +169,7 @@
 		))
 
 		annotations.forEach(annotation => {
-			let label = caption.createLabel(annotation.speaker)
+			let label = caption.createLabel({name: annotation.speaker})
 			let region = addRegion({
 				start: annotation.start,
 				end: annotation.end,
@@ -111,9 +177,6 @@
 				drag: true,
 				resize: true,
 			}, annotation.speaker);
-			region.element.style.top = (annotation.level * 10).toString() + "%";
-			region.element.style.height = (100 - (annotation.numLevels + 1) * 10 ).toString() + "%";
-
 		});
 	}
 
@@ -137,6 +200,7 @@
 		let region = wsRegions.addRegion(options);
 		const annotation = {start: region.start, end: region.end, speaker: speaker, color: region.color};
 		regionsMap.set(region.id, annotation);
+		updateRegionsOverlapping(region.id);
 
 		// if this is the first region added on the waveform
 		if(!initialAnnotations){
@@ -153,9 +217,9 @@
 	 */
 	function handleRegionAdd(relativeY: number): void{
 		let label = (activeLabel ? activeLabel : defaultLabel);
-		// if annotations were not initialized, do nothing
+		// if annotations were not initialized, create a new label
 		if (!label){
-			label = caption.createLabel();
+			label = caption.createLabel({});
 		}
 		let region = addRegion({
 			start: relativeY - 1.0,
@@ -163,7 +227,7 @@
 			color: label.color,
 			drag: true,
 			resize: true,
-		}, label.speaker);
+		}, label.name);
 
 		// set region as active one
 		setActiveRegion(region);
@@ -179,8 +243,10 @@
 		if(region === activeRegion){
 			setActiveRegion(null);
 		}
-		regionsMap.delete(region.id)
+		regionsMap.delete(region.id);
+		removeRegionFromGraph(region.id);
 		region.remove();
+
 		updateAnnotations();
 	}
 
@@ -260,7 +326,7 @@
 	 * speaker label
 	 * @param label active caption's label
 	 */
-	function setRegionSpeaker(label: CaptionLabel){
+	function setRegionSpeaker(label: Label){
 		// get label color
 
 		if(activeRegion !== null) {
@@ -280,7 +346,7 @@
 
 			// update corresponding annotation color
 			let activeAnnotation = regionsMap.get(activeRegion.id);
-			activeAnnotation.speaker = label.speaker;
+			activeAnnotation.speaker = label.name;
 			updateAnnotations();
 		}
 	}
@@ -496,9 +562,10 @@
 			});
 
 			wsRegions?.on("region-updated", (region) => {
-				var updatedAnnotation = regionsMap.get(region.id);
+				let updatedAnnotation = regionsMap.get(region.id);
 				updatedAnnotation.start = region.start;
 				updatedAnnotation.end = region.end;
+				updateRegionsOverlapping(region.id);
 				updateAnnotations();
 			});
 		}
@@ -559,6 +626,9 @@
 
 	onMount(() => {
 		window.addEventListener("keydown", (e) => {
+			// do not process keyboard shortcuts when a dialog popup is open
+			if(isDialogOpen) return;
+
 			switch(e.key){
 				case "ArrowLeft": handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
 				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
@@ -611,6 +681,7 @@
 			<div class="commands">
 				<div class="waveform-controls">
 					<WaveformControls
+						{isDialogOpen}
 						{waveform}
 						{playing}
 						{audio_duration}
@@ -655,8 +726,15 @@
 					bind:this={caption}
 					bind:defaultLabel
 					bind:activeLabel
+					bind:isDialogOpen
 					on:select={(e) => setRegionSpeaker(e.detail)}
-					on:select={(e) => activeLabel = e.detail}
+					on:color_update={(e) => {
+						wsRegions.getRegions().forEach(region => {
+							if(regionsMap.get(region.id).speaker === e.detail.name){
+								region.setOptions({color:e.detail.color});
+							}
+						});
+					}}
 				/>
 			{/if}
 		{/if}
