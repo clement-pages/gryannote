@@ -29,7 +29,9 @@ repos:
         # MD013: line too long
         # MD033: no inline HTML
         # MD041: first line in a file should be a top-level heading
-        args: [--disable, MD013, MD033, MD041, '--']
+        # MD012: Multiple consecutive blank lines
+        # MD022: blanks-around-headings Headings should be surrounded by blank lines
+        args: [--disable, MD013, MD033, MD041, MD012, MD022'--']
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
@@ -61,13 +63,6 @@ repos:
         language: pygrep
         types_or: [markdown, yaml]
         exclude: .pre-commit-config.yaml
-
-      - id: no-repeated-whitespace
-        name: No repeated spaces
-        entry: '\S+\s{2,}'
-        language: pygrep
-        types: [text]
-        exclude_types: [javascript, ts]
 
       - id: format-urls
         name: Format URLs

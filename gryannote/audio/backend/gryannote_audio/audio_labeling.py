@@ -25,7 +25,7 @@ set_documentation_group("component")
 @dataclasses.dataclass
 class WaveformOptions:
     """
-    A dataclass for specifying options for the waveform display in the AnnotatedAudio component. An instance of this class can be passed into the `waveform_options` parameter of `AnnotatedAudio`.
+    A dataclass for specifying options for the waveform display in the `AudioLabeling` component. An instance of this class can be passed into the `waveform_options` parameter of `AudioLabeling`.
     Parameters:
         waveform_color: The color (as a hex string or valid CSS color) of the full waveform representing the amplitude of the audio. Defaults to a light gray color.
         waveform_progress_color: The color (as a hex string or valid CSS color) that the waveform fills with to as the audio plays. Defaults to an orange color.
@@ -44,7 +44,7 @@ class WaveformOptions:
 
 
 @document()
-class AnnotatedAudio(
+class AudioLabeling(
     StreamingInput,
     StreamingOutput,
     Component,
@@ -106,7 +106,7 @@ class AnnotatedAudio(
     ):
         """
         Parameters:
-            value: A [audio path, pyannote annotations] tuple for the default value that AnnotatedAudio component is going to take. If callable, the function will be called whenever the app loads to set the initial value of the component.
+            value: A [audio path, pyannote annotations] tuple for the default value that `AudioLabeling` component is going to take. If callable, the function will be called whenever the app loads to set the initial value of the component.
             sources: A list of sources permitted for audio. "upload" creates a box where user can drop an audio file, "microphone" creates a microphone input. The first element in the list will be used as the default source. If None, defaults to ["upload", "microphone"], or ["microphone"] if `streaming` is True.
             type: The format the audio file is converted to before being passed into the prediction function. "numpy" converts the audio to a tuple consisting of: (int sample rate, numpy.array for the data), "filepath" passes a str path to a temporary file containing the audio.
             label: The label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.
@@ -155,7 +155,7 @@ class AnnotatedAudio(
         self.streaming = streaming
         if self.streaming and "microphone" not in self.sources:
             raise ValueError(
-                "AnnotatedAudio streaming only available if sources includes 'microphone'."
+                "AudioLabeling streaming only available if sources includes 'microphone'."
             )
         self.format = format
         self.autoplay = autoplay
@@ -334,5 +334,5 @@ class AnnotatedAudio(
             and self.streaming
         ):
             raise ValueError(
-                "AnnotatedAudio streaming only available if source includes 'microphone'."
+                "AudioLabeling streaming only available if source includes 'microphone'."
             )

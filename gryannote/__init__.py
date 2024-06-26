@@ -20,14 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import sys
+
 from gryannote.audio.backend.gryannote_audio import *
 from gryannote.pipeline.backend.gryannote_pipeline import *
 from gryannote.rttm.backend.gryannote_rttm import *
 
-import sys
-
 __import__("pkg_resources").declare_namespace(__name__)
 
-sys.modules["gryannote.audio"] = sys.modules["gryannote.audio.backend.gryannote_audio"]
-sys.modules["gryannote.pipeline"] = sys.modules["gryannote.pipeline.backend.gryannote_pipeline"]
-sys.modules["gryannote.rttm"] = sys.modules["gryannote.rttm.backend.gryannote_rttm"]
+sys.modules["gryannote_audio"] = sys.modules["gryannote.audio.backend.gryannote_audio"]
+sys.modules["gryannote_pipeline"] = sys.modules[
+    "gryannote.pipeline.backend.gryannote_pipeline"
+]
+sys.modules["gryannote_rttm"] = sys.modules["gryannote.rttm.backend.gryannote_rttm"]

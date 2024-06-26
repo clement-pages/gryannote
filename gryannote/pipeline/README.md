@@ -1,23 +1,17 @@
 
-# `gradio_pipelineselector`
-<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.1.2%20-%20orange">  
+# `gryannote_pipeline`
+<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.1.3%20-%20orange">
 
 A component allowing a user to select a pipeline from a drop-down list
-
-## Installation
-
-```bash
-pip install gradio_pipelineselector
-```
 
 ## Usage
 
 ```python
 import gradio as gr
-from gradio_pipelineselector import PipelineSelector
+from gryannote_pipeline import PipelineSelector
 
 with gr.Blocks() as demo:
-    pipeline_selector = PipelineSelector()
+    pipeline_selector = PipelineSelector(show_config=True)
 
     pipeline_selector.select(
         fn=pipeline_selector.on_select,
@@ -312,4 +306,3 @@ The code snippet below is accurate in cases where the component is used as both 
  ) -> pyannote.audio.core.pipeline.Pipeline | None:
      return value
  ```
- 

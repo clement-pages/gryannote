@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "@gradio/atoms": "0.4.1",
+    "@gradio/atoms": "0.7.4",
     "@gradio/client": "0.10.1",
     "@gradio/icons": "0.3.2",
     "@gradio/statustracker": "0.4.3",

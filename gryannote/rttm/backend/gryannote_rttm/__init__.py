@@ -1,3 +1,3 @@
-from .rttmhandler import RTTMHandler
+from .rttm import RTTM
 
-__all__ = ["RTTMHandler"]
+__all__ = ["RTTM"]

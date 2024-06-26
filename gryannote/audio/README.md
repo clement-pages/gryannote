@@ -10,10 +10,10 @@ pip install gryannote-audio
 
 ```python
 import gradio as gr
-from gryannote_audio import AnnotatedAudio
+from gryannote_audio import AudioLabeling
 from pyannote.audio import Pipeline
 
-annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
+audio_labeling = AudioLabeling(type="filepath", interactive=True)
 
 
 def apply_pipeline(audio):
@@ -21,7 +21,7 @@ def apply_pipeline(audio):
     annotations = pipeline(audio)
     return (audio, annotations)
 
-demo = gr.Interface(apply_pipeline, inputs=annotated_audio, outputs=annotated_audio)
+demo = gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labeling)
 
 demo.launch()
 ```
@@ -30,7 +30,7 @@ demo.launch()
 
 ## Keyboard shortcuts
 
-The following table summarizes available keyboard shortcuts for the `AnnotatedAudio` component:
+The following table summarizes available keyboard shortcuts for the `AudioLabeling` component:
 
 | Shortcut                                      | Action                                                                |
 | --------------------------------------------- | --------------------------------------------------------------------- |
@@ -44,7 +44,7 @@ The following table summarizes available keyboard shortcuts for the `AnnotatedAu
 | `SHIFT + ALT + LEFT` or `SHIFT + ALT + RIGHT` | Same, but faster                                                      |
 | `TAB`                                         | Select next annotation                                                |
 | `SHIFT + TAB`                                 | Select previous annotation                                            |
-|`BACKSAPCE`                                    | Delete selected annotation and select the previous one                |
+|`BACKSPACE`                                    | Delete selected annotation and select the previous one                |
 |`DELETE` or `SHIFT + BACKSPACE`                | Delete selected region and select the next one                        |
 |`ESC`                                          | Unselect selected annotation and / or label                           |
 | `UP` or `DOWN`                                | Zoom in/out                                                           |

@@ -1,4 +1,4 @@
-"""RTTMHandler component"""
+"""RTTM component"""
 
 import tempfile
 from pathlib import Path
@@ -8,15 +8,15 @@ from gradio.components.base import Component
 from gradio.data_classes import FileData, ListFiles
 from gradio.events import Events
 from gradio.utils import NamedString
-from gryannote.audio.backend.gryannote_audio.core import AnnotadedAudioData
 from gradio_client.documentation import document, set_documentation_group
+from gryannote_audio.core import AnnotadedAudioData
 from pyannote.core import Annotation as PyannoteAnnotation
 
 set_documentation_group("component")
 
 
 @document()
-class RTTMHandler(Component):
+class RTTM(Component):
     """
     Creates a file component that allows uploading generic file (when used as an input) and or displaying generic files (output).
     Preprocessing: passes the uploaded file as a {tempfile._TemporaryFileWrapper} or {List[tempfile._TemporaryFileWrapper]} depending on `file_count` (or a {bytes}/{List[bytes]} depending on `type`)

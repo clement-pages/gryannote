@@ -1,8 +1,8 @@
 import gradio as gr
-from gradio_pipelineselector import PipelineSelector
+from gryannote_pipeline import PipelineSelector
 
 with gr.Blocks() as demo:
-    pipeline_selector = PipelineSelector()
+    pipeline_selector = PipelineSelector(show_config=True)
 
     pipeline_selector.select(
         fn=pipeline_selector.on_select,

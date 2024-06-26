@@ -1,8 +1,8 @@
 import gradio as gr
-from gryannote.audio import AnnotatedAudio
+from gryannote_audio import AudioLabeling
 from pyannote.audio import Pipeline
 
-annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
+audio_labeling = AudioLabeling(type="filepath", interactive=True)
 
 
 def apply_pipeline(audio):
@@ -10,6 +10,7 @@ def apply_pipeline(audio):
     annotations = pipeline(audio)
     return (audio, annotations)
 
-demo = gr.Interface(apply_pipeline, inputs=annotated_audio, outputs=annotated_audio)
+
+demo = gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labeling)
 
 demo.launch()

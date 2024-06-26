@@ -19,12 +19,13 @@ pip install gryannote
 ## Usage
 
 The following code snippet show how to use the `gryannote_audio` component with a `pyannote` pipeline in just a few lines of code
+
 ```python
 import gradio as gr
-from gryannote.audio import AnnotatedAudio
+from gryannote_audio import AudioLabeling
 from pyannote.audio import Pipeline
 
-annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
+audio_labeling = AudioLabeling(type="filepath", interactive=True)
 
 
 def apply_pipeline(audio):
@@ -32,12 +33,12 @@ def apply_pipeline(audio):
     annotations = pipeline(audio)
     return (audio, annotations)
 
-demo = gr.Interface(apply_pipeline, inputs=annotated_audio, outputs=annotated_audio)
+demo = gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labeling)
 
 demo.launch()
 ```
 
-## Try it !
+## Try it!
 
 A version of the `gryannote` app is available in this [Hugging Face space](https://huggingface.co/spaces/clement-pages/gryannote)
 

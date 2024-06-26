@@ -5,8 +5,8 @@
 	import type { LoadingStatus } from "@gradio/statustracker";
 	import type { WaveformOptions} from "./shared/types";
 	import AnnotatedAudioData from "./shared/AnnotatedAudioData"
-	import StaticAnnotatedAudio from "./static/StaticAnnotatedAudio.svelte";
-	import InteractiveAnnotatedAudio from "./interactive/InteractiveAnnotatedAudio.svelte";
+	import StaticAudioLabeling from "./static/StaticAudioLabeling.svelte";
+	import InteractiveAudioLabeling from "./interactive/InteractiveAudioLabeling.svelte";
 	import { StatusTracker } from "@gradio/statustracker";
 	import { Block, UploadText } from "@gradio/atoms";
 
@@ -129,7 +129,7 @@
 			{...loading_status}
 		/>
 
-		<StaticAnnotatedAudio
+		<StaticAudioLabeling
 			i18n={gradio.i18n}
 			{show_label}
 			{show_download_button}
@@ -161,7 +161,7 @@
 			i18n={gradio.i18n}
 			{...loading_status}
 		/>
-		<InteractiveAnnotatedAudio
+		<InteractiveAudioLabeling
 			{label}
 			{show_label}
 			{show_download_button}
@@ -194,6 +194,6 @@
 			{waveform_options}
 		>
 			<UploadText i18n={gradio.i18n} type="audio" />
-		</InteractiveAnnotatedAudio>
+		</InteractiveAudioLabeling>
 	</Block>
 {/if}
