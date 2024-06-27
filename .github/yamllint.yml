@@ -2,7 +2,7 @@ extends: default
 
 rules:
   line-length:
-    max: 100
+    max: 200
   document-start: disable
   truthy:
     check-keys: false

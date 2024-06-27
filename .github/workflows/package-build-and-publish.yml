@@ -1,0 +1,45 @@
+# This workflow will build gradio custom components and upload the gryannote package on PyPi using Twine when a tag is created
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Upload Python Package
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build gradio
+      - name: Build package
+        run: |
+          # build gryannote_audio component. Do not generate docs as it fails for now.
+          gradio cc build --no-generate-docs --bump-version gryannote/audio/
+          gradio cc build --no-generate-docs --bump-version gryannote/pipeline/
+          gradio cc build --no-generate-docs --bump-version gryannote/rttm/
+          python -m build
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
