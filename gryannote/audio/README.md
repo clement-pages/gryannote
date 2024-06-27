@@ -40,7 +40,7 @@ The component offers two ways of loading audio: either by loading a file, or by 
 
 Then, it is possible to add annotations on the audio waveform by double clicking on it, or by using shortcut. All available shortcuts are enumareted in the following table.
 
-![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_audio_with_loaded_audio.png?raw=1)
+![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_audio_with_annotations.png?raw=1)
 
 
 
