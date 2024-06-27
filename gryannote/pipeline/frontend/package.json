@@ -18,5 +18,8 @@
     "@gradio/icons": "0.3.3",
     "@gradio/statustracker": "0.4.8",
     "@gradio/utils": "0.3.0"
+  },
+  "devDependencies": {
+    "@gradio/preview": "^0.10.0"
   }
 }

@@ -21,5 +21,8 @@
     ".": "./Index.svelte",
     "./example": "./Example.svelte",
     "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@gradio/preview": "^0.10.0"
   }
 }

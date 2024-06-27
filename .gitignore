@@ -5,6 +5,8 @@ __pycache__/
 # Distribution / packaging
 *.egg-info
 .eggs/
+.secrets
+.env
 
 dist/
 *.pyc
