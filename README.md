@@ -18,7 +18,8 @@ pip install gryannote
 
 ## Usage
 
-The following code snippet show how to use the `gryannote_audio` component with a `pyannote` pipeline in just a few lines of code
+The following code snippet show how to use the `gryannote_audio` component with a `pyannote` pipeline in just a few lines of code. You can find a complete example that uses the three component
+in `app.py` script.
 
 ```python
 import gradio as gr
@@ -38,10 +39,28 @@ demo = gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labelin
 demo.launch()
 ```
 
+## Interface
+
+Launching `app.py` script will generate the following interface. This interface uses the three `gryannote` components. More details about these components and their interface can be found
+in their respective README.
+
+![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_audio_with_loaded_audio.png?raw=1)
+
+RTTM annotations in RTTM component are dynamically updated according to the audio labeling made in the audio component.
+
 ## Try it!
 
 A version of the `gryannote` app is available in this [Hugging Face space](https://huggingface.co/spaces/clement-pages/gryannote)
 
 ## Citation
 
-TODO
+TO BE UPDATED
+
+```bibtex
+@inproceedings{Pages24,
+  author={Clément Pagés and Hervé Bredin},
+  title={{gryannote open-source speaker diarization labeling tool}},
+  year=2024,
+  booktitle={Proc. INTERSPEECH 2024},
+}
+```

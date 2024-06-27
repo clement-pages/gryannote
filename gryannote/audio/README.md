@@ -1,5 +1,7 @@
 # GRYANNOTE-AUDIO: AUDIO LABELING GRADIO COMPONENT
 
+The gryannote audio component provides an interface to annotate an audio. It is powered by [wavesurfer.js](https://wavesurfer.xyz/).
+
 ## Installation
 
 ```shell
@@ -25,6 +27,20 @@ demo = gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labelin
 
 demo.launch()
 ```
+
+## Interface
+
+Here's the audio component interface when the interface is accessed
+
+![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_audio_upload_interface.png?raw=1)
+
+The component offers two ways of loading audio: either by loading a file, or by directly recording a conversation using the interface. After loading an audio, the component will display the following interface:
+
+![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_audio_with_loaded_audio.png?raw=1)
+
+Then, it is possible to add annotations on the audio waveform by double clicking on it, or by using shortcut. All available shortcuts are enumareted in the following table.
+
+![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_audio_with_loaded_audio.png?raw=1)
 
 
 

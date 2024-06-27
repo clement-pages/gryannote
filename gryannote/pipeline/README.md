@@ -31,10 +31,18 @@ with gr.Blocks() as demo:
 
 if __name__ == "__main__":
     demo.launch()
-
 ```
 
-## `PipelineSelector`
+## Interface
+
+Here's an example of what the component interface looks like
+
+![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_pipeline_interface.png?raw=1)
+
+1 - Type your Hugging Face token in the textbox. This is needed the first time you use a specific pipeline. If you don't specify a token, the component will raise an error.
+2 - Select a `pyannote` pipeline to apply
+3 - If `enable_edition` is set to `True` in the component instantiation, you can edit pipeline's parameters.
+4 - Finally, to validate pipeline's parameters modification, click on update button.
 
 ### Initialization
 

@@ -38,7 +38,12 @@ if __name__ == "__main__":
 
 ```
 
-## `RTTM`
+## Interface
+
+Here's an example of what the component interface looks like:
+
+![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_rttm_interface.png?raw=1)
+
 
 ### Initialization
 

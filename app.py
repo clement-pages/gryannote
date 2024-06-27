@@ -18,7 +18,7 @@ def update_annotations(data):
 
 with gr.Blocks() as demo:
     gr.Markdown(
-        "Welcome to the [pyannote.audio](https://github.com/pyannote/pyannote-audio) app !"
+        "[Gryannote](): The [pyannote](https://github.com/pyannote/pyannote-audio) audio labeling tool"
     )
 
     # login_button = gr.LoginButton()
