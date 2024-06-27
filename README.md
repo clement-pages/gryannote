@@ -44,7 +44,7 @@ demo.launch()
 Launching `app.py` script will generate the following interface. This interface uses the three `gryannote` components. More details about these components and their interface can be found
 in their respective README.
 
-![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_audio_with_loaded_audio.png?raw=1)
+![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_interface.png?raw=1)
 
 RTTM annotations in RTTM component are dynamically updated according to the audio labeling made in the audio component.
 
