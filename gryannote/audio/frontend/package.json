@@ -1,0 +1,36 @@
+{
+  "name": "gryannote_audio",
+  "version": "0.7.2",
+  "description": "Gradio UI packages",
+  "type": "module",
+  "author": "Clément Pagés [clement.pages@irit.fr]",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "@gradio/atoms": "0.6.1",
+    "@gradio/button": "0.2.28",
+    "@gradio/client": "0.14.0",
+    "@gradio/icons": "0.3.4",
+    "@gradio/statustracker": "0.4.10",
+    "@gradio/upload": "0.8.2",
+    "@gradio/utils": "0.3.0",
+    "@gradio/wasm": "0.10.0",
+    "@types/wavesurfer.js": "^6.0.10",
+    "extendable-media-recorder": "^9.0.0",
+    "extendable-media-recorder-wav-encoder": "^7.0.76",
+    "resize-observer-polyfill": "^1.5.1",
+    "svelte-range-slider-pips": "^2.0.1",
+    "wavesurfer.js": "^7.4.2"
+  },
+  "main_changeset": true,
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./example": "./Example.svelte",
+    "./shared": "./shared/index.ts",
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@gradio/preview": "^0.9.0"
+  }
+}
