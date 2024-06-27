@@ -13,4 +13,6 @@ def apply_pipeline(audio):
 
 demo = gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labeling)
 
-demo.launch()
+
+if __name__ == "__main__":
+    demo.launch()
