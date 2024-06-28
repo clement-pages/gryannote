@@ -30,8 +30,9 @@
         const labelButton = document.createElement("button");
         labelButton.id = label.shortcut;
 
-        labelButton.addEventListener("focusin", () => {setActiveLabel(label.shortcut)});
-        labelButton.addEventListener("focusout", () => {setActiveLabel()});
+        labelButton.addEventListener("focusin", () => setActiveLabel(label.shortcut));
+        labelButton.addEventListener("focusout", () => setActiveLabel());
+        labelButton.addEventListener("dblclick", () => dialog.openDialog(label));
 
         container.appendChild(labelButton);
 
