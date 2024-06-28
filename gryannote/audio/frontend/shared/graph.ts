@@ -134,6 +134,14 @@ export default class Graph<N> {
     }
 
     /**
+     * Remove all the nodes and edges from the graph
+     */
+    public clear(){
+        this.edges.clear();
+        this.numNodes = 0;
+    }
+
+    /**
      *
      * @returns
      */
