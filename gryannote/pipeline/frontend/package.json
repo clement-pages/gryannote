@@ -1,0 +1,25 @@
+{
+  "name": "gryannote_pipeline",
+  "version": "0.6.2",
+  "description": "Gradio UI packages",
+  "type": "module",
+  "author": "Clément Pagés [clement.pages@irit.fr]",
+  "license": "MIT",
+  "private": false,
+  "main_changeset": true,
+  "exports": {
+    ".": "./Index.svelte",
+    "./example": "./Example.svelte",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@gradio/atoms": "0.5.3",
+    "@gradio/button": "^0.2.30",
+    "@gradio/icons": "0.3.3",
+    "@gradio/statustracker": "0.4.8",
+    "@gradio/utils": "0.3.0"
+  },
+  "devDependencies": {
+    "@gradio/preview": "^0.10.0"
+  }
+}

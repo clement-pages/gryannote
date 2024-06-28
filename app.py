@@ -1,12 +1,8 @@
 import gradio as gr
-from gryannote_audio import AnnotatedAudio
-from gradio_pipelineselector import PipelineSelector
-from gradio_rttmhandler import RTTMHandler
+from gryannote_audio import AudioLabeling
+from gryannote_pipeline import PipelineSelector
+from gryannote_rttm import RTTM
 from pyannote.audio import Pipeline
-
-example = AnnotatedAudio().example_inputs()
-
-annotated_audio = AnnotatedAudio(type="filepath", interactive=True)
 
 
 def apply_pipeline(pipeline: Pipeline, audio):
@@ -17,15 +13,15 @@ def apply_pipeline(pipeline: Pipeline, audio):
 
 
 def update_annotations(data):
-    return rttm_handler.on_edit(data)
+    return rttm.on_edit(data)
 
 
 with gr.Blocks() as demo:
     gr.Markdown(
-        "Welcome to the [pyannote.audio](https://github.com/pyannote/pyannote-audio) app !"
+        "[Gryannote](): The [pyannote](https://github.com/pyannote/pyannote-audio) audio labeling tool"
     )
 
-    #login_button = gr.LoginButton()
+    # login_button = gr.LoginButton()
 
     pipeline_selector = PipelineSelector()
     pipeline_selector.select(
@@ -42,27 +38,27 @@ with gr.Blocks() as demo:
         preprocess=False,
         postprocess=False,
     )
-    annotated_audio = AnnotatedAudio(
+    audio_labeling = AudioLabeling(
         type="filepath",
         interactive=True,
     )
 
     run_btn = gr.Button("Run pipeline")
 
-    rttm_handler = RTTMHandler()
+    rttm = RTTM()
 
-    annotated_audio.edit(
+    audio_labeling.edit(
         fn=update_annotations,
-        inputs=annotated_audio,
-        outputs=rttm_handler,
+        inputs=audio_labeling,
+        outputs=rttm,
         preprocess=False,
         postprocess=False,
     )
 
     run_btn.click(
         fn=apply_pipeline,
-        inputs=[pipeline_selector, annotated_audio],
-        outputs=[annotated_audio, rttm_handler],
+        inputs=[pipeline_selector, audio_labeling],
+        outputs=[audio_labeling, rttm],
     )
 
 
