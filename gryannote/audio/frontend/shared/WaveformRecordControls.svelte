@@ -27,7 +27,7 @@
 		RecordPlugin.getAvailableAudioDevices().then(
 			(devices: MediaDeviceInfo[]) => {
 				micDevices = devices;
-				devices.forEach((device) => {
+				micDevices.forEach((device) => {
 					if (device.deviceId) {
 						tempDevices.push(device);
 					}
