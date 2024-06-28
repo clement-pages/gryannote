@@ -12,8 +12,6 @@
 
     let labels: Label[] = [];
 
-    let labelIdx: number = 0;
-
     let dialog: Dialog;
 
     const colorList = ["#ffd70080", "#0000ff80", "#ff000080", "#00ff0080"];
@@ -49,10 +47,12 @@
      * letter in alphabetic order.
      */
     export function createLabel(options: {name?: string, color?: string, shortcut?: string}): Label {
+        const labelIdx = labels.length;
         // if maximum number of labels has been reached, do nothing
-        if(labels.length === 26){
+        if(labelIdx === 26){
             return;
         }
+
         if(!options.name){
             options.name = "LABEL_" + labelIdx.toString().padStart(2, "0");
         }
@@ -79,8 +79,6 @@
         };
         labels.push(label);
         createLabelElement(label);
-
-        labelIdx++;
 
         labels = labels.sort((i1, i2) => i1.shortcut.localeCompare(i2.shortcut));
 
@@ -117,7 +115,7 @@
      * Update the User Interface of the specified label.
      * @param label label to update
      */
-    function updateLabelUI(label): void {
+    function updateLabelUI(label: Label): void {
         let labelButton = document.getElementById(label.shortcut);
         labelButton.style.backgroundColor = label.color;
         labelButton.innerHTML = "<span style=\"font-weight: bold;\">" + label.shortcut + "</span>: " + label.name;
@@ -163,12 +161,14 @@
         // reset active label
         if(activeLabel){
             document.getElementById(activeLabel.shortcut).classList.remove("active-button");
+            document.getElementById(activeLabel.shortcut).blur();
         }
 
         // update active label
         activeLabel = label;
         if(activeLabel){
             document.getElementById(activeLabel.shortcut).classList.add("active-button");
+            document.getElementById(activeLabel.shortcut).focus();
             dispatch("select", activeLabel);
         }
     }
