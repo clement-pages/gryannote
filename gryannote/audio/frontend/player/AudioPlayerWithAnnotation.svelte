@@ -80,7 +80,7 @@
 		regionsGraph.getNodesList().forEach(node => {
 			let nodeAnnotation = regionsMap.get(node)
 			// if there is an overlap between the two annotations, add a edge between them in the grap
-			if(annotation.start <= nodeAnnotation.end && nodeAnnotation.start <= annotation.end){
+			if(annotation.start < nodeAnnotation.end && nodeAnnotation.start < annotation.end){
 				regionsGraph.addEdge(region, node);
 			}
 			else{
@@ -298,6 +298,7 @@
 		wsRegions?.clearRegions();
 		value.annotations = [];
 		regionsMap.clear();
+		regionsGraph.clear();
 	};
 
 	/**
