@@ -315,10 +315,22 @@
 			return;
 		}
 
+		setActiveRegionBackground(region.color);
+	}
+
+	/**
+	 * Update active region background with the specified color
+	 * @param color new color for the active region
+	 */
+	function setActiveRegionBackground(color: string): void{
+		if(!activeRegion){
+			return;
+		}
+
 		activeRegion.element.style.background = "repeating-linear-gradient(45deg,"
-						+ region.color
+						+ color
 						+ " ,"
-						+ region.color
+						+ color
 						+ " 10px, #ffffff 10px ,#ffffff 15px)";
 	}
 
@@ -339,11 +351,7 @@
 				drag: true,
 				resize: true,
 			});
-			activeRegion.element.style.background = "repeating-linear-gradient(45deg,"
-						+ activeRegion.color
-						+ " ,"
-						+ activeRegion.color
-						+ " 10px, #ffffff 10px ,#ffffff 15px)";
+			setActiveRegionBackground(activeRegion.color);
 
 			// update corresponding annotation color
 			let activeAnnotation = regionsMap.get(activeRegion.id);
@@ -730,9 +738,14 @@
 					bind:isDialogOpen
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:color_update={(e) => {
+						// update all regions associated with the modified label
 						wsRegions.getRegions().forEach(region => {
 							if(regionsMap.get(region.id).speaker === e.detail.name){
 								region.setOptions({color:e.detail.color});
+
+								if(region === activeRegion){
+									setActiveRegionBackground(region.color);
+								}
 							}
 						});
 					}}
