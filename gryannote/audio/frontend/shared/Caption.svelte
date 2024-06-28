@@ -179,22 +179,18 @@
 
     onMount(() => {
         window.addEventListener("keydown", (e): void => {
-        // do not process keyboard shortcuts when a dialog popup is open
-		if(isDialogOpen) return;
+            // do not process keyboard shortcuts when a dialog popup is open
+            if(isDialogOpen) return;
 
             if(e.key.match(/^[a-zA-Z]$/)){
                 let shortcut = e.key.toUpperCase();
-                if(e.altKey){
-                    let label = labels.find(_label => _label.shortcut === shortcut);
-                    if(label){
-                        dialog.openDialog(label);
-                    }
-                } else {
-                    setActiveLabel(shortcut);
-                }
+                setActiveLabel(shortcut);
             }
             else if(e.key === "Escape"){
                 setActiveLabel();
+            }
+            else if(e.key === "F2" && activeLabel){
+                dialog.openDialog(activeLabel);
             }
         });
     });
