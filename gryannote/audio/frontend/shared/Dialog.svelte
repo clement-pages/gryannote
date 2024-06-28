@@ -22,6 +22,7 @@
     export function openDialog(label: Label): void {
         name = label.name;
         color = label.color.slice(0, label.color.length - 2);
+        shortcut = label.shortcut;
 
         // open dialog pop-up
         dialog.showModal();
