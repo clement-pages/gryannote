@@ -737,12 +737,19 @@
 					bind:activeLabel
 					bind:isDialogOpen
 					on:select={(e) => setRegionSpeaker(e.detail)}
+					on:name_update={(e) => {
+						wsRegions.getRegions().forEach(region => {
+							if(region.color === e.detail.color){
+								regionsMap.get(region.id).speaker = e.detail.name;
+							}
+						});
+						console.log(regionsMap);
+					}}
 					on:color_update={(e) => {
 						// update all regions associated with the modified label
 						wsRegions.getRegions().forEach(region => {
 							if(regionsMap.get(region.id).speaker === e.detail.name){
 								region.setOptions({color:e.detail.color});
-
 								if(region === activeRegion){
 									setActiveRegionBackground(region.color);
 								}

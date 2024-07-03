@@ -17,6 +17,7 @@
     const colorList = ["#ffd70080", "#0000ff80", "#ff000080", "#00ff0080"];
     const dispatch = createEventDispatcher<{
         select: Label;
+        name_update: Label,
         color_update: Label;
     }>();
 
@@ -128,7 +129,13 @@
      */
     function updateLabel(label: Label, options: Partial<Label> = {}): void {
         const {name = label.name, color = label.color, shortcut = label.shortcut} = options;
-        label.name = name;
+
+        if(label.name !== name){
+            label.name = name;
+            // update annotation name
+            dispatch("name_update", label);
+        }
+
         if(label.color !== color){
             label.color = color;
             // update regions color
