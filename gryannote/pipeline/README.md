@@ -1,6 +1,6 @@
 
 # `gryannote_pipeline`
-<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.1.3%20-%20orange">
+<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.2.0%20-%20orange">
 
 A component allowing a user to select a pipeline from a drop-down list
 
@@ -10,7 +10,14 @@ A component allowing a user to select a pipeline from a drop-down list
 import gradio as gr
 from gryannote_pipeline import PipelineSelector
 
+
+def update_token(oauth_token: gr.OAuthToken | None = None):
+    token = oauth_token.token if oauth_token else None
+    return PipelineSelector(show_config=True, token=token)
+
+
 with gr.Blocks() as demo:
+    login_button = gr.LoginButton()
     pipeline_selector = PipelineSelector(show_config=True)
 
     pipeline_selector.select(
@@ -20,7 +27,6 @@ with gr.Blocks() as demo:
         preprocess=False,
         postprocess=False,
     )
-
     pipeline_selector.change(
         fn=pipeline_selector.on_change,
         inputs=pipeline_selector,
@@ -148,7 +154,20 @@ bool
 
 </td>
 <td align="left"><code>True</code></td>
-<td align="left">optional</td>
+<td align="left">bool, optional</td>
+</tr>
+
+<tr>
+<td align="left"><code>show_token_textbox</code></td>
+<td align="left" style="width: 25%;">
+
+```python
+bool
+```
+
+</td>
+<td align="left"><code>True</code></td>
+<td align="left">bool, optional</td>
 </tr>
 
 <tr>

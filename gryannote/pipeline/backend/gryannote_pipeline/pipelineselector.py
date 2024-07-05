@@ -56,6 +56,7 @@ class PipelineSelector(FormComponent):
         info: str | None = None,
         every: float | None = None,
         show_label: bool = True,
+        show_token_textbox: bool = True,
         show_config: bool = False,
         enable_edition: bool = False,
         container: bool = True,
@@ -93,8 +94,11 @@ class PipelineSelector(FormComponent):
             If `value` is a callable, run the function 'every' number of seconds while the client
             connection is open. Has no effect otherwise. The event can be accessed (e.g. to cancel it)
             via this component's .load_event attribute.
-        show_label: optional
+        show_label: bool, optional
             If True, will display label.
+        show_token_textbox: bool, optional
+            If True, will display texbox to type a HuggingFace token. Automatically set to False if
+            a `token` is provided.
         show_config: bool, optional
             If True, will display pipeline hyperparameters configuration interface as soon as a pipeline
             has been loaded. Has no effect if `enable_edition` is set to False. Default to False.
@@ -161,10 +165,14 @@ class PipelineSelector(FormComponent):
             )
 
         self.token = token
+        # if a token has been provided, do not display token text box in the component interface
+        if self.token:
+            show_token_textbox = False
+
+        self.show_token_textbox = show_token_textbox
 
         # component is visible only if a pipeline was not already set
         visible = getattr(self, "_pipeline", None) is None
-
 
         self.show_config = show_config
         self.enable_edition = enable_edition
