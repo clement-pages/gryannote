@@ -292,6 +292,7 @@
 	</div>
 	<button
 		id="help-button"
+		title="help"
 		on:click={() => helpDialog.openDialog()}
 	>
 		<Help/>
