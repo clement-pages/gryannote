@@ -15,6 +15,8 @@
 	import StreamAudio from "../streaming/StreamAudio.svelte";
 	import { SelectSource } from "@gradio/atoms";
 	import type { WaveformOptions } from "../shared/types";
+	import Help  from "../shared/icons/Help.svelte"
+	import HelpDialog from "../shared/HelpDialog.svelte";
     import AudioPlayerWithAnnotation from "../player/AudioPlayerWithAnnotation.svelte";
 
 	export let value: null | AnnotatedAudioData = null;
@@ -50,6 +52,9 @@
 	let pending_stream: Uint8Array[] = [];
 	let submit_pending_stream_on_pending_end = false;
 	let inited = false;
+
+	let isDialogOpen = false;
+	let helpDialog: HelpDialog;
 
 	const STREAM_TIMESLICE = 500;
 	const NUM_HEADER_BYTES = 44;
@@ -266,6 +271,7 @@
 
 	<AudioPlayerWithAnnotation
 		bind:mode
+		bind:isDialogOpen
 		{value}
 		{label}
 		{i18n}
@@ -280,4 +286,43 @@
 	/>
 {/if}
 
-<SelectSource {sources} bind:active_source handle_clear={clear} />
+<div class="button-zone">
+	<div id="select-source">
+		<SelectSource {sources} bind:active_source handle_clear={clear}/>
+	</div>
+	<button
+		id="help-button"
+		on:click={() => helpDialog.openDialog()}
+	>
+		<Help/>
+	</button>
+</div>
+
+<HelpDialog
+    bind:this={helpDialog}
+    bind:isOpen={isDialogOpen}
+/>
+
+<style>
+	.button-zone{
+		display: grid;
+		grid-template-columns: 1fr 10fr 1fr;
+		gap: 20px;
+		align-items: center;
+	}
+
+	#select-source {
+		grid-column: 2 / 3;
+	}
+
+	#help-button {
+		width: 24px;
+		height: 24px;
+		grid-column: 3 / 4;
+		color: var(--neutral-400);
+	}
+
+	#help-button:hover {
+		color: var(--color-accent);
+	}
+</style>
