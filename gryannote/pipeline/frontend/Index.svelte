@@ -22,6 +22,7 @@
 	export let value_is_output = false;
 	export let pipelines: [string, string | number][];
 	export let show_label: boolean;
+	export let show_token_textbox: boolean;
 	export let show_config: boolean = false;
 	export let enable_edition: boolean = false;
 	export let container = true;
@@ -232,21 +233,21 @@
 	/>
 
 	{#if visible}
-
-		<div class="form">
-		<label for="token" class="label"> Enter your Hugging Face token:</label>
-		<input
-			data-testid="textbox"
-			type="text"
-			class="text-area"
-			name="token"
-			id="token"
-			placeholder="hf_xxxxxxx..."
-			aria-label="Enter your Hugging Face token"
-			maxlength="50"
-			disabled={!interactive}
-			bind:value={value.token}
-		/>
+		{#if show_token_textbox}
+			<label for="token" class="label"> Enter your Hugging Face token:</label>
+			<input
+				data-testid="textbox"
+				type="text"
+				class="text-area"
+				name="token"
+				id="token"
+				placeholder="hf_xxxxxxx..."
+				aria-label="Enter your Hugging Face token"
+				maxlength="50"
+				disabled={!interactive}
+				bind:value={value.token}
+			/>
+		{/if}
 		<Dropdown
 			bind:value_is_output
 			choices={pipelines}
@@ -282,21 +283,20 @@
 			</div>
 		{/if}
 		<div class="params-control" id="params-control"></div>
-			{#if value.name !== ""}
-				<div class="validation">
-					<BaseButton
-						{elem_id}
-						{elem_classes}
-						{scale}
-						{min_width}
-						visible={show_config}
-						on:click={() => gradio.dispatch("change", value)}
-					>
-						Update parameters
-					</BaseButton>
-				</div>
-			{/if}
-		</div>
+		{#if value.name !== ""}
+			<div class="validation">
+				<BaseButton
+					{elem_id}
+					{elem_classes}
+					{scale}
+					{min_width}
+					visible={show_config}
+					on:click={() => gradio.dispatch("change", value)}
+				>
+					Update parameters
+				</BaseButton>
+			</div>
+		{/if}
 	{/if}
 </Block>
 
