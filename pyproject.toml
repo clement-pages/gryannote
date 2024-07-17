@@ -11,7 +11,7 @@ authors = [{name = "Clément Pagés", email = "clement.pages@irit.fr"}]
 license = { file = "LICENSE" }
 classifiers = [
   'Development Status :: 3 - Alpha',
-  'License :: OSI Approved :: Apache Software License',
+  'License :: OSI Approved :: MIT License',
   'Operating System :: OS Independent',
   'Programming Language :: Python :: 3',
   'Programming Language :: Python :: 3 :: Only',

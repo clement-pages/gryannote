@@ -12,14 +12,14 @@ version = "0.2.0"
 description = "audio component with speaker annotations"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [{ name = "Clément Pagés", email = "clement.pages@irit.fr" }]
 keywords = ["gradio-custom-component", "gradio-template-Audio", "pyannote.audio", "speaker diarization"]
 # Add dependencies here
 dependencies = ["gradio>=4.0,<5.0"]
 classifiers = [
   'Development Status :: 3 - Alpha',
-  'License :: OSI Approved :: Apache Software License',
+  'License :: OSI Approved :: MIT License',
   'Operating System :: OS Independent',
   'Programming Language :: Python :: 3',
   'Programming Language :: Python :: 3 :: Only',
