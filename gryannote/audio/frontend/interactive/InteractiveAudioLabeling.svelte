@@ -287,6 +287,10 @@
 {/if}
 
 <div class="button-zone">
+	<a href="https://github.com/clement-pages/gryannote" id="logo-link">
+		<img src="https://github.com/clement-pages/gryannote/blob/main/docs/assets/logo-gryannote.png?raw=true" alt=" " id="logo">
+		<p> provided by gryannote</p>
+	</a>
 	<div id="select-source">
 		<SelectSource {sources} bind:active_source handle_clear={clear}/>
 	</div>
@@ -310,6 +314,22 @@
 		grid-template-columns: 1fr 10fr 1fr;
 		gap: 20px;
 		align-items: center;
+	}
+
+	#logo-link{
+		display: flex;
+		flex-direction: row;
+		font-family: inherit;
+		font-size: 0.75em;
+	}
+
+	#logo {
+		width: 2em;
+		margin: 0.5em;
+	}
+
+	#logo-link:hover {
+		color: var(--color-accent);
 	}
 
 	#select-source {
