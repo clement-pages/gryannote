@@ -65,6 +65,7 @@
 		{/if}
 	</div>
 	<AudioPlayerWithAnnotation
+		isDialogOpen={false}
 		value={value}
 		interactive={false}
 		{label}

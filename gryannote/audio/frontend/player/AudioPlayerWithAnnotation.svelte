@@ -27,6 +27,7 @@
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let mode = "";
+	export let isDialogOpen: boolean;
 
 	let container: HTMLDivElement;
 	let waveform: WaveSurfer | undefined;
@@ -55,7 +56,6 @@
 	// nodes = regions (id), edges = overlap between linked regions
 	let regionsGraph: Graph<string> = new Graph()
 
-	let isDialogOpen: boolean;
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
@@ -743,7 +743,6 @@
 								regionsMap.get(region.id).speaker = e.detail.name;
 							}
 						});
-						console.log(regionsMap);
 					}}
 					on:color_update={(e) => {
 						// update all regions associated with the modified label
