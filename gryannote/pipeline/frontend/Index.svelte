@@ -248,10 +248,13 @@
 				bind:value={value.token}
 			/>
 		{/if}
+		<p id="dropdown-label">
+			Select the <a href="https://huggingface.co/pyannote"> pipeline </a> to use:
+		</p>
 		<Dropdown
 			bind:value_is_output
 			choices={pipelines}
-			label={"Select the pipeline to use: "}
+			label={""}
 			{info}
 			{show_label}
 			{container}
@@ -302,6 +305,13 @@
 
 
 <style>
+	a {
+		text-decoration: underline;
+	}
+
+	a:hover {
+		color: var(--color-accent);
+	}
 
 	.params-control{
 		width: 100%;
@@ -432,5 +442,9 @@
 
 	.slider.round:before {
 	border-radius: 50%;
+	}
+
+	#dropdown-label{
+		margin-top: 1.5em;
 	}
 </style>
