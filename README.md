@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://github.com/clement-pages/gryannote/blob/main/docs/assets/logo-gryannote.png?raw=true" alt="gryannote logo" width="200">
+<p>
+
 # gryannote: a  speaker diarization labeling tool
 
 gryannote is a collection of [`Gradio`](https://www.gradio.app/) custom components focusing on the labeling of speaker diarization data. Integrated with the [`pyannote`](https://github.com/pyannote/pyannote-audio) speaker diarization ecosystem, it allows to build web applications to load pretrained `pyannote` pipelines and customize their hyper-parameters, upload or record an audio file, process it with the pipeline, visualize and interact with its outputs, correct them if needed, and export the final annotation in RTTM format. Each of these components can be used independently from each other.
