@@ -189,7 +189,6 @@
 
 	.action {
 		width: var(--size-5);
-		width: var(--size-5);
 		color: var(--neutral-400);
 		margin-left: var(--spacing-md);
 	}
@@ -243,7 +242,8 @@
 	}
 
 	.zoom-button {
-		width: 1.75em;
+		margin-left: var(--spacing-md);
+		width: var(--size-6);
 		fill: var(--neutral-400);
 	}
 </style>
