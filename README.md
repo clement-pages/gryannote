@@ -29,16 +29,27 @@ in `app.py` script.
 import gradio as gr
 from gryannote_audio import AudioLabeling
 from pyannote.audio import Pipeline
+from gryannote_rttm import RTTM
 
 audio_labeling = AudioLabeling(type="filepath", interactive=True)
 
+def update_annotations(data):
+    return rttm.on_edit(data)
 
 def apply_pipeline(audio):
     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1")
     annotations = pipeline(audio)
     return (audio, annotations)
 
-demo = gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labeling)
+with gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labeling) as demo:
+    rttm = RTTM()
+    audio_labeling.edit(
+        fn=update_annotations,
+        inputs=audio_labeling,
+        outputs=rttm,
+        preprocess=False,
+        postprocess=False,
+    )
 
 demo.launch()
 ```
