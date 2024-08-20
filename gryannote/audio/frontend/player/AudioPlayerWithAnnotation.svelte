@@ -316,6 +316,9 @@
 		}
 
 		setActiveRegionBackground(region.color);
+
+		// adjust time cursor position so that active region is always visible
+		waveform.setTime(region.start)
 	}
 
 	/**
