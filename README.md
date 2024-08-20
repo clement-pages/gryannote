@@ -45,7 +45,7 @@ demo.launch()
 
 ## Interface
 
-Launching `app.py` script will generate the following interface. This interface uses the three `gryannote` components. More details about these components and their interface can be found
+Launching `demo/app.py` script will generate the following interface. This interface uses the three `gryannote` components. More details about these components and their interface can be found
 in their respective README.
 
 ![](https://github.com/clement-pages/gryannote/blob/main/docs/assets/gryannote_interface.png?raw=1)
