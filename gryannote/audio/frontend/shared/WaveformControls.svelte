@@ -24,9 +24,9 @@
 	let currentVolume = 1;
 
 	let currentZoom: number = 10;
-	let zoomMin: number = 10;
-	let zoomMax: number = 10000;
-	let zoomDelta = 100;
+	let zoomMin: number = 0;
+	let zoomMax: number = 500;
+	let zoomDelta = 50;
 
 	/**
 	 * Update zoom value
