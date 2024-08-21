@@ -34,7 +34,7 @@ classifiers = [
 dev = ["build", "twine"]
 
 [tool.hatch.build]
-artifacts = ["/backend/gryannote_audio/templates", "*.pyi", "home/clement-pages/micromamba/envs/pyannote/lib/python3.10/site-packages/gryannote_audio/templates", "backend/gryannote_audio/templates", "backend/gryannote_audio/templates"]
+artifacts = ["/backend/gryannote_audio/templates", "*.pyi"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["/backend/gryannote_audio"]
