@@ -74,7 +74,7 @@
 
 		<button
 		class="zoom-button icon"
-			on:click={() => showZoomSlider =! showZoomSlider}
+			on:click={() => showZoomSlider = !showZoomSlider}
 		>
 			<Magnifier/>
 		</button>
