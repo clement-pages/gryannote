@@ -7,6 +7,7 @@
 	import type {WaveformOptions } from "./types";
 	import VolumeLevels from "./VolumeLevels.svelte";
 	import VolumeControl from "./VolumeControl.svelte";
+	import ZoomControl from "./ZoomControl.svelte";
 	import { onMount } from "svelte";
 
 	export let waveform: WaveSurfer;
@@ -23,26 +24,6 @@
 
 	let currentVolume = 1;
 
-	let currentZoom: number = 10;
-	let zoomMin: number = 0;
-	let zoomMax: number = 500;
-	let zoomDelta = 50;
-
-	/**
-	 * Update zoom value
-	 * @param zoom new value for zoom
-	 */
-	function updateZoom(zoom: number): void{
-		currentZoom = zoom;
-		if(currentZoom < zoomMin){
-			currentZoom = zoomMin;
-		}
-		else if(currentZoom > zoomMax){
-			currentZoom = zoomMax;
-		}
-		waveform.zoom(currentZoom);
-	}
-
 	onMount(() => {
 		window.addEventListener("keydown", (e) =>{
 			// do not process keyboard shortcuts when a dialog popup is open
@@ -50,8 +31,6 @@
 
 			switch(e.key){
 				case " ": waveform.playPause(); e.preventDefault(); break;
-				case "ArrowUp": e.preventDefault(); updateZoom(currentZoom + zoomDelta); break;
-				case "ArrowDown": e.preventDefault(); updateZoom(currentZoom - zoomDelta); break;
 				default: //do nothing
 			}
 		})
@@ -92,24 +71,17 @@
 		>
 			<span>{playbackSpeed}x</span>
 		</button>
-		<div class="zoom-wrapper">
-			<button
-			class="zoom-button icon"
-				on:click={() => showZoomSlider = !	showZoomSlider}
-			>
-				<Magnifier/>
-			</button>
-			{#if showZoomSlider}
-				<input
-					type="range"
-					min={zoomMin}
-					max={zoomMax}
-					bind:value={currentZoom}
-					on:input={(e) => updateZoom(e.target.value)}
-					on:focusout={() => showZoomSlider = false}
-				>
-				{/if}
-		</div>
+
+		<button
+		class="zoom-button icon"
+			on:click={() => showZoomSlider = !	showZoomSlider}
+		>
+			<Magnifier/>
+		</button>
+		{#if showZoomSlider}
+			<ZoomControl {waveform} bind:showZoomSlider/>
+		{/if}
+
 	</div>
 
 	<div class="play-pause-wrapper">
