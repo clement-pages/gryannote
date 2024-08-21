@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import warnings
 from pathlib import Path
 from typing import Any, Callable, Literal, Tuple
 
@@ -81,7 +82,9 @@ class AudioLabeling(
         | Callable
         | None = None,
         *,
-        sources: list[Literal["upload", "microphone"]] | None = None,
+        audio: str | Path | Tuple[int, np.ndarray] | None = None,
+        annotations: PyannoteAnnotation | None = None,
+        sources: list[Literal["upload", "microphone"]] | str | None = None,
         type: Literal["numpy", "filepath"] = "numpy",
         label: str | None = None,
         every: float | None = None,
@@ -106,7 +109,9 @@ class AudioLabeling(
     ):
         """
         Parameters:
-            value: A [audio path, pyannote annotations] tuple for the default value that `AudioLabeling` component is going to take. If callable, the function will be called whenever the app loads to set the initial value of the component.
+            value: A [audio, pyannote annotations] tuple for the default value that `AudioLabeling` component is going to take. If callable, the function will be called whenever the app loads to set the initial value of the component.
+            audio: Init the `AudioLabeling` component with this audio
+            annotations: Init the `AudioLabeling` with these annotations. Can be specified only if audio was set with the corresponding audio.
             sources: A list of sources permitted for audio. "upload" creates a box where user can drop an audio file, "microphone" creates a microphone input. The first element in the list will be used as the default source. If None, defaults to ["upload", "microphone"], or ["microphone"] if `streaming` is True.
             type: The format the audio file is converted to before being passed into the prediction function. "numpy" converts the audio to a tuple consisting of: (int sample rate, numpy.array for the data), "filepath" passes a str path to a temporary file containing the audio.
             label: The label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.
@@ -130,7 +135,7 @@ class AudioLabeling(
             max_length: The maximum length of audio (in seconds) that the user can pass into the prediction function. If None, there is no maximum length.
             waveform_options: A dictionary of options for the waveform display. Options include: waveform_color (str), waveform_progress_color (str), show_controls (bool), skip_length (int). Default is None, which uses the default values for these options.
         """
-        valid_sources: list[Literal["upload", "microphone"]] = ["upload", "microphone"]
+        valid_sources = ["upload", "microphone"]
         if sources is None:
             self.sources = ["microphone"] if streaming else valid_sources
         elif isinstance(sources, str) and sources in valid_sources:
@@ -146,26 +151,32 @@ class AudioLabeling(
                 raise ValueError(
                     f"`sources` must a list consisting of elements in {valid_sources}"
                 )
+
         valid_types = ["numpy", "filepath"]
         if type not in valid_types:
             raise ValueError(
                 f"Invalid value for parameter `type`: {type}. Please choose from one of: {valid_types}"
             )
         self.type = type
+
         self.streaming = streaming
         if self.streaming and "microphone" not in self.sources:
             raise ValueError(
                 "AudioLabeling streaming only available if sources includes 'microphone'."
             )
+
         self.format = format
         self.autoplay = autoplay
+
         self.show_download_button = show_download_button
         self.show_share_button = (
             (utils.get_space() is not None)
             if show_share_button is None
             else show_share_button
         )
+
         self.editable = editable
+
         if waveform_options is None:
             self.waveform_options = WaveformOptions()
         self.waveform_options = (
@@ -173,6 +184,16 @@ class AudioLabeling(
             if isinstance(waveform_options, dict)
             else waveform_options
         )
+
+        # TODO: What if annotations don't match audio?
+        if audio:
+            value = (audio, annotations)
+        else:
+            if annotations:
+                warnings.warn(
+                    "Value for annotation parameter was ignored as no audio was provided"
+                )
+
         self.min_length = min_length
         self.max_length = max_length
 
