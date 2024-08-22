@@ -1,6 +1,6 @@
 # Changelog
 
-## main
+## 0.2.0
 
 ### backend API
 - add two new parameters to `AudioLabeling` constructor: `audio` and `annotations`. These two parameters can be used to init an `AudioLabeling` component with specified audio and annotations, for visualization purposes for instance.

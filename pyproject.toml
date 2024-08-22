@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gryannote"
-version = "0.1.6"
+version = "0.2.0"
 description = "Provide Gradio custom components to make the diarization-based audio annotation process easier"
 readme = "README.md"
 authors = [{name = "Clément Pagés", email = "clement.pages@irit.fr"}]
