@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gryannote_pipeline"
-version = "0.2.0"
+version = "0.2.1"
 description = "A component allowing a user to select a pipeline from a drop-down list"
 readme = "README.md"
 license = "MIT"
@@ -34,7 +34,7 @@ classifiers = [
 dev = ["build", "twine"]
 
 [tool.hatch.build]
-artifacts = ["/backend/gryannote_pipeline/templates", "*.pyi", "backend/gryannote_pipeline/templates"]
+artifacts = ["/backend/gryannote_pipeline/templates", "*.pyi"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["/backend/gryannote_pipeline"]
