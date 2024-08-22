@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from gradio.components.base import FormComponent
 from gradio.data_classes import GradioModel
 from gradio.events import Events
+from gradio.exceptions import Error
 from huggingface_hub import HfApi
 from pyannote.audio import Pipeline
 from pyannote.pipeline.parameter import (
@@ -210,11 +211,9 @@ class PipelineSelector(FormComponent):
             An instantiated pipeline
         """
         if not getattr(self, "_pipeline", None):
-            if not payload:
-                raise ValueError(
-                    "Cannot instantiate a pipeline as no pipeline",
-                    "was provided in the backend or in the interface",
-                )
+            if not payload or payload.name == "":
+                # no pipeline was given by the user in the interface nor in the backend
+                raise Error("Please select a pipeline first")
             self._pipeline = self._load_pipeline(payload)
         return self._pipeline
 
@@ -289,6 +288,12 @@ class PipelineSelector(FormComponent):
             pipeline = Pipeline.from_pretrained(
                 pipeline_info.name, use_auth_token=self.token
             )
+            if not pipeline:
+                raise Error(
+                    f"Could not download {pipeline_info.name} pipeline."
+                    "It might be because the pipeline is private or gated so make"
+                    " sure to authenticate with your hugging face token "
+                )
         return pipeline
 
     def _get_param_specs(self, param_types: Dict, param_values: Dict) -> Dict:

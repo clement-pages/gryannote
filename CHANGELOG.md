@@ -13,6 +13,7 @@ audio_labeling = AudioLabeling(type="filepath", interactive=True, audio=audio, a
 ### improvement
 - move time cursor so that active segment is always visible on the screen
 - improve `AudioLabeling` zoom interface
+- add more error messages on the UI
 
 ### dependency
 - remove dependency to `networkx`

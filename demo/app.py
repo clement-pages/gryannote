@@ -7,7 +7,10 @@ from pyannote.audio import Pipeline
 
 def apply_pipeline(pipeline: Pipeline, audio):
     """Apply specified pipeline on the indicated audio file"""
-    annotations = pipeline(audio)
+    try:
+        annotations = pipeline(audio)
+    except (ValueError, RuntimeError) as e:
+        raise gr.Error(f"An error occurred while processing audio: {e}")
 
     return ((audio, annotations), (audio, annotations))
 
@@ -20,8 +23,6 @@ with gr.Blocks() as demo:
     gr.Markdown(
         "[Gryannote](): The [pyannote](https://github.com/pyannote/pyannote-audio) audio labeling tool"
     )
-
-    # login_button = gr.LoginButton()
 
     pipeline_selector = PipelineSelector()
     pipeline_selector.select(
