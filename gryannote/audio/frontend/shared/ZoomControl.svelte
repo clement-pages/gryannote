@@ -2,7 +2,7 @@
     import { onMount} from "svelte"
     import WaveSurfer from "wavesurfer.js";
 
-    export let currentZoom: number = 50;
+    export let currentZoom: number = 0;
 	export let zoomMin: number = 0;
 	export let zoomMax: number = 500;
 	export let zoomDelta: number = 50;
