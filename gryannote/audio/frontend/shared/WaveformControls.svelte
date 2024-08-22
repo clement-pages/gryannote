@@ -78,9 +78,7 @@
 		>
 			<Magnifier/>
 		</button>
-		{#if showZoomSlider}
-			<ZoomControl {waveform} bind:showZoomSlider/>
-		{/if}
+		<ZoomControl {waveform} bind:showZoomSlider/>
 
 	</div>
 

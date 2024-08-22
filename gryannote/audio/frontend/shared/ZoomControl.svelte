@@ -2,7 +2,7 @@
     import { onMount} from "svelte"
     import WaveSurfer from "wavesurfer.js";
 
-    export let currentZoom: number = 50;
+    export let currentZoom: number = 0;
 	export let zoomMin: number = 0;
 	export let zoomMax: number = 500;
 	export let zoomDelta: number = 50;
@@ -41,6 +41,12 @@
 
     $: currentZoom, adjustSlider();
 
+	// init zoom
+	$: waveform?.on("ready", () => {
+		waveform.zoom(currentZoom);
+		adjustSlider();
+	})
+
     onMount(() => {
         window.addEventListener("keydown", (e) => {
             // do not process keyboard shortcuts when a dialog popup is open
@@ -52,23 +58,22 @@
                 default: //do nothing
             }
         })
-		// init zoom
-        waveform.zoom(currentZoom);
-		adjustSlider();
     });
 
 </script>
 
-<input
-    bind:this={zoomElement}
-    class="zoom-slider"
-    type="range"
-    min={zoomMin}
-    max={zoomMax}
-    bind:value={currentZoom}
-    on:input={(e) => updateZoom(e.target.value)}
-    on:focusout={() => showZoomSlider = false}
->
+{#if showZoomSlider}
+	<input
+		bind:this={zoomElement}
+		class="zoom-slider"
+		type="range"
+		min={zoomMin}
+		max={zoomMax}
+		bind:value={currentZoom}
+		on:input={(e) => updateZoom(e.target.value)}
+		on:focusout={() => showZoomSlider = false}
+	>
+{/if}
 
 <style>
 	.zoom-slider {
