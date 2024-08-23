@@ -2,10 +2,9 @@
     import { onMount} from "svelte"
     import WaveSurfer from "wavesurfer.js";
 
-    export let currentZoom: number = 0;
-	export let zoomMin: number = 0;
+	export let zoomMin: number = 1;
 	export let zoomMax: number = 500;
-	export let zoomDelta: number = 50;
+    export let currentZoom: number = zoomMin;
     export let showZoomSlider: boolean = false;
     export let waveform: WaveSurfer;
     export let isDialogOpen: boolean = false;
@@ -26,16 +25,17 @@
 
     /**
 	 * Update zoom value
-	 * @param zoom new value for zoom
+	 * @param value new value for zoom
 	 */
-	function updateZoom(zoom: number): void{
-		currentZoom = zoom;
-		if(currentZoom < zoomMin){
+	function zoom(value: number): void{
+		if(value < zoomMin){
 			currentZoom = zoomMin;
-		}
-		else if(currentZoom > zoomMax){
+		} else if(value > zoomMax){
 			currentZoom = zoomMax;
+		} else{
+			currentZoom = value;
 		}
+		console.log(currentZoom);
 		waveform.zoom(currentZoom);
 	}
 
@@ -52,9 +52,11 @@
             // do not process keyboard shortcuts when a dialog popup is open
             if(isDialogOpen) return;
 
+			const coef = e.shiftKey ? 2.0 : 1.1;
+			console.log(e.key)
             switch(e.key){
-                case "ArrowUp": e.preventDefault(); updateZoom(currentZoom + zoomDelta); break;
-				case "ArrowDown": e.preventDefault(); updateZoom(currentZoom - zoomDelta); break;
+                case "ArrowUp": e.preventDefault(); zoom(currentZoom * coef); break;
+				case "ArrowDown": e.preventDefault(); zoom(currentZoom / coef); break;
                 default: //do nothing
             }
         })
@@ -70,7 +72,7 @@
 		min={zoomMin}
 		max={zoomMax}
 		bind:value={currentZoom}
-		on:input={(e) => updateZoom(e.target.value)}
+		on:input={(e) => zoom(e.target.value)}
 		on:focusout={() => showZoomSlider = false}
 	>
 {/if}
