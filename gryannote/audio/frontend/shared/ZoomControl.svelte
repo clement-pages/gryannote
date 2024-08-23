@@ -2,9 +2,9 @@
     import { onMount} from "svelte"
     import WaveSurfer from "wavesurfer.js";
 
-	export let zoomMin: number = 1;
-	export let zoomMax: number = 500;
-    export let currentZoom: number = zoomMin;
+	export let zoomMin: number;
+	export let zoomMax: number;
+    export let currentZoom: number;
     export let showZoomSlider: boolean = false;
     export let waveform: WaveSurfer;
     export let isDialogOpen: boolean = false;
@@ -35,7 +35,6 @@
 		} else{
 			currentZoom = value;
 		}
-		console.log(currentZoom);
 		waveform.zoom(currentZoom);
 	}
 
@@ -43,6 +42,14 @@
 
 	// init zoom
 	$: waveform?.on("ready", () => {
+		// adapt zoom range according to audio duration and view size
+		const viewSize = waveform.getWrapper().clientWidth;
+		const duration = waveform.getDuration();
+
+		zoomMin = Math.trunc(viewSize / duration);
+		zoomMax = zoomMin * 10;
+		currentZoom = zoomMin;
+
 		waveform.zoom(currentZoom);
 		adjustSlider();
 	})
@@ -53,7 +60,6 @@
             if(isDialogOpen) return;
 
 			const coef = e.shiftKey ? 2.0 : 1.1;
-			console.log(e.key)
             switch(e.key){
                 case "ArrowUp": e.preventDefault(); zoom(currentZoom * coef); break;
 				case "ArrowDown": e.preventDefault(); zoom(currentZoom / coef); break;
