@@ -2,25 +2,25 @@
     import { onMount} from "svelte"
     import WaveSurfer from "wavesurfer.js";
 
-	export let zoomMin: number;
-	export let zoomMax: number;
-    export let currentZoom: number;
+	export let waveform: WaveSurfer;
     export let showZoomSlider: boolean = false;
-    export let waveform: WaveSurfer;
     export let isDialogOpen: boolean = false;
 
-    let zoomElement: HTMLInputElement;
+	let zoomMin: number;
+	let zoomMax: number;
+    let currentZoom: number;
+    let slider: HTMLInputElement;
 
 	/**
 	 * Adjust slider style according to current zoom value
 	 */
     function adjustSlider(): void {
-        let slider = zoomElement;
         if(!slider) return;
 
+		const cursorPosition = 100 * ((currentZoom - zoomMin) / (zoomMax - zoomMin));
         slider.style.background = `linear-gradient(to right, var(--color-accent) ${
-            currentZoom / 5
-        }%, var(--neutral-400) ${currentZoom / 5}%)`;
+            cursorPosition
+        }%, var(--neutral-400) ${cursorPosition}%)`;
     };
 
     /**
@@ -36,18 +36,19 @@
 			currentZoom = value;
 		}
 		waveform.zoom(currentZoom);
+		adjustSlider();
 	}
 
-    $: currentZoom, adjustSlider();
-
-	// init zoom
 	$: waveform?.on("ready", () => {
-		// adapt zoom range according to audio duration and view size
+		// adapt zoom range according to audio duration and waveform viewport size
 		const viewSize = waveform.getWrapper().clientWidth;
 		const duration = waveform.getDuration();
 
+		// min value of zoom to have all the audio in the waveform viewport
 		zoomMin = Math.trunc(viewSize / duration);
-		zoomMax = zoomMin * 10;
+		if(zoomMin === 0) zoomMin = 1;
+		// the longer the audio, the more we want to be able to zoom in relative to min zoom
+		zoomMax = Math.trunc(zoomMin * (duration  / 10));
 		currentZoom = zoomMin;
 
 		waveform.zoom(currentZoom);
@@ -72,7 +73,7 @@
 
 {#if showZoomSlider}
 	<input
-		bind:this={zoomElement}
+		bind:this={slider}
 		class="zoom-slider"
 		type="range"
 		min={zoomMin}
