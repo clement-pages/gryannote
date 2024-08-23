@@ -749,6 +749,7 @@
 					bind:defaultLabel
 					bind:activeLabel
 					bind:isDialogOpen
+					{interactive}
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:name_update={(e) => {
 						wsRegions.getRegions().forEach(region => {
