@@ -1,5 +1,12 @@
 # Changelog
 
+## develop
+
+### improvement
+
+- if audio is playing, time cursor will not jump to the start of the active annotation
+- if audio is paused, time cursor will be set to the start of the active annotation only if this annotation is not visible on the screen.
+
 ## 0.2.0
 
 ### backend API

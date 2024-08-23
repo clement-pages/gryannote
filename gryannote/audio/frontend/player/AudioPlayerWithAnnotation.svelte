@@ -302,6 +302,28 @@
 	};
 
 	/**
+	 * Return whether specified region is visible on the screen
+	 * @param region
+	 * @param waveformContainer
+	 */
+	function isRegionVisible(region: Region, waveformContainer: HTMLDivElement): bool {
+		// Get the left and right boundaries of the waveform view box:
+		const viewbox = waveformContainer.getBoundingClientRect();
+		const viewboxLeft = viewbox.left;
+		const viewboxRight = viewbox.right;
+
+		// Get the left and right boundaries of the region
+		const regionBox = region.element.getBoundingClientRect();
+		const regionBoxLeft = regionBox.left;
+		const regionBoxRight = regionBox.right;
+
+		// Check if the region is within the visible bounds of the visible part of the waveform
+		const isVisible = (regionBoxLeft >= viewboxLeft && regionBoxRight <= viewboxRight);
+
+    	return isVisible;
+	}
+
+	/**
 	 * Set active region with specified one.
 	 * @param region the region to activate
 	 */
@@ -318,9 +340,12 @@
 		setActiveRegionBackground(region.color);
 
 		// adjust time cursor position so that active region is always visible
-		// only update if audio is not playing to prevent audio jumping
+		// only update if audio is not playing and active region not visible
+		// to prevent audio jumping
 		if(!waveform.isPlaying()){
-			waveform.setTime(region.start);
+			if(!isRegionVisible(region, container)){
+				waveform.setTime(region.start);
+			}
 		}
 	}
 
