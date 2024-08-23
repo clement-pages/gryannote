@@ -64,4 +64,5 @@ The following table summarizes available keyboard shortcuts for the `AudioLabeli
 |`DELETE` or `SHIFT + BACKSPACE`                | Delete selected region and select the next one                        |
 |`ESC`                                          | Unselect selected annotation and / or label                           |
 | `UP` or `DOWN`                                | Zoom in/out                                                           |
+| `SHIFT + UP` or `SHIFT + DOWN`                | Same, but faster                                                      |
 | `F2`                                          | Open settings for the active label                                    |
