@@ -174,8 +174,8 @@
 				start: annotation.start,
 				end: annotation.end,
 				color: label.color,
-				drag: true,
-				resize: true,
+				drag: interactive,
+				resize: interactive,
 			}, annotation.speaker);
 		});
 	}
@@ -213,9 +213,12 @@
 
 	/**
 	 * Handle add region event. The new added region become the active region.
+	 * Do nothing if the component is not in interactive mode
 	 * @param relativeY mouse y-coordinate relative to waveform start
 	 */
 	function handleRegionAdd(relativeY: number): void{
+		if(!interactive) return;
+
 		let label = (activeLabel ? activeLabel : defaultLabel);
 		// if annotations were not initialized, create a new label
 		if (!label){
@@ -303,9 +306,12 @@
 
 	/**
 	 * Set active region with specified one.
+	 * Do nothing if component is not in interactive mode
 	 * @param region the region to activate
 	 */
 	function setActiveRegion(region: Region): void {
+		if(!interactive) return;
+
 		if(activeRegion){
 			activeRegion.element.style.background = activeRegion.color;
 		}
@@ -351,8 +357,8 @@
 				start: activeRegion.start,
 				end: activeRegion.end,
 				color: label.color,
-				drag: true,
-				resize: true,
+				drag: activeRegion.drag,
+				resize: activeRegion.resize,
 			});
 			setActiveRegionBackground(activeRegion.color);
 
@@ -425,9 +431,12 @@
 	 * - if there is an active region, split this region
 	 * - else, split the region in which the time cursor is
 	 * - if the cursor is out on any region, do nothing
+	 * Do nothing if the audio component is not in interactive mode
 	 * @param currentTime position of the cursor on the waveform
 	 */
 	function handleRegionSplit(currentTime: number): void {
+		if(!interactive) return;
+
 		// get region in which the cursor in currently located
 		let region = wsRegions.getRegions().find(
 			(_region) => _region.start < currentTime && _region.end > currentTime
@@ -563,23 +572,24 @@
 		if(wsRegions === undefined ){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
 
-			// add region-clicked event listener
-			wsRegions?.on("region-clicked", (region, e) => {
-				switch(mode){
-					case "remove": removeRegion(region); break;
-					case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
-					default: setActiveRegion(region); region.play();
-				}
-				mode = "";
-			});
-
-			wsRegions?.on("region-updated", (region) => {
-				let updatedAnnotation = regionsMap.get(region.id);
-				updatedAnnotation.start = region.start;
-				updatedAnnotation.end = region.end;
-				updateRegionsOverlapping(region.id);
-				updateAnnotations();
-			});
+			if(interactive){
+				// add region-clicked event listener
+				wsRegions?.on("region-clicked", (region, e) => {
+					switch(mode){
+						case "remove": removeRegion(region); break;
+						case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
+						default: setActiveRegion(region); region.play();
+					}
+					mode = "";
+				});
+				wsRegions?.on("region-updated", (region) => {
+					let updatedAnnotation = regionsMap.get(region.id);
+					updatedAnnotation.start = region.start;
+					updatedAnnotation.end = region.end;
+					updateRegionsOverlapping(region.id);
+					updateAnnotations();
+				});
+			}
 		}
 		if (!waveform_settings.autoplay) {
 			waveform?.stop();
@@ -739,6 +749,7 @@
 					bind:defaultLabel
 					bind:activeLabel
 					bind:isDialogOpen
+					{interactive}
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:name_update={(e) => {
 						wsRegions.getRegions().forEach(region => {

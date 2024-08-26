@@ -92,7 +92,7 @@ class AudioLabeling(
         container: bool = True,
         scale: int | None = None,
         min_width: int = 160,
-        interactive: bool | None = None,
+        interactive: bool = True,
         visible: bool = True,
         streaming: bool = False,
         elem_id: str | None = None,
@@ -357,3 +357,41 @@ class AudioLabeling(
             raise ValueError(
                 "AudioLabeling streaming only available if source includes 'microphone'."
             )
+
+
+def Player(
+    audio: str | Path | Tuple[int, np.ndarray],
+    annotations: PyannoteAnnotation | None = None,
+    label: str | None = None,
+):
+    """
+    Parameters:
+        audio: str | Path | Tuple(int, np.ndarray)
+            audio to play, as a string, Path object or tuple (sample rate, data)
+        annotations: pyannote.core.Annotation, optional
+            annotations to load on the audio, for visualization purposes only.
+        If you want be able to edit them, use `AudioLabeling` component instead.
+        label: str, optional
+            The label for this component. Appears above the component and is also used as
+            the header if there are a table of examples for this component. If None and used
+            in a `gr.Interface`, the label will be the name of the parameter this component
+            is assigned to.
+    """
+    if isinstance(audio, (str, Path)):
+        type = "filepath"
+    elif isinstance(audio, tuple):
+        type = "numpy"
+    else:
+        raise ValueError(
+            "audio must be a passed as a string, a Path object or tuple (int, numpy.array)"
+        )
+
+    return AudioLabeling(
+        audio=audio,
+        annotations=annotations,
+        type=type,
+        interactive=False,
+        show_download_button=False,
+        show_share_button=False,
+        label=label,
+    )
