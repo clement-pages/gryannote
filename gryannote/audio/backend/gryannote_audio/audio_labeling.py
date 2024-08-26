@@ -92,7 +92,7 @@ class AudioLabeling(
         container: bool = True,
         scale: int | None = None,
         min_width: int = 160,
-        interactive: bool | None = None,
+        interactive: bool = True,
         visible: bool = True,
         streaming: bool = False,
         elem_id: str | None = None,
