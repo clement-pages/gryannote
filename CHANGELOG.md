@@ -2,6 +2,19 @@
 
 ## main
 
+### backend API
+
+- add new component: `gryannote_audio.Player`. This component is dedicated to visualization purposes:
+```python
+audio = ...
+annotations = ...
+
+# Equivalent to player = AudioLabeling(audio=audio, annotations=annotations, interactive=False, type="filepath")
+player = Player(audio=audio, annotations=annotations)
+
+demo = gr.Interface(lambda x : x, inputs=None, outputs=player)
+```
+
 ### improvements
 - replace arithmetic zoom (z = z + delta) by a geometric one (z = z * coef)
 - add new shortcuts to speed up zoom in / zoom out: `SHIFT+UP` / `SHIFT+DOWN`
