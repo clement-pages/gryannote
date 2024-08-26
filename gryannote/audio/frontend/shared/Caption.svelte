@@ -7,6 +7,7 @@
     export let defaultLabel: Label | null = null;
     export let activeLabel: Label | null = null;
     export let isDialogOpen: boolean = false;
+    export let interactive: boolean = true;
 
     let container: HTMLDivElement;
 
@@ -206,12 +207,14 @@
 <div class="caption-container">
     <div class="caption" bind:this={container}></div>
     <div class="action-buttons">
-        <button class="create-label" on:click={() => {
-                const label = createLabel({});
-                setActiveLabel(label.shortcut);
-            }}>
-             <Plus/>
-        </button>
+        {#if interactive}
+            <button class="create-label" on:click={() => {
+                    const label = createLabel({});
+                    setActiveLabel(label.shortcut);
+                }}>
+                <Plus/>
+            </button>
+        {/if}
     </div>
 </div>
 
