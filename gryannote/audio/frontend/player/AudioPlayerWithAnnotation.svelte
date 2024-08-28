@@ -17,6 +17,8 @@
 	import { createEventDispatcher } from "svelte";
 	import Caption from "../shared/Caption.svelte"
 	import Graph from "../shared/graph"
+	import GamepadControl from "../shared/GamepadControl.svelte";
+	import type { ButtonEvent, AxeEvent } from "../shared/types";
 
 	export let value: null | AnnotatedAudioData = null;
 	$: url = value.file_data?.url;
@@ -56,6 +58,7 @@
 	// nodes = regions (id), edges = overlap between linked regions
 	let regionsGraph: Graph<string> = new Graph()
 
+	let gamepad: GamepadControl;
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
@@ -309,7 +312,7 @@
 	 * @param region
 	 * @param waveformContainer
 	 */
-	function isRegionVisible(region: Region, waveformContainer: HTMLDivElement): bool {
+	function isRegionVisible(region: Region, waveformContainer: HTMLDivElement): boolean {
 		// Get the left and right boundaries of the waveform view box:
 		const viewbox = waveformContainer.getBoundingClientRect();
 		const viewboxLeft = viewbox.left;
@@ -402,11 +405,11 @@
 	 * active one. If active region is the last one,
 	 * the next region to be activated is the first one
 	 * on the waveform.
-	 * @param shiftKey: go back if true, go ahead otherwise
+	 * @param goBackward: go back if true, go ahead otherwise
 	 */
-	function selectNextRegion(shiftKey: boolean): void {
+	function selectNextRegion(goBackward: boolean): void {
 		// go back if shift was pressed, else go ahead:
-		var direction = shiftKey ? -1 : 1;
+		var direction = goBackward ? -1 : 1;
 		var regions = wsRegions.getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
 		// if there is no active region, active the first one
 		if(activeRegion === null){
@@ -665,6 +668,29 @@
 		}
 	}
 
+	function onGamepadButtonPress(event: ButtonEvent): void  {
+		console.log(event.idx);
+		switch(event.idx){
+			case 0: setActiveRegion(null); break;
+			case 1: handleRegionAdd(waveform.getCurrentTime()); break;
+			case 2: handleRegionRemoval("Delete", false); break;
+			case 3: handleRegionRemoval("Delete", false); break;
+			case 4: selectNextRegion(true); break;
+			case 5: selectNextRegion(false);break;
+			case 11: waveform.playPause(); break;
+			default: // do nothing
+		}
+	}
+
+	function onGamepadAxePush(event: AxeEvent): void {
+		let direction = event.value < 0? "ArrowLeft" : "ArrowRight";
+		switch(event.idx){
+			case 0: handleTimeAdjustement(direction, false, gamepad.isButtonPressed(10)); break;
+			case 2: handleTimeAdjustement(direction, false, false); break;
+			default: // do nothing
+		}
+	}
+
 	async function load_audio(data: string): Promise<void> {
 		await resolve_wasm_src(data).then((resolved_src) => {
 			if (!resolved_src || value.file_data?.is_stream) return;
@@ -675,10 +701,10 @@
 	$: url && load_audio(url);
 
 	onMount(() => {
+		gamepad.start();
 		window.addEventListener("keydown", (e) => {
 			// do not process keyboard shortcuts when a dialog popup is open
 			if(isDialogOpen) return;
-
 			switch(e.key){
 				case "ArrowLeft": handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
 				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
@@ -802,6 +828,12 @@
 		{/if}
 	</div>
 {/if}
+
+<GamepadControl
+	bind:this={gamepad}
+	on:buttonPressed={(e) => onGamepadButtonPress(e.detail)}
+	on:axePushed={(e) => onGamepadAxePush(e.detail)}
+/>
 
 <style>
 	.action {
