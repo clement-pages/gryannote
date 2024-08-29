@@ -18,6 +18,3 @@ export type Label = {
 	color: string
 	shortcut: string
 }
-
-export type AxeEvent = {idx:number, value:number}
-export type ButtonEvent = {idx: number}

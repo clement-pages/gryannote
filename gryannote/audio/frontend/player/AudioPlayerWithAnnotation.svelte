@@ -10,6 +10,10 @@
 		type Region,
 		type RegionParams,
 	} from "wavesurfer.js/dist/plugins/regions.js";
+	import GamepadPlugin, {
+		type ButtonEvent,
+		type AxeEvent,
+	} from "wavesurfer.js/dist/plugins/gamepad.js";
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
@@ -17,8 +21,6 @@
 	import { createEventDispatcher } from "svelte";
 	import Caption from "../shared/Caption.svelte"
 	import Graph from "../shared/graph"
-	import GamepadControl from "../shared/GamepadControl.svelte";
-	import type { ButtonEvent, AxeEvent } from "../shared/types";
 
 	export let value: null | AnnotatedAudioData = null;
 	$: url = value.file_data?.url;
@@ -34,6 +36,7 @@
 	let container: HTMLDivElement;
 	let waveform: WaveSurfer | undefined;
 	let wsRegions: RegionsPlugin;
+	let wsGamepad: GamepadPlugin;
 	let activeRegion: Region | null = null;
 	let leftRegionHandle: HTMLDivElement | null;
 	let rightRegionHandle: HTMLDivElement | null;
@@ -57,8 +60,6 @@
 
 	// nodes = regions (id), edges = overlap between linked regions
 	let regionsGraph: Graph<string> = new Graph()
-
-	let gamepad: GamepadControl;
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
@@ -600,9 +601,17 @@
 	);
 
 	$: waveform?.on("ready", () => {
+		if(wsGamepad === undefined){
+			wsGamepad = waveform.registerPlugin(GamepadPlugin.create());
+			wsGamepad?.on("button-pressed", (e: ButtonEvent) => {
+				onGamepadButtonPressed(e);
+			});
+			wsGamepad?.on("axe-pushed", (e: AxeEvent)=> {
+				onGamepadAxePushed(e);
+			});
+		}
 		if(wsRegions === undefined ){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
-
 			if(interactive){
 				// add region-clicked event listener
 				wsRegions?.on("region-clicked", (region, e) => {
@@ -668,8 +677,8 @@
 		}
 	}
 
-	function onGamepadButtonPress(event: ButtonEvent): void  {
-		console.log(event.idx);
+	function onGamepadButtonPressed(event: ButtonEvent): void  {
+		console.log("button pressed !!")
 		switch(event.idx){
 			case 0: setActiveRegion(null); break;
 			case 1: handleRegionAdd(waveform.getCurrentTime()); break;
@@ -682,10 +691,10 @@
 		}
 	}
 
-	function onGamepadAxePush(event: AxeEvent): void {
+	function onGamepadAxePushed(event: AxeEvent): void {
 		let direction = event.value < 0? "ArrowLeft" : "ArrowRight";
 		switch(event.idx){
-			case 0: handleTimeAdjustement(direction, false, gamepad.isButtonPressed(10)); break;
+			case 0: handleTimeAdjustement(direction, false, wsGamepad.isButtonPressed(10)); break;
 			case 2: handleTimeAdjustement(direction, false, false); break;
 			default: // do nothing
 		}
@@ -701,7 +710,6 @@
 	$: url && load_audio(url);
 
 	onMount(() => {
-		gamepad.start();
 		window.addEventListener("keydown", (e) => {
 			// do not process keyboard shortcuts when a dialog popup is open
 			if(isDialogOpen) return;
@@ -816,7 +824,7 @@
 						// update all regions associated with the modified label
 						wsRegions.getRegions().forEach(region => {
 							if(regionsMap.get(region.id).speaker === e.detail.name){
-								region.setOptions({color:e.detail.color});
+								region.setOptions({color:e.detail.color, ...region});
 								if(region === activeRegion){
 									setActiveRegionBackground(region.color);
 								}
@@ -828,12 +836,6 @@
 		{/if}
 	</div>
 {/if}
-
-<GamepadControl
-	bind:this={gamepad}
-	on:buttonPressed={(e) => onGamepadButtonPress(e.detail)}
-	on:axePushed={(e) => onGamepadAxePush(e.detail)}
-/>
 
 <style>
 	.action {
