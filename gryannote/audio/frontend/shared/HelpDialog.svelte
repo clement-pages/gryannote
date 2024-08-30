@@ -38,13 +38,16 @@
 
 <dialog bind:this={dialog} id="help-dialog-box" hidden>
     <p>
-        Do you have a problem or a suggestion about the component?
+        Do you have a problem or a suggestion about this component?
         Feel free to open an issue on the <a href="https://github.com/clement-pages/gryannote/issues/new" target="_blank">gryannote github directory</a>!
     </p>
     <p>
         Component's keyboard shortcuts:
     </p>
     <img src="https://github.com/clement-pages/gryannote/blob/main/docs/assets/shortcuts.png?raw=true" alt="component keyboard shortcut"/>
+    <p>
+        You can also use a gamepad to speed up your annotation process! Go <a href="https://github.com/clement-pages/gryannote/tree/main/gryannote/audio#gamepad-shortcuts">here</a> for further details.
+    </p>
     <button
         id="close"
         on:click={() => onClose()}
