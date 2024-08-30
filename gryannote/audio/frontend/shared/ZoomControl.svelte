@@ -1,8 +1,12 @@
 <script lang="ts">
     import { onMount} from "svelte"
     import WaveSurfer from "wavesurfer.js";
+	import GamepadPlugin, {
+		type ButtonEvent
+	} from "wavesurfer.js/dist/plugins/gamepad";
 
 	export let waveform: WaveSurfer;
+	export let wsGamepad: GamepadPlugin;
     export let showZoomSlider: boolean = false;
     export let isDialogOpen: boolean = false;
 
@@ -10,6 +14,11 @@
 	let zoomMax: number;
     let currentZoom: number;
     let slider: HTMLInputElement;
+
+	enum zoomCoef {
+		normalZoom = 1.1,
+		fastZoom = 2.0,
+	}
 
 	/**
 	 * Adjust slider style according to current zoom value
@@ -39,6 +48,14 @@
 		adjustSlider();
 	}
 
+	function onGamepadButtonPressed(event: ButtonEvent): void {
+		switch(event.idx){
+			case 12: zoom(currentZoom * zoomCoef.fastZoom); break;
+			case 13: zoom(currentZoom / zoomCoef.fastZoom); break;
+			default: // do nothing
+		}
+	}
+
 	$: waveform?.on("ready", () => {
 		// adapt zoom range according to audio duration and waveform viewport size
 		const viewSize = waveform.getWrapper().clientWidth;
@@ -53,14 +70,16 @@
 
 		waveform.zoom(currentZoom);
 		adjustSlider();
-	})
+	});
+
+	$: wsGamepad?.on("button-pressed", (event: ButtonEvent) => onGamepadButtonPressed(event));
 
     onMount(() => {
         window.addEventListener("keydown", (e) => {
             // do not process keyboard shortcuts when a dialog popup is open
             if(isDialogOpen) return;
 
-			const coef = e.shiftKey ? 2.0 : 1.1;
+			const coef = e.shiftKey ? zoomCoef.fastZoom : zoomCoef.normalZoom;
             switch(e.key){
                 case "ArrowUp": e.preventDefault(); zoom(currentZoom * coef); break;
 				case "ArrowDown": e.preventDefault(); zoom(currentZoom / coef); break;

@@ -678,15 +678,13 @@
 	}
 
 	function onGamepadButtonPressed(event: ButtonEvent): void  {
-		console.log("button pressed !!")
 		switch(event.idx){
 			case 0: setActiveRegion(null); break;
 			case 1: handleRegionAdd(waveform.getCurrentTime()); break;
 			case 2: handleRegionRemoval("Delete", false); break;
-			case 3: handleRegionRemoval("Delete", false); break;
+			case 3: handleRegionSplit(waveform.getCurrentTime()); break;
 			case 4: selectNextRegion(true); break;
 			case 5: selectNextRegion(false);break;
-			case 11: waveform.playPause(); break;
 			default: // do nothing
 		}
 	}
@@ -767,6 +765,7 @@
 					<WaveformControls
 						{isDialogOpen}
 						{waveform}
+						{wsGamepad}
 						{playing}
 						{audio_duration}
 						{i18n}
@@ -812,6 +811,7 @@
 					bind:activeLabel
 					bind:isDialogOpen
 					{interactive}
+					{wsGamepad}
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:name_update={(e) => {
 						wsRegions.getRegions().forEach(region => {
