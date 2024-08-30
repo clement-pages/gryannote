@@ -694,8 +694,8 @@
 	function onGamepadAxePushed(event: AxeEvent): void {
 		let direction = event.value < 0? "ArrowLeft" : "ArrowRight";
 		switch(event.idx){
-			case 0: handleTimeAdjustement(direction, false, wsGamepad.isButtonPressed(10)); break;
-			case 2: handleTimeAdjustement(direction, false, false); break;
+			case 0: handleTimeAdjustement(direction, false, false); break;
+			case 2: handleTimeAdjustement(direction, false, true); break;
 			default: // do nothing
 		}
 	}
