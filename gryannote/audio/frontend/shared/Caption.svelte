@@ -3,16 +3,16 @@
     import Plus from "./icons/Plus.svelte";
     import Dialog from "./Dialog.svelte";
     import { createEventDispatcher, onMount} from "svelte";
+    import GamepadPlugin, {type ButtonEvent} from "wavesurfer.js/dist/plugins/gamepad";
 
     export let defaultLabel: Label | null = null;
     export let activeLabel: Label | null = null;
     export let isDialogOpen: boolean = false;
     export let interactive: boolean = true;
+    export let wsGamepad: GamepadPlugin;
 
     let container: HTMLDivElement;
-
     let labels: Label[] = [];
-
     let dialog: Dialog;
 
     const colorList = ["#ffd70080", "#0000ff80", "#ff000080", "#00ff0080"];
@@ -181,9 +181,20 @@
         }
     }
 
+    function onGamepadAxeValueUpdated(event: ButtonEvent): void {
+        let activeLabelIdx = labels.findIndex((label) => label.shortcut === activeLabel?.shortcut);
+        switch(event.idx){
+            case 14: setActiveLabel(labels.at(activeLabelIdx - 1 % labels.length).shortcut); break;
+            case 15: setActiveLabel(labels.at((activeLabelIdx + 1) % labels.length).shortcut); break;
+            default: // do nothing
+        }
+    }
+
     $: if(labels.length > 0){
         defaultLabel = labels[0];
     }
+
+    $: wsGamepad?.on("button-pressed", (e: ButtonEvent) => onGamepadAxeValueUpdated(e));
 
     onMount(() => {
         window.addEventListener("keydown", (e): void => {

@@ -4,6 +4,7 @@
 	import { get_skip_rewind_amount } from "../shared/utils";
 	import type { I18nFormatter } from "@gradio/utils";
 	import WaveSurfer from "wavesurfer.js";
+	import GamepadPlugin, {type ButtonEvent} from "wavesurfer.js/dist/plugins/gamepad";
 	import type {WaveformOptions } from "./types";
 	import VolumeLevels from "./VolumeLevels.svelte";
 	import VolumeControl from "./VolumeControl.svelte";
@@ -11,6 +12,7 @@
 	import { onMount } from "svelte";
 
 	export let waveform: WaveSurfer;
+	export let wsGamepad: GamepadPlugin;
 	export let audio_duration: number;
 	export let i18n: I18nFormatter;
 	export let playing: boolean;
@@ -23,6 +25,16 @@
 	let playbackSpeed = playbackSpeeds[1];
 
 	let currentVolume = 1;
+
+	function onGamepadButtonPressed(event: ButtonEvent): void {
+		switch(event.idx){
+			case 10: waveform.playPause(); break;
+			case 11: waveform.playPause(); break;
+			default: // do nothing
+		}
+	}
+
+	$: wsGamepad?.on("button-pressed", (e) => onGamepadButtonPressed(e));
 
 	onMount(() => {
 		window.addEventListener("keydown", (e) =>{
@@ -78,7 +90,7 @@
 		>
 			<Magnifier/>
 		</button>
-		<ZoomControl {waveform} bind:showZoomSlider/>
+		<ZoomControl {waveform} {wsGamepad} bind:showZoomSlider/>
 
 	</div>
 

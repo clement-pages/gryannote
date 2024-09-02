@@ -10,6 +10,10 @@
 		type Region,
 		type RegionParams,
 	} from "wavesurfer.js/dist/plugins/regions.js";
+	import GamepadPlugin, {
+		type ButtonEvent,
+		type AxeEvent,
+	} from "wavesurfer.js/dist/plugins/gamepad.js";
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
@@ -32,6 +36,7 @@
 	let container: HTMLDivElement;
 	let waveform: WaveSurfer | undefined;
 	let wsRegions: RegionsPlugin;
+	let wsGamepad: GamepadPlugin;
 	let activeRegion: Region | null = null;
 	let leftRegionHandle: HTMLDivElement | null;
 	let rightRegionHandle: HTMLDivElement | null;
@@ -55,7 +60,6 @@
 
 	// nodes = regions (id), edges = overlap between linked regions
 	let regionsGraph: Graph<string> = new Graph()
-
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
@@ -309,7 +313,7 @@
 	 * @param region
 	 * @param waveformContainer
 	 */
-	function isRegionVisible(region: Region, waveformContainer: HTMLDivElement): bool {
+	function isRegionVisible(region: Region, waveformContainer: HTMLDivElement): boolean {
 		// Get the left and right boundaries of the waveform view box:
 		const viewbox = waveformContainer.getBoundingClientRect();
 		const viewboxLeft = viewbox.left;
@@ -402,11 +406,11 @@
 	 * active one. If active region is the last one,
 	 * the next region to be activated is the first one
 	 * on the waveform.
-	 * @param shiftKey: go back if true, go ahead otherwise
+	 * @param goBackward: go back if true, go ahead otherwise
 	 */
-	function selectNextRegion(shiftKey: boolean): void {
+	function selectNextRegion(goBackward: boolean): void {
 		// go back if shift was pressed, else go ahead:
-		var direction = shiftKey ? -1 : 1;
+		var direction = goBackward ? -1 : 1;
 		var regions = wsRegions.getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
 		// if there is no active region, active the first one
 		if(activeRegion === null){
@@ -597,9 +601,17 @@
 	);
 
 	$: waveform?.on("ready", () => {
+		if(wsGamepad === undefined){
+			wsGamepad = waveform.registerPlugin(GamepadPlugin.create());
+			wsGamepad?.on("button-pressed", (e: ButtonEvent) => {
+				onGamepadButtonPressed(e);
+			});
+			wsGamepad?.on("axe-pushed", (e: AxeEvent)=> {
+				onGamepadAxePushed(e);
+			});
+		}
 		if(wsRegions === undefined ){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
-
 			if(interactive){
 				// add region-clicked event listener
 				wsRegions?.on("region-clicked", (region, e) => {
@@ -665,6 +677,27 @@
 		}
 	}
 
+	function onGamepadButtonPressed(event: ButtonEvent): void  {
+		switch(event.idx){
+			case 0: setActiveRegion(null); break;
+			case 1: handleRegionAdd(waveform.getCurrentTime()); break;
+			case 2: handleRegionSplit(waveform.getCurrentTime()); break;
+			case 3: handleRegionRemoval("Delete", false); break;
+			case 4: selectNextRegion(true); break;
+			case 5: selectNextRegion(false);break;
+			default: // do nothing
+		}
+	}
+
+	function onGamepadAxePushed(event: AxeEvent): void {
+		let direction = event.value < 0? "ArrowLeft" : "ArrowRight";
+		switch(event.idx){
+			case 0: handleTimeAdjustement(direction, false, false); break;
+			case 2: handleTimeAdjustement(direction, false, true); break;
+			default: // do nothing
+		}
+	}
+
 	async function load_audio(data: string): Promise<void> {
 		await resolve_wasm_src(data).then((resolved_src) => {
 			if (!resolved_src || value.file_data?.is_stream) return;
@@ -678,7 +711,6 @@
 		window.addEventListener("keydown", (e) => {
 			// do not process keyboard shortcuts when a dialog popup is open
 			if(isDialogOpen) return;
-
 			switch(e.key){
 				case "ArrowLeft": handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
 				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
@@ -733,6 +765,7 @@
 					<WaveformControls
 						{isDialogOpen}
 						{waveform}
+						{wsGamepad}
 						{playing}
 						{audio_duration}
 						{i18n}
@@ -778,6 +811,7 @@
 					bind:activeLabel
 					bind:isDialogOpen
 					{interactive}
+					{wsGamepad}
 					on:select={(e) => setRegionSpeaker(e.detail)}
 					on:name_update={(e) => {
 						wsRegions.getRegions().forEach(region => {
@@ -790,7 +824,7 @@
 						// update all regions associated with the modified label
 						wsRegions.getRegions().forEach(region => {
 							if(regionsMap.get(region.id).speaker === e.detail.name){
-								region.setOptions({color:e.detail.color});
+								region.setOptions({color:e.detail.color, ...region});
 								if(region === activeRegion){
 									setActiveRegionBackground(region.color);
 								}
