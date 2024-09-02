@@ -16,6 +16,8 @@ demo = gr.Interface(lambda x : x, inputs=None, outputs=player)
 ```
 
 ### improvements
+- **label an audio using a gamepad!** See [here](https://github.com/clement-pages/gryannote/tree/audio-labeling-with-gamepad/gryannote/audio#gamepad-shortcuts) to check the available shortcuts.
+⚠️ This feature has been tested with a Battletron Nintendo Switch on Firefox, and may not work with any other device or browser.
 - if audio is playing, time cursor will not jump to the start of the active annotation
 - if audio is paused, time cursor will be set to the start of the active annotation only if this annotation is not visible on the screen.
 - replace arithmetic zoom (z = z + delta) by a geometric one (z = z * coef)
