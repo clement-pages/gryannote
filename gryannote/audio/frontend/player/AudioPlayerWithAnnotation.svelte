@@ -681,8 +681,8 @@
 		switch(event.idx){
 			case 0: setActiveRegion(null); break;
 			case 1: handleRegionAdd(waveform.getCurrentTime()); break;
-			case 2: handleRegionRemoval("Delete", false); break;
-			case 3: handleRegionSplit(waveform.getCurrentTime()); break;
+			case 2: handleRegionSplit(waveform.getCurrentTime()); break;
+			case 3: handleRegionRemoval("Delete", false); break;
 			case 4: selectNextRegion(true); break;
 			case 5: selectNextRegion(false);break;
 			default: // do nothing
