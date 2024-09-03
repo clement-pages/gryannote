@@ -104,23 +104,22 @@ export default class Graph<N> {
      */
     public removeNode(node: N): boolean {
         let adjNodes = this.getAdjNodes(node);
-        if(adjNodes !== undefined){
-            // remove all the corresponding edges
-            adjNodes.forEach(adjNode => {
-                this.removeEdge(node, adjNode);
-            })
-            // remove node from the grap
-            this.edges.delete(node);
-            this.numNodes -= 1;
+        if(adjNodes === undefined) return false;
 
-            return true;
-        }
-        return false;
+        // remove all the corresponding edges
+        adjNodes.forEach(adjNode => {
+            this.removeEdge(node, adjNode);
+        })
+        // remove node from the grap
+        this.edges.delete(node);
+        this.numNodes -= 1;
+
+        return true;
     }
 
     /**
      * Remove the edge (node1, node2) from this graph. Calling this method for edge
-     * (node2, node1) will give the same result.
+     * (node2, node1) will give the same result. Do nothing if edge is not in the graph
      * @param node1 edge's first node
      * @param node2 edge's second node
      */
@@ -130,24 +129,46 @@ export default class Graph<N> {
             return;
         }
         this.getAdjNodes(node1)?.splice(Number(this.getAdjNodes(node1)?.indexOf(node2)), 1);
-        this.getAdjNodes(node2)?.splice(Number(this.getAdjNodes(node1)?.indexOf(node1)), 1);
+        this.getAdjNodes(node2)?.splice(Number(this.getAdjNodes(node2)?.indexOf(node1)), 1);
     }
 
     /**
      * Remove all the nodes and edges from the graph
      */
-    public clear(){
+    public clear(): void{
         this.edges.clear();
         this.numNodes = 0;
+    }
+
+    /**
+     * Check for equality between this graph and the specified one.
+     * Two graphs are equal if and only if they share exactly the same nodes and edges.
+     * @param other the graph to compare with this graph
+     * @returns true if the two graphs are equal, false otherwise
+     */
+    public equals(other: Graph<N>): boolean {
+        if(Array.from(this.edges.keys()).length !== Array.from(other.edges.keys()).length)
+            return false;
+        let isEqual: boolean = true;
+        this.edges.forEach((adjNodes, node) => {
+            if(!other.edges.has(node)){
+                isEqual = false;
+            }
+            adjNodes.forEach(adjNode => {
+                if(!other.getAdjNodes(node)?.includes(adjNode))
+                    isEqual = false;
+            });
+        });
+        return isEqual;
     }
 
     /**
      *
      * @returns
      */
-    public greedyColoring(){
+    public greedyColoring(): Map<N, number>{
         // map associating a color at each graph node:
-        let nodesColor = new Map<N, number>()
+        let nodesColor = new Map<N, number>();
         let isColorAvailable = new Array(this.numNodes).fill(true);
 
         this.getNodesList().forEach(node => {
@@ -184,15 +205,33 @@ export default class Graph<N> {
         return connectedComponent;
     }
 
+    /**
+     *
+     * @returns all the connected components of this graph
+     */
+    public getConnectedComponents(): Graph<N>[] {
+        const visitedNodes: N[] = []
+        const components: Graph<N>[]= [];
+
+        this.getNodesList().forEach(node => {
+            if (!visitedNodes.includes(node)) {
+                const component: Graph<N> = new Graph();
+                this.getConnectedComponentHelper(node, visitedNodes, component);
+                components.push(component);
+            }
+        });
+
+        return components;
+    }
+
     private getConnectedComponentHelper(node: N, visitedNodes: N[], connectedComponent: Graph<N>): void{
         visitedNodes.push(node);
         connectedComponent.addNode(node);
         this.getAdjNodes(node)?.forEach(adjNode => {
             connectedComponent.addEdge(node, adjNode);
-            if(visitedNodes.find(visitedNode => visitedNode === adjNode) === undefined){
+            if(!visitedNodes.find(visitedNode => visitedNode === adjNode)){
                 this.getConnectedComponentHelper(adjNode, visitedNodes, connectedComponent);
             }
         });
     }
-
 }

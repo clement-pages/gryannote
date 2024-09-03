@@ -23,6 +23,10 @@ demo = gr.Interface(lambda x : x, inputs=None, outputs=player)
 - replace arithmetic zoom (z = z + delta) by a geometric one (z = z * coef)
 - add new shortcuts to speed up zoom in / zoom out: `SHIFT+UP` / `SHIFT+DOWN`
 
+### fixes
+
+- fix display of overlapping regions when splitting an annotation
+
 ## 0.2.0
 
 ### backend API
