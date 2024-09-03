@@ -54,3 +54,30 @@ export function handle_shared_keys(
 	}
 	return [true, active_index];
 }
+
+export function object2Map(obj?: Object) {
+	const map = new Map<string, any>();
+	if(!obj){
+		return map;
+	}
+
+	for(const key in obj) {
+		if(obj.hasOwnProperty(key)) {
+			if(typeof obj[key] == "object" && obj[key] !== null) {
+				map.set(key, object2Map(obj[key]));
+			} else {
+				map.set(key, obj[key]);
+			}
+		}
+	}
+	return map;
+}
+
+export function Map2Object(map: Map<any, any>): Object {
+	let obj = Object.fromEntries(Array.from(
+			map.entries(), ([ k, v ]) =>
+			v instanceof Map ? [ k, Map2Object(v) ]: [ k, v ]
+		)
+	);
+	return obj;
+}

@@ -6,6 +6,7 @@
 
 <script lang="ts">
 	import Dropdown from "./shared/Dropdown.svelte";
+	import {object2Map, Map2Object} from "./shared/utils";
 	import { Block } from "@gradio/atoms";
 	import { StatusTracker } from "@gradio/statustracker";
 	import PipelineInfo from "./shared/PipelineInfo"
@@ -54,33 +55,6 @@
 			gradio.dispatch("select", value);
 			paramsViewNeedUpdate = true;
 		}
-	}
-
-	function object2Map(obj?: Object) {
-		const map = new Map<string, any>();
-		if(!obj){
-			return map;
-		}
-
-		for(const key in obj) {
-			if(obj.hasOwnProperty(key)) {
-				if(typeof obj[key] == "object" && obj[key] !== null) {
-					map.set(key, object2Map(obj[key]));
-				} else {
-					map.set(key, obj[key]);
-				}
-			}
-		}
-		return map;
-	}
-
-	function Map2Object(map: Map<any, any>): Object {
-		let obj = Object.fromEntries(Array.from(
-				map.entries(), ([ k, v ]) =>
-				v instanceof Map ? [ k, Map2Object(v) ]: [ k, v ]
-			)
-		);
-		return obj;
 	}
 
 	function updateParameter(name: string, val: string): void {
