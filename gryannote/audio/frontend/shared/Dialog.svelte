@@ -111,6 +111,10 @@
         margin: 0.5em;
     }
 
+    input[type="text"] {
+        background-color: var(--block-background-fill);
+    }
+
     .dialog-buttons {
         display: flex;
         flex-direction: row;
