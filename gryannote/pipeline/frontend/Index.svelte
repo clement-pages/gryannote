@@ -5,12 +5,13 @@
 </script>
 
 <script lang="ts">
-	import Dropdown from "./shared/Dropdown.svelte";
-	import {object2Map, Map2Object} from "./shared/utils";
 	import { Block } from "@gradio/atoms";
 	import { StatusTracker } from "@gradio/statustracker";
-	import PipelineInfo from "./shared/PipelineInfo"
 	import { BaseButton } from "@gradio/button";
+	import { onMount, tick} from "svelte";
+	import Dropdown from "./shared/Dropdown.svelte";
+	import {object2Map, Map2Object} from "./shared/utils";
+	import PipelineInfo from "./shared/PipelineInfo"
 
 	import { type Gradio, type KeyUpData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
@@ -22,6 +23,7 @@
 	export let value: PipelineInfo = new PipelineInfo({name:"", token:""});
 	export let value_is_output = false;
 	export let pipelines: [string, string | number][];
+	export let default_pipeline: string | undefined;
 	export let show_label: boolean;
 	export let show_token_textbox: boolean;
 	export let show_config: boolean = false;
@@ -40,7 +42,7 @@
 	}>;
 	export let interactive: boolean;
 
-	let paramsViewNeedUpdate = false;
+	let paramsViewNeedUpdate: boolean = false;
 
 	/**
 	 * Handle drop down selection event
@@ -51,7 +53,7 @@
 			value.name = name;
 			// reset pipeline's parameters
 			value.param_specs = {};
-			// dispatch event to backward
+			// dispatch event to backend to retrieve pipeline's parameters
 			gradio.dispatch("select", value);
 			paramsViewNeedUpdate = true;
 		}
@@ -177,7 +179,6 @@
 		// if a pipeline has been instantiated, and if the parameter view needs to be updated
 		if(Object.keys(value.param_specs).length > 0 && paramsViewNeedUpdate){
 			const container = document.getElementById("params-control");
-
 			// reset parameter view
 			container.replaceChildren();
 			if(show_config){
@@ -188,6 +189,13 @@
 			}
 		}
 	}
+
+	onMount(() => {
+		if(default_pipeline){
+			// time needed to register backend listeners and handle selection event
+			setTimeout(() => handleSelect(default_pipeline), 10);
+		}
+	});
 
 </script>
 
@@ -232,6 +240,7 @@
 			{info}
 			{show_label}
 			{container}
+			value={default_pipeline}
 			on:input={() => gradio.dispatch("input")}
 			on:select={(e) => handleSelect(e.detail.value)}
 			on:blur={() => gradio.dispatch("blur")}

@@ -51,6 +51,7 @@ class PipelineSelector(FormComponent):
             Pipeline | List[str] | Dict[str, Pipeline] | Tuple[str, Pipeline]
         ] = None,
         *,
+        default_pipeline: str | None = None,
         value: str | Callable | None = None,
         token: str | None = None,
         label: str | None = None,
@@ -81,7 +82,9 @@ class PipelineSelector(FormComponent):
                 - dict {pipeline name : pipeline instance}
             By default, the component ask the user to select a pipeline from a dropdown with
             available pyannote pipeline on Hugging Face
-        value: optional
+        default_pipeline: string, optional
+            default pipeline selected in dropdown. If None, no value will be selected by default.
+        value: optional, deprecated => use default instead
             default value selected in dropdown. If None, no value is selected by default.
             If callable, the function will be called whenever the app loads to set the initial value
             of the component.
@@ -164,6 +167,8 @@ class PipelineSelector(FormComponent):
                 "a list of (pipeline name, pipeline instance) or a dict of pipeline name",
                 "pipeline instance",
             )
+
+        self.default_pipeline = default_pipeline
 
         self.token = token
         # if a token has been provided, do not display token text box in the component interface
