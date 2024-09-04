@@ -54,17 +54,18 @@ RTTM annotations in RTTM component are dynamically updated according to the audi
 
 ## Try it!
 
-A version of the `gryannote` app is available in this [Hugging Face space](https://huggingface.co/spaces/clement-pages/gryannote)
+A `gryannote` app can be runned in this [Hugging Face space](https://huggingface.co/spaces/clement-pages/gryannote)
 
 ## Citation
 
-TO BE UPDATED
+If you are using `gryannote`, please use the following citation:
 
 ```bibtex
-@inproceedings{Pages24,
-  author={Clément Pagés and Hervé Bredin},
-  title={{gryannote open-source speaker diarization labeling tool}},
-  year=2024,
-  booktitle={Proc. INTERSPEECH 2024},
+@inproceedings{pages24_interspeech,
+  title     = {Gryannote open-source speaker diarization labeling tool},
+  author    = {Clément Pages and Hervé Bredin},
+  year      = {2024},
+  booktitle = {Interspeech 2024},
+  pages     = {3650--3651},
 }
 ```
