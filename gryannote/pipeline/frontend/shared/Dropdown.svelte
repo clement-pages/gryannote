@@ -8,8 +8,8 @@
 
 	export let label: string;
 	export let info: string | undefined = undefined;
-	export let value: string | number | (string | number)[] | undefined = [];
-	let old_value: string | number | (string | number)[] | undefined = [];
+	export let value: string | number | undefined = undefined;
+	let old_value: string | number | undefined = undefined;
 	export let value_is_output = false;
 	export let choices: [string, string | number][];
 	let old_choices: [string, string | number][];
@@ -56,12 +56,6 @@
 			old_input_text = input_text;
 		}
 		set_input_text();
-	} else if (choices.length > 0) {
-		old_selected_index = 0;
-		selected_index = 0;
-		[input_text, value] = choices[selected_index];
-		old_value = value;
-		old_input_text = input_text;
 	}
 
 	$: {
