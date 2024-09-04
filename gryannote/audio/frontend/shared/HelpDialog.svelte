@@ -67,6 +67,7 @@
     }
 
     p {
+        color: var(--body-text-color);
         font-family: Arial, Helvetica, sans-serif;
         margin: 1em;
     }
