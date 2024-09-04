@@ -15,6 +15,11 @@ player = Player(audio=audio, annotations=annotations)
 demo = gr.Interface(lambda x : x, inputs=None, outputs=player)
 ```
 
+- add `default_pipeline` parameter to `PipelineSelection`. This parameter allows to select a default pipeline for the component dropdown.
+```python
+    pipeline_selector = PipelineSelector(default_pipeline="pyannote/speaker-diarization-3.1")
+```
+
 ### improvements
 - **label an audio using a gamepad!** See [here](https://github.com/clement-pages/gryannote/tree/audio-labeling-with-gamepad/gryannote/audio#gamepad-shortcuts) to check the available shortcuts.
 ⚠️ This feature has been tested with a Battletron Nintendo Switch on Firefox, and may not work with any other device or browser.
