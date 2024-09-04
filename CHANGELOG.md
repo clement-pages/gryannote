@@ -26,6 +26,7 @@ demo = gr.Interface(lambda x : x, inputs=None, outputs=player)
 ### fixes
 
 - fix display of overlapping regions when splitting an annotation
+- fix text not visible in the label name setting box when using dark mode
 
 ## 0.2.0
 
