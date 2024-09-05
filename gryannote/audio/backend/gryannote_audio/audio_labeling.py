@@ -314,12 +314,16 @@ class AudioLabeling(
         """Load audio annotations onto the component
         (from the rttm component for instance)
         """
+
+        if not audio:
+            raise Error("Please load an audio first")
+
         # TODO How to check if annotations match audio when using numpy type ?
         if isinstance(audio, (str, Path)):
             audioname = Path(audio).name
             uri = audioname.split(".")[0]
             if uri != annotations.uri:
-                raise Warning(
+                Warning(
                     "It seems that loaded annotations doesn't correspond to current audio."
                     " Bad things may happen."
                 )
