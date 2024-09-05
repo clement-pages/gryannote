@@ -11,6 +11,8 @@ from gradio.utils import NamedString
 from gradio_client.documentation import document, set_documentation_group
 from gryannote_audio.core import AnnotadedAudioData
 from pyannote.core import Annotation as PyannoteAnnotation
+from pyannote.core import Segment
+from pyannote.database.util import load_rttm
 
 set_documentation_group("component")
 
@@ -114,7 +116,7 @@ class RTTM(Component):
             "Unknown type: " + str(type) + ". Please choose from: 'filepath', 'binary'."
         )
 
-    def _process_rttm(self, data: AnnotadedAudioData) -> Path:
+    def _write_rttm(self, annotations: PyannoteAnnotation) -> Path:
         """Dump pipeline's annotations to file using RTTM format
 
         Parameters
@@ -130,32 +132,43 @@ class RTTM(Component):
             path to rttm file
         """
 
-        audio = Path(data.file_data.path)
-        audioname = audio.name.split(".")[0]
-        with open(
-            f"{self.GRADIO_CACHE}/{audioname}.rttm", "w", encoding="utf-8"
-        ) as rttm:
-            for annotation in data.annotations:
-                duration = annotation.end - annotation.start
-                rttm.write(
-                    f"SPEAKER {audioname} 1 {annotation.start:.3f} {duration:.3f} <NA> <NA> {annotation.speaker} <NA> <NA>\n"
-                )
+        uri = annotations.uri
+        with open(f"{self.GRADIO_CACHE}/{uri}.rttm", "w", encoding="utf-8") as file:
+            annotations.write_rttm(file)
 
-        return Path(rttm.name)
+        return Path(file.name)
+
+    def _convert_to_pyannote_annotation(
+        self, data: AnnotadedAudioData
+    ) -> PyannoteAnnotation:
+        """Convert annotated data from the frontend into pyannote annotations"""
+
+        audiopath = Path(data.file_data.path)
+        uri = audiopath.name.split(".")[0]
+
+        annotations = PyannoteAnnotation(uri=uri)
+        for annotation in data.annotations:
+            segment = Segment(annotation.start, annotation.end)
+            annotations[segment] = annotation.speaker
+
+        return annotations
 
     def preprocess(
         self, payload: ListFiles | FileData | None | AnnotadedAudioData
-    ) -> bytes | NamedString | list[bytes | NamedString] | None:
+    ) -> bytes | NamedString | list[bytes | NamedString] | PyannoteAnnotation | None:
 
         if payload is None:
             return None
-
         if self.file_count == "single":
             if isinstance(payload, AnnotadedAudioData):
-                return payload
+                return self._convert_to_pyannote_annotation(payload)
             if isinstance(payload, ListFiles):
                 return self._process_single_file(payload[0])
-            return self._process_single_file(payload)
+            if isinstance(payload, FileData):
+                file_rttm = self._process_single_file(payload)
+                annotations = load_rttm(file_rttm)
+                # we suppose there are annotations for only one file
+                return annotations[list(annotations.keys())[0]]
 
         # if file_count was set to "multiple" or "directory"
         if isinstance(payload, ListFiles):
@@ -163,16 +176,15 @@ class RTTM(Component):
         return [self._process_single_file(payload)]
 
     def postprocess(
-        self, value: str | list[str] | Tuple[str | Path, PyannoteAnnotation] | None
+        self, value: str | list[str] | PyannoteAnnotation | None
     ) -> ListFiles | FileData | None:
 
         if value is None:
             return None
 
-        if isinstance(value, tuple):
-            audio, annotations = value
-            file_data = FileData(path=audio)
-            rttm = self._process_rttm(AnnotadedAudioData(file_data, annotations))
+        if isinstance(value, PyannoteAnnotation):
+            annotations = value
+            rttm = self._write_rttm(annotations)
             return FileData(
                 path=str(rttm),
                 orig_name=rttm.name,
@@ -196,10 +208,12 @@ class RTTM(Component):
             size=Path(value).stat().st_size,
         )
 
-    def on_edit(self, value: Dict) -> FileData | None:
+    def on_edit(self, value: Dict | None) -> FileData | None:
         if value is None:
             return value
-        rttm = self._process_rttm(AnnotadedAudioData(**value))
+
+        annotations = self._convert_to_pyannote_annotation(AnnotadedAudioData(**value))
+        rttm = self._write_rttm(annotations)
         return FileData(
             path=str(rttm),
             orig_name=rttm.name,

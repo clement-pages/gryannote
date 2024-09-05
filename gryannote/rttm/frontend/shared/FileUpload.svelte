@@ -8,7 +8,7 @@
 	import FilePreview from "./FilePreview.svelte";
 	import type { I18nFormatter } from "@gradio/utils";
 
-	export let value: null | FileData | FileData[];
+	export let value: FileData | FileData[] | undefined;
 
 	export let label: string;
 	export let show_label = true;
@@ -67,7 +67,7 @@
 	label={label || "File"}
 />
 
-{#if value && (Array.isArray(value) ? value.length > 0 : false)}
+{#if value}
 	<ModifyUpload {i18n} on:clear={handle_clear} absolute />
 	<FilePreview {i18n} on:select {selectable} {value} {height} />
 {:else}

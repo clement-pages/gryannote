@@ -1,7 +1,5 @@
 """gr.Audio() component."""
 
-from __future__ import annotations
-
 import dataclasses
 import warnings
 from pathlib import Path
@@ -9,7 +7,7 @@ from typing import Any, Callable, Literal, Tuple
 
 import httpx
 import numpy as np
-from gradio import processing_utils, utils
+from gradio import Warning, processing_utils, utils
 from gradio.components.base import Component, StreamingInput, StreamingOutput
 from gradio.data_classes import FileData
 from gradio.events import Events
@@ -78,9 +76,11 @@ class AudioLabeling(
 
     def __init__(
         self,
-        value: Tuple[str | Path | Tuple[int, np.ndarray], PyannoteAnnotation]
-        | Callable
-        | None = None,
+        value: (
+            Tuple[str | Path | Tuple[int, np.ndarray], PyannoteAnnotation]
+            | Callable
+            | None
+        ) = None,
         *,
         audio: str | Path | Tuple[int, np.ndarray] | None = None,
         annotations: PyannoteAnnotation | None = None,
@@ -305,6 +305,25 @@ class AudioLabeling(
         file_data = FileData(path=str(audio_path), orig_name=orig_name)
 
         return AnnotadedAudioData(file_data=file_data, annotations=annotations)
+
+    def load_annotations(
+        self,
+        audio: str | Path | Tuple[int, np.ndarray],
+        annotations: PyannoteAnnotation,
+    ) -> Tuple[str, PyannoteAnnotation]:
+        """Load audio annotations onto the component
+        (from the rttm component for instance)
+        """
+        # TODO How to check if annotations match audio when using numpy type ?
+        if isinstance(audio, (str, Path)):
+            audioname = Path(audio).name
+            uri = audioname.split(".")[0]
+            if uri != annotations.uri:
+                raise Warning(
+                    "It seems that loaded annotations doesn't correspond to current audio."
+                    " Bad things may happen."
+                )
+        return (audio, annotations)
 
     def stream_output(
         self, value, output_id: str, first_chunk: bool
