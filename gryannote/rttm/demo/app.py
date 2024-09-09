@@ -2,11 +2,6 @@ import gradio as gr
 from gryannote_audio import AudioLabeling
 from gryannote_rttm import RTTM
 
-
-def update_annotations(data):
-    return rttm.on_edit(data)
-
-
 with gr.Blocks() as demo:
     audio_labeling = AudioLabeling(
         type="filepath",
@@ -16,11 +11,17 @@ with gr.Blocks() as demo:
     rttm = RTTM()
 
     audio_labeling.edit(
-        fn=update_annotations,
+        fn=rttm.on_edit,
         inputs=audio_labeling,
         outputs=rttm,
         preprocess=False,
         postprocess=False,
+    )
+
+    rttm.upload(
+        fn=audio_labeling.load_annotations,
+        inputs=[audio_labeling, rttm],
+        outputs=audio_labeling,
     )
 
 

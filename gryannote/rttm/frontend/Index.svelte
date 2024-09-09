@@ -37,7 +37,7 @@
 	export let gradio: Gradio<{
 		change: never;
 		error: string;
-		upload: never;
+		upload: FileData | FileData[];
 		clear: never;
 		select: SelectData;
 	}>;

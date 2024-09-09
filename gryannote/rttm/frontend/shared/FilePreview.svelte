@@ -78,7 +78,6 @@
 				<tr class="file-content" id="file-content-{i}">
 					<td>
 						{#if file.url}
-							{console.log("Passing here")}
 							{getFileContent(file.url, "file-content-" + i.toString())}
 						{/if}
 					</td>
