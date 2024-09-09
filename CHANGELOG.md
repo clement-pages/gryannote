@@ -2,6 +2,10 @@
 
 ## main
 
+### Breaking changes
+
+- RTTM postprocessing does not need anymore the audio to be passed as return value of wrapped function, only `pyannote.core.Annotation`.
+
 ### backend API
 
 - add new component: `gryannote_audio.Player`. This component is dedicated to visualization purposes:
@@ -19,6 +23,19 @@ demo = gr.Interface(lambda x : x, inputs=None, outputs=player)
 ```python
     pipeline_selector = PipelineSelector(default_pipeline="pyannote/speaker-diarization-3.1")
 ```
+
+- The RTTM component can now be used to upload annotations to the audio labeling one !
+```python
+audio_labeling = AudioLabeling(type="filepath")
+
+rttm = RTTM()
+rttm.upload(
+    fn=audio_labeling.load_annotations,
+    inputs=[audio_labeling, rttm],
+    outputs=audio_labeling,
+)
+```
+
 
 ### improvements
 - **label an audio using a gamepad!** See [here](https://github.com/clement-pages/gryannote/tree/audio-labeling-with-gamepad/gryannote/audio#gamepad-shortcuts) to check the available shortcuts.
