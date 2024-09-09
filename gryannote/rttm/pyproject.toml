@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gryannote_rttm"
-version = "0.1.1"
+version = "1.0.0"
 description = "Component to load, display and download RTTM files"
 readme = "README.md"
 license = "MIT"
