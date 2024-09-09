@@ -311,8 +311,8 @@ class AudioLabeling(
         audio: str | Path | Tuple[int, np.ndarray],
         annotations: PyannoteAnnotation,
     ) -> Tuple[str, PyannoteAnnotation]:
-        """Load audio annotations onto the component
-        (from the rttm component for instance)
+        """Callback for the upload event from the RTTM component. Used to load RTTM annotations
+        into this component
         """
 
         if not audio:
