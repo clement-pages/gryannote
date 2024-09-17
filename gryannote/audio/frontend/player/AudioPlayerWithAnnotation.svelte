@@ -14,6 +14,7 @@
 		type ButtonEvent,
 		type AxeEvent,
 	} from "wavesurfer.js/dist/plugins/gamepad.js";
+	import MiniMapPlugin from "wavesurfer.js/dist/plugins/minimap.js"
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
@@ -28,6 +29,7 @@
 	export let i18n: I18nFormatter;
 	export let interactive = true;
 	export let editable = true;
+	export let show_minimap: boolean = true;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let mode = "";
@@ -37,6 +39,7 @@
 	let waveform: WaveSurfer | undefined;
 	let wsRegions: RegionsPlugin;
 	let wsGamepad: GamepadPlugin;
+	let wsMinimap: MiniMapPlugin;
 	let activeRegion: Region | null = null;
 	let leftRegionHandle: HTMLDivElement | null;
 	let rightRegionHandle: HTMLDivElement | null;
@@ -618,6 +621,15 @@
 				onGamepadAxePushed(e);
 			});
 		}
+
+		if(show_minimap && !wsMinimap){
+			wsMinimap = waveform.registerPlugin(MiniMapPlugin.create({
+				waveColor: "#9ca3af",
+            	progressColor: "#f97316",
+            	height: 25
+			}));
+		}
+
 		if(wsRegions === undefined ){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
 			if(interactive){
