@@ -14,6 +14,7 @@
 		type ButtonEvent,
 		type AxeEvent,
 	} from "wavesurfer.js/dist/plugins/gamepad.js";
+	import Spectrogram from "wavesurfer.js/dist/plugins/spectrogram"
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
@@ -28,15 +29,17 @@
 	export let i18n: I18nFormatter;
 	export let interactive = true;
 	export let editable = true;
+	export let show_spectrogram = true;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let mode = "";
 	export let isDialogOpen: boolean;
 
 	let container: HTMLDivElement;
-	let waveform: WaveSurfer | undefined;
+	let waveform: WaveSurfer;
 	let wsRegions: RegionsPlugin;
 	let wsGamepad: GamepadPlugin;
+	let wsSpectro: Spectrogram;
 	let activeRegion: Region | null = null;
 	let leftRegionHandle: HTMLDivElement | null;
 	let rightRegionHandle: HTMLDivElement | null;
@@ -127,6 +130,12 @@
 	function updateRegionalignment(region: Region, regionColor: number, numColors: number){
 		let top = regionColor * (100. / numColors);
 		let height = 100. / numColors;
+
+		// if spectrogram is displayed, only the top 50% of the container is available for waveform
+		if(show_spectrogram){
+			top = top / 2;
+			height = height / 2;
+		}
 
 		// update region alignment style:
 		region.element.style.top = top.toString() + "%";
@@ -618,6 +627,7 @@
 				onGamepadAxePushed(e);
 			});
 		}
+
 		if(wsRegions === undefined ){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
 			if(interactive){
@@ -635,6 +645,14 @@
 				});
 			}
 		}
+
+		if(show_spectrogram && !wsSpectro){
+			wsSpectro = waveform.registerPlugin(Spectrogram.create({
+				labels: true,
+				splitChannels: true,
+			}));
+		}
+
 		if (!waveform_settings.autoplay) {
 			waveform?.stop();
 		} else {
@@ -893,7 +911,11 @@
 	}
 
 	:global(::part(wrapper)) {
-			margin-bottom: var(--size-2);
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: 20px;
+		margin-bottom: var(--size-2);
 	}
 
 	.timestamps {

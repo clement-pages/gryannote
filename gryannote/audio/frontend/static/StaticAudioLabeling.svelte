@@ -14,6 +14,7 @@
 	export let label: string;
 	export let show_label = true;
 	export let show_download_button: boolean = true;
+	export let show_spectrogram: boolean = true;
 	export let i18n: I18nFormatter;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
@@ -70,6 +71,7 @@
 		interactive={false}
 		{label}
 		{i18n}
+		{show_spectrogram}
 		{waveform_settings}
 		{waveform_options}
 		on:pause

@@ -1,17 +1,14 @@
 import gradio as gr
-from gryannote_audio import AudioLabeling
+from gryannote_audio import AudioLabeling, Player
 from pyannote.audio import Pipeline
+from pyannote.database.util import load_rttm
 
-audio_labeling = AudioLabeling(type="filepath", interactive=True)
+audio = "/home/clement-pages/gryannote/sample.wav"
+annotations = load_rttm("/home/clement-pages/gryannote/sample.rttm")["sample"]
 
+player = AudioLabeling(audio=audio, annotations=annotations)
 
-def apply_pipeline(audio):
-    pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1")
-    annotations = pipeline(audio)
-    return (audio, annotations)
-
-
-demo = gr.Interface(apply_pipeline, inputs=audio_labeling, outputs=audio_labeling)
+demo = gr.Interface(lambda x: x, inputs=None, outputs=player)
 
 
 if __name__ == "__main__":
