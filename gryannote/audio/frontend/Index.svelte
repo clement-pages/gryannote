@@ -24,6 +24,7 @@
 	export let root: string;
 	export let show_label: boolean;
 	export let show_download_button: boolean = true;
+	export let show_minimap: boolean = true;
 	export let container = true;
 	export let scale: number | null = null;
 	export let min_width: number | undefined = undefined;
@@ -133,6 +134,7 @@
 			i18n={gradio.i18n}
 			{show_label}
 			{show_download_button}
+			{show_minimap}
 			{value}
 			{label}
 			{waveform_settings}
@@ -165,6 +167,7 @@
 			{label}
 			{show_label}
 			{show_download_button}
+			{show_minimap}
 			{value}
 			on:change={({ detail }) => (value = detail)}
 			on:stream={({ detail }) => {

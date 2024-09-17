@@ -32,6 +32,7 @@
 	export let pending = false;
 	export let streaming = false;
 	export let i18n: I18nFormatter;
+	export let show_minimap: boolean = true;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions = {};
 	export let dragging: boolean;
@@ -275,6 +276,7 @@
 		{value}
 		{label}
 		{i18n}
+		{show_minimap}
 		{waveform_settings}
 		{waveform_options}
 		{editable}
