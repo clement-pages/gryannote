@@ -6,7 +6,7 @@ from pyannote.database.util import load_rttm
 audio = "/home/clement-pages/gryannote/sample.wav"
 annotations = load_rttm("/home/clement-pages/gryannote/sample.rttm")["sample"]
 
-player = AudioLabeling(audio=audio, annotations=annotations, show_spectrogram=False)
+player = AudioLabeling(audio=audio, annotations=annotations)
 
 demo = gr.Interface(lambda x: x, inputs=None, outputs=player)
 
