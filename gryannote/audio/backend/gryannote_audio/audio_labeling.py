@@ -102,6 +102,7 @@ class AudioLabeling(
         autoplay: bool = False,
         show_download_button=True,
         show_share_button: bool | None = None,
+        show_spectrogram: bool = True,
         editable: bool = True,
         min_length: int | None = None,
         max_length: int | None = None,
@@ -131,6 +132,9 @@ class AudioLabeling(
             show_download_button: If True, will show a download button in the corner of the component for saving audio. If False, icon does not appear.
             show_share_button: If True, will show a share icon in the corner of the component that allows user to share outputs to Hugging Face Spaces Discussions. If False, icon does not appear. If set to None (default behavior), then the icon appears if this Gradio app is launched on Spaces, but not otherwise.
             editable: If True, allows users to manipulate the audio file (if the component is interactive).
+            show_spectrogram: bool, optional
+                Whether to show audio spectrogram on the interface.
+                Default to True.
             min_length: The minimum length of audio (in seconds) that the user can pass into the prediction function. If None, there is no minimum length.
             max_length: The maximum length of audio (in seconds) that the user can pass into the prediction function. If None, there is no maximum length.
             waveform_options: A dictionary of options for the waveform display. Options include: waveform_color (str), waveform_progress_color (str), show_controls (bool), skip_length (int). Default is None, which uses the default values for these options.
@@ -174,6 +178,7 @@ class AudioLabeling(
             if show_share_button is None
             else show_share_button
         )
+        self.show_spectrogram = show_spectrogram
 
         self.editable = editable
 

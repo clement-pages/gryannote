@@ -24,6 +24,7 @@
 	export let root: string;
 	export let show_label = true;
 	export let show_download_button: boolean = true;
+	export let show_spectrogram: boolean = true;
 	export let sources:
 		| ["microphone"]
 		| ["upload"]
@@ -275,6 +276,7 @@
 		{value}
 		{label}
 		{i18n}
+		{show_spectrogram}
 		{waveform_settings}
 		{waveform_options}
 		{editable}
