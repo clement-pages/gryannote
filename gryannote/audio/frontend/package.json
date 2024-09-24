@@ -20,7 +20,7 @@
     "extendable-media-recorder-wav-encoder": "^7.0.76",
     "resize-observer-polyfill": "^1.5.1",
     "svelte-range-slider-pips": "^2.0.1",
-    "wavesurfer.js": "npm:@gryannote/wavesurfer.js@7.8.5"
+    "wavesurfer.js": "npm:@gryannote/wavesurfer.js@7.8.6"
   },
   "main_changeset": true,
   "main": "index.ts",
