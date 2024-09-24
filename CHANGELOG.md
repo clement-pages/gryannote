@@ -46,6 +46,8 @@ is displayed on the minimap, but it is planned to also show annotation in a futu
 - if audio is paused, time cursor will be set to the start of the active annotation only if this annotation is not visible on the screen.
 - replace arithmetic zoom (z = z + delta) by a geometric one (z = z * coef)
 - add new shortcuts to speed up zoom in / zoom out: `SHIFT+UP` / `SHIFT+DOWN`
+- Managing of region overlapped is now devolved to `@gryannote/wavesurfer.js`
+
 ### fixes
 
 - fix display of overlapping regions when splitting an annotation
