@@ -626,7 +626,8 @@
 			wsMinimap = waveform.registerPlugin(MiniMapPlugin.create({
 				waveColor: "#9ca3af",
             	progressColor: "#f97316",
-            	height: 25
+				insertPosition: "beforebegin",
+				height: 30,
 			}));
 		}
 
@@ -906,6 +907,10 @@
 
 	:global(::part(wrapper)) {
 			margin-bottom: var(--size-2);
+	}
+
+	:global(::part(minimap)){
+		margin-bottom: 0.5em;
 	}
 
 	.timestamps {
