@@ -20,7 +20,6 @@
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
 	import { createEventDispatcher } from "svelte";
 	import Caption from "../shared/Caption.svelte"
-	import Graph from "../shared/graph"
 
 	export let value: null | AnnotatedAudioData = null;
 	$: url = value.file_data?.url;
@@ -58,9 +57,6 @@
 	let defaultLabel: Label | null = null;
 	let activeLabel: Label | null = null;
 
-	// nodes = regions (id), edges = overlap between linked regions
-	let regionsGraph: Graph<string> = new Graph()
-
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
 		play: undefined;
@@ -69,69 +65,6 @@
 		end: undefined;
 	}>();
 
-	/**
-	 * Update region overlapping graph
-	 * @param region region ID to update
-	 */
-	function updateRegionsOverlapping(): void{
-		// get linked annotation
-		regionsGraph.getNodesList().forEach(node1 => {
-			let annotation1 = regionsMap.get(node1);
-			regionsGraph.getNodesList().forEach(node2 => {
-				let annotation2 = regionsMap.get(node2)
-				// if there is an overlap between the two annotations, add a edge between them in the grap
-				if(annotation1.start < annotation2.end && annotation2.start < annotation1.end){
-					regionsGraph.addEdge(node1, node2);
-				}
-				else{
-					// if there is an edge between the two annotations, remove it from the graph
-					regionsGraph.removeEdge(node1, node2);
-				}
-			});
-		});
-
-		// resolve graph coloring problem on connected component to which the region belongs
-		let regionConnectedComponents = regionsGraph.getConnectedComponents();
-		regionConnectedComponents.forEach(connectedComponent => {
-			let graphColoring = connectedComponent.greedyColoring();
-			let numColors = Math.max(...Array.from(graphColoring.values())) + 1;
-			// update region alignment
-			wsRegions.getRegions().forEach(region => {
-				if(graphColoring.get(region.id) !== undefined){
-					updateRegionalignment(region, graphColoring.get(region.id), numColors);
-				}
-			});
-		});
-	}
-
-	function addAddRegionToGraph(region: Region): void{
-		regionsGraph.addNode(region.id);
-		updateRegionsOverlapping();
-	}
-
-	/**
-	 * Remove specified region from the overlapping graph.
-	 * @param region region to remove from the graph
-	 */
-	function removeRegionFromGraph(region: Region): void{
-		regionsGraph.removeNode(region.id);
-		updateRegionsOverlapping();
-	}
-
-	/**
-	 * Update region vertical alignment on the waveform
-	 * @param region region to be updated
-	 * @param regionColor color of the region in the overlapping graph
-	 * @param numColors total number of colors in the overlapping graph
-	 */
-	function updateRegionalignment(region: Region, regionColor: number, numColors: number){
-		let top = regionColor * (100. / numColors);
-		let height = 100. / numColors;
-
-		// update region alignment style:
-		region.element.style.top = top.toString() + "%";
-		region.element.style.height = height.toString() + "%";
-	}
 
 	function formatTime(seconds: number): string {
 		const minutes = Math.floor(seconds / 60);
@@ -209,7 +142,6 @@
 		let region = wsRegions.addRegion(options);
 		const annotation = {start: region.start, end: region.end, speaker: speaker, color: region.color};
 		regionsMap.set(region.id, annotation);
-		addAddRegionToGraph(region);
 
 		// if this is the first region added on the waveform
 		if(!initialAnnotations){
@@ -256,7 +188,6 @@
 			setActiveRegion(null);
 		}
 
-		removeRegionFromGraph(region);
 		regionsMap.delete(region.id);
 		region.remove();
 
@@ -311,7 +242,6 @@
 		wsRegions?.clearRegions();
 		value.annotations = [];
 		regionsMap.clear();
-		regionsGraph.clear();
 	};
 
 	/**
@@ -710,7 +640,6 @@
 		let annotation = regionsMap.get(region.id);
 		annotation.start = region.start;
 		annotation.end = region.end;
-		updateRegionsOverlapping();
 		updateAnnotations();
 	}
 
