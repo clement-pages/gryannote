@@ -30,7 +30,6 @@
 	export let min_width: number | undefined = undefined;
 	export let loading_status: LoadingStatus;
 	export let autoplay = false;
-	export let editable = true;
 	export let waveform_options: WaveformOptions = {};
 	export let pending: boolean;
 	export let streaming: boolean;
@@ -180,7 +179,6 @@
 			{active_source}
 			{pending}
 			{streaming}
-			{editable}
 			bind:dragging
 			on:edit={(e) => gradio.dispatch("edit", e.detail)}
 			on:play={() => gradio.dispatch("play")}
