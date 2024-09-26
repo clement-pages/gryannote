@@ -10,7 +10,7 @@
     import GamepadPlugin, { type ButtonEvent, type AxeEvent } from "wavesurfer.js/dist/plugins/gamepad";
     import Caption from "./Caption.svelte";
 
-	export let adjustTimeCursorPosition: (string, boolean) => void;
+	export let adjustTimeCursorPosition: (s:string, b:boolean) => void;
 	export let i18n: I18nFormatter;
 	export let waveform: WaveSurfer;
 	export let wsGamepad: GamepadPlugin;
@@ -30,7 +30,7 @@
     let activeHandle = "";
 
     let initialAnnotations: Annotation[] | null = null;
-    // correspondence between a Region and an Annotation
+    // mapping between a Region and an Annotation
     let regionsMap: Map<string, Annotation> = new Map();
 
     const dispatch = createEventDispatcher<{
@@ -38,34 +38,27 @@
 	}>();
 
 	/**
-	 * Set region speaker for the active region with specified
-	 * speaker label
-	 * @param label active caption's label
+	 * Set active region label. Do nothing if there is no
+	 * active region.
+	 * @param label new label
 	 */
-	export function setRegionSpeaker(label: Label){
-		// get label color
+	export function setActiveRegionLabel(label: Label){
+		if(!activeRegion) return;
 
-		if(activeRegion !== null) {
-			// update region color
-			activeRegion.setOptions({
-				start: activeRegion.start,
-				end: activeRegion.end,
-				color: label.color,
-				drag: activeRegion.drag,
-				resize: activeRegion.resize,
-			});
-			setActiveRegionBackground(activeRegion.color);
+		// update region color
+		const {color, ...regionOpt} = activeRegion;
+		activeRegion.setOptions({color: label.color, ...regionOpt})
+		setActiveRegionBackground(activeRegion.color);
 
-			// update corresponding annotation color
-			let activeAnnotation = regionsMap.get(activeRegion.id);
-			activeAnnotation.speaker = label.name;
-			updateAnnotations();
-		}
+		// update corresponding annotation color
+		let activeAnnotation = regionsMap.get(activeRegion.id);
+		activeAnnotation.speaker = label.name;
+		updateAnnotations();
 	}
 
 
     /**
-	 * Update active region background with the specified color
+	 * Update active region background style with the specified color.
 	 * @param color new color for the active region
 	 */
 	export function setActiveRegionBackground(color: string): void{
@@ -221,8 +214,7 @@
 	}
 
 	/**
-	 * Remove specified region from waveform as well as
-	 * the linked annotation
+	 * Remove specified region as well as the mapped annotation
 	 * @param region region to remove
 	 */
      function removeRegion(region: Region): void {
@@ -238,16 +230,16 @@
 	}
 
     /**
-	 * Adjust region start and end time bounds
-	 * @param key shortcut name. Indicates direction: forward or backward.
+	 * Adjust region start and end time boundaries
+	 * @param direction shortcut name. Indicates direction: forward or backward.
 	 * @param fastMode indicates whether shift key was pressed. If true, move faster
 	 * @param side side of the active region to be updated
 	 */
-    function adjustRegionBounds(key: string, side: "start" | "end", fastMode: boolean): void {
+    function adjustRegionBounds(direction: "backward" | "forward", side: "start" | "end", fastMode: boolean): void {
 		if(!activeRegion) return;
 
 		//TODO do not hardcore this and adapt it according to relative size of the waveform
-		let dx: number = (key === "ArrowLeft" ? -1 : 1);
+		let dx: number = (direction === "backward" ? -1 : 1);
 		if(fastMode){
 			dx = dx * 5.0;
 		}
@@ -355,7 +347,7 @@
 	 * Do nothing if the component is not in interactive mode.
 	 * @param relativeY mouse y-coordinate relative to waveform start
 	 */
-	function handleRegionAdd(relativeY: number): void{
+	function onRegionAdd(relativeY: number): void{
 		if(!interactive) return;
 
 		const label = caption.getActiveLabel() || caption.getDefaultLabel();
@@ -374,24 +366,23 @@
 
     /**
 	 * Handle the region removal event, and remove the active region. According to `key` and
-	 * `shiftKey` value, the new active region is the one set before or after the removed region.
+	 * `shiftKey` value, the new active region is the one positioned before or after the removed region.
 	 * Do nothing if there is no active region.
 	 * @param key shortcut name. Help to determine which region to select after the removal.
 	 * @param shiftKey indicates whether shift key was pressed. Help to determine which region to select
 	 */
-	function handleRegionRemoval(key: string, shiftKey: boolean): void {
+	function onRegionRemove(key: string, shiftKey: boolean): void {
 		// if there is no active region, do nothing
-		if(!activeRegion){
-			return;
-		}
+		if(!activeRegion) return;
 
-		let region2remove = wsRegions.getRegions().find((region) => region.id === activeRegion.id);
+		const region2remove = wsRegions.getRegions().find((region) => region.id === activeRegion.id);
 		// remove active region and set the next region as the active one
 		if(key === "Delete" || (key == "Backspace" && shiftKey)){
 			selectNextRegion(false);
 		}
-		// remove region and set the previous region as the active one
+
 		else {
+			// remove region and set the previous region as the active one
 			selectNextRegion(true);
 		}
 
@@ -407,11 +398,12 @@
 	 * @param altKey indicates whether alt key was pressed. If true, move end bound,
 	 * else start bound. No effect when updating time cursor.
 	 */
-	function handleTimeAdjustement(key: string, shiftKey: boolean, altKey: boolean): void {
+	function onTimeAdjustement(key: string, shiftKey: boolean, altKey: boolean): void {
 		// if there is an active region, update region bounds
 		if(activeRegion){
 			const side = (altKey ? "end" : "start");
-			adjustRegionBounds(key, side, shiftKey);
+			const direction = (key === "ArrowLeft"? "backward": "forward")
+			adjustRegionBounds(direction, side, shiftKey);
 			return;
 		}
 		// else update time cursor position
@@ -424,8 +416,6 @@
 	}
 
 	$: waveform.on("init", () => {
-		if(container) return;
-
 		let waveformContainer = waveform.options.container
 		if(typeof waveformContainer === "string"){
 			waveformContainer = document.getElementById(waveformContainer);
@@ -437,8 +427,8 @@
 	function onGamepadButtonPressed(event: ButtonEvent): void  {
 		switch(event.idx){
 			case 0: setActiveRegion(null); break;
-			case 1: handleRegionAdd(waveform.getCurrentTime()); break;
-			case 2: handleRegionRemoval("Delete", false); break;
+			case 1: onRegionAdd(waveform.getCurrentTime()); break;
+			case 2: onRegionRemove("Delete", false); break;
 			case 3: onRegionSplit(waveform.getCurrentTime()); break;
 			case 4: selectNextRegion(true); break;
 			case 5: selectNextRegion(false);break;
@@ -449,14 +439,14 @@
 	function onGamepadAxePushed(event: AxeEvent): void {
 		let direction = event.value < 0? "ArrowLeft" : "ArrowRight";
 		switch(event.idx){
-			case 0: handleTimeAdjustement(direction, false, false); break;
-			case 2: handleTimeAdjustement(direction, false, true); break;
+			case 0: onTimeAdjustement(direction, false, false); break;
+			case 2: onTimeAdjustement(direction, false, true); break;
 			default: // do nothing
 		}
 	}
 
 	$: waveform.on("ready", () => {
-		if(wsGamepad === undefined){
+		if(!wsGamepad){
 			wsGamepad = waveform.registerPlugin(GamepadPlugin.create());
 			wsGamepad?.on("button-pressed", (e: ButtonEvent) => {
 				onGamepadButtonPressed(e);
@@ -466,7 +456,7 @@
 			});
 		}
 
-		if(wsRegions === undefined ){
+		if(!wsRegions){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
 			if(interactive){
 				// add region-clicked event listener
@@ -486,7 +476,7 @@
 	});
 
 	$: waveform.on("dblclick", () => {
-			handleRegionAdd(waveform.getCurrentTime());
+			onRegionAdd(waveform.getCurrentTime());
 	});
 
 	$: if (activeRegion) {
@@ -518,18 +508,18 @@
 			// do not process keyboard shortcuts when a dialog popup is open
 			if(isDialogOpen) return;
 			switch(e.key){
-				case "ArrowLeft": handleTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
-				case "ArrowRight": handleTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
+				case "ArrowLeft": onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
+				case "ArrowRight": onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
 				case "Escape": setActiveRegion(null); break;
 				case "Tab": e.preventDefault(); selectNextRegion(e.shiftKey); break;
-				case "Delete": handleRegionRemoval("Delete", e.shiftKey); break;
-				case "Backspace": handleRegionRemoval("Backspace", e.shiftKey); break;
+				case "Delete": onRegionRemove("Delete", e.shiftKey); break;
+				case "Backspace": onRegionRemove("Backspace", e.shiftKey); break;
 				case "Enter":
 					e.preventDefault();
 					if(e.shiftKey){
 						onRegionSplit(waveform.getCurrentTime());
 					} else {
-						handleRegionAdd(waveform.getCurrentTime());
+						onRegionAdd(waveform.getCurrentTime());
 					}
 					break;
 				default: //do nothing
