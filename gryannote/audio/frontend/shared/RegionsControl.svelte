@@ -204,28 +204,19 @@
 			throw new RangeError("split time out of region bounds");
 		}
 
-		let speaker = regionsMap.get(region.id).speaker;
-
-		let regionRight = addRegion({
+		const label = regionsMap.get(region.id).speaker;
+		const {start, ...rightRegionOpt} = region
+		const regionRight = addRegion({
 			start: splitTime,
-			end: region.end,
-			color: region.color,
-			drag: region.drag,
-			resize: region.resize,
-		}, speaker);
+			...rightRegionOpt,
+		}, label);
 
-		region.setOptions({
-			end: splitTime,
-			start:region.start,
-			color:region.color,
-			drag:region.drag,
-			resize:region.resize
-		});
+		const {end, ...leftRegionOpt} = region
+		region.setOptions({end: splitTime, ...leftRegionOpt});
 
-		// annotation and grap need to be updated with new region's end
+		// annotations need to be updated to take into account the split
 		onRegionUpdate(region);
 
-		// update active region
 		setActiveRegion(regionRight);
 	}
 
@@ -249,53 +240,19 @@
     /**
 	 * Adjust region start and end time bounds
 	 * @param key shortcut name. Indicates direction: forward or backward.
-	 * @param shiftKey indicates whether shift key was pressed. If true, move faster
-	 * @param altKey indicates whether alt key was pressed. If true, move end bound,
-	 * else start bound
+	 * @param fastMode indicates whether shift key was pressed. If true, move faster
+	 * @param side side of the active region to be updated
 	 */
-    function adjustRegionBounds(key: string, shiftKey: boolean, altKey: boolean): void {
-		let newStart: number;
-		let newEnd: number;
-		let delta: number = 0.05; //TODO do not hardcore this and adapt it according to relative size of the waveform
+    function adjustRegionBounds(key: string, side: "start" | "end", fastMode: boolean): void {
+		if(!activeRegion) return;
 
-		// if alt is pressed, go faster
-		if(shiftKey){
-			delta = delta * 4.0;
+		//TODO do not hardcore this and adapt it according to relative size of the waveform
+		let dx: number = (key === "ArrowLeft" ? -1 : 1);
+		if(fastMode){
+			dx = dx * 5.0;
 		}
 
-		// edit active region end time
-		if (!altKey) {
-			if (key === "ArrowLeft") {
-				newStart = activeRegion.start - delta;
-				newEnd = activeRegion.end;
-			} else {
-				newStart = activeRegion.start + delta;
-				newEnd = activeRegion.end;
-			}
-		// edit active region start time
-		} else {
-			if (key === "ArrowLeft") {
-				newStart = activeRegion.start;
-				newEnd = activeRegion.end - delta;
-			} else {
-				newStart = activeRegion.start;
-				newEnd = activeRegion.end + delta;
-			}
-		}
-
-		// saturate region bound
-		if(newStart > activeRegion.end){
-			newStart = activeRegion.end - 0.1;
-		}
-		if(newEnd < activeRegion.start){
-			newEnd = activeRegion.start + 0.1;
-		}
-
-		activeRegion.setOptions({
-			start: newStart,
-			end: newEnd
-		});
-
+		activeRegion._onUpdate(dx, side);
 		onRegionUpdate(activeRegion);
 	};
 
@@ -321,7 +278,7 @@
 
         annotations.forEach(annotation => {
             let label = caption.createLabel({name: annotation.speaker})
-            let region = addRegion({
+            addRegion({
                 start: annotation.start,
                 end: annotation.end,
                 color: label.color,
@@ -367,28 +324,29 @@
 	}
 
     /**
-	 * Split a region into two distinct regions. There are two cases (sorted by priority):
+	 * Handle region split shortcut event. There are two cases (sorted by priority):
 	 * - if there is an active region, split this region
 	 * - else, split the region in which the time cursor is
 	 * - if the cursor is out on any region, do nothing
-	 * Do nothing if the audio component is not in interactive mode
+	 * Do nothing if the audio component is not in interactive mode.
 	 * @param currentTime position of the cursor on the waveform
 	 */
-	function handleRegionSplit(currentTime: number): void {
+	function onRegionSplit(currentTime: number): void {
 		if(!interactive) return;
 
-		// get region in which the cursor in currently located
-		let region = wsRegions.getRegions().find(
-			(_region) => _region.start < currentTime && _region.end > currentTime
-		);
-		if(region === undefined){
-			// if cursor is not in a region, use active region, if available
-			if(activeRegion === null){
-				return;
-			}
-			region = activeRegion;
+		let region = activeRegion;
+		if(region){
 			currentTime = region.start + (region.end - region.start) / 2.;
+		} else {
+			// if no region is activated, select the one on which the time cursor is positioned
+			region = wsRegions.getRegions().find(
+				(_region) => _region.start < currentTime && _region.end > currentTime
+			);
 		}
+
+		// if there is not active region and time cursor is not on a region, nothing to do
+		if(!region) return;
+
 		splitRegion(region, currentTime);
 	}
 
@@ -452,7 +410,8 @@
 	function handleTimeAdjustement(key: string, shiftKey: boolean, altKey: boolean): void {
 		// if there is an active region, update region bounds
 		if(activeRegion){
-			adjustRegionBounds(key, shiftKey, altKey);
+			const side = (altKey ? "end" : "start");
+			adjustRegionBounds(key, side, shiftKey);
 			return;
 		}
 		// else update time cursor position
@@ -480,7 +439,7 @@
 			case 0: setActiveRegion(null); break;
 			case 1: handleRegionAdd(waveform.getCurrentTime()); break;
 			case 2: handleRegionRemoval("Delete", false); break;
-			case 3: handleRegionSplit(waveform.getCurrentTime()); break;
+			case 3: onRegionSplit(waveform.getCurrentTime()); break;
 			case 4: selectNextRegion(true); break;
 			case 5: selectNextRegion(false);break;
 			default: // do nothing
@@ -568,7 +527,7 @@
 				case "Enter":
 					e.preventDefault();
 					if(e.shiftKey){
-						handleRegionSplit(waveform.getCurrentTime());
+						onRegionSplit(waveform.getCurrentTime());
 					} else {
 						handleRegionAdd(waveform.getCurrentTime());
 					}
