@@ -5,8 +5,6 @@
     import { createEventDispatcher, onMount} from "svelte";
     import GamepadPlugin, {type ButtonEvent} from "wavesurfer.js/dist/plugins/gamepad";
 
-    export let defaultLabel: Label | null = null;
-    export let activeLabel: Label | null = null;
     export let isDialogOpen: boolean = false;
     export let interactive: boolean = true;
     export let wsGamepad: GamepadPlugin;
@@ -15,12 +13,28 @@
     let labels: Label[] = [];
     let dialog: Dialog;
 
+    let activeLabel: Label | null = null;
+
     const colorList = ["#ffd70080", "#0000ff80", "#ff000080", "#00ff0080"];
     const dispatch = createEventDispatcher<{
         select: Label;
         name_update: Label,
         color_update: Label;
     }>();
+
+    /**
+     * Return active label
+     */
+     export function getActiveLabel(): Label | null {
+        return activeLabel;
+    }
+
+    /**
+     * Return default label
+     */
+    export function getDefaultLabel(): Label {
+        return labels[0] || createLabel({});
+    }
 
     /**
      * Create label user interface component
@@ -48,7 +62,7 @@
      * @param shortcut label shortcut, optional. If not provided, will be set to the first available
      * letter in alphabetic order.
      */
-    export function createLabel(options: {name?: string, color?: string, shortcut?: string}): Label {
+    function createLabel(options: {name?: string, color?: string, shortcut?: string}): Label {
         const labelIdx = labels.length;
         // if maximum number of labels has been reached, do nothing
         if(labelIdx === 26){
@@ -188,10 +202,6 @@
             case 15: setActiveLabel(labels.at((activeLabelIdx + 1) % labels.length).shortcut); break;
             default: // do nothing
         }
-    }
-
-    $: if(labels.length > 0){
-        defaultLabel = labels[0];
     }
 
     $: wsGamepad?.on("button-pressed", (e: ButtonEvent) => onGamepadAxeValueUpdated(e));

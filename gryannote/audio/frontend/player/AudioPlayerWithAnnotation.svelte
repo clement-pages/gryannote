@@ -37,8 +37,6 @@
 	let regionsMap: Map<string, Annotation> = new Map();
 
 	let caption: Caption;
-	let defaultLabel: Label | null = null;
-	let activeLabel: Label | null = null;
 
 	let regionsControl: RegionsControl;
 
@@ -181,8 +179,6 @@
 					<RegionsControl
 						bind:this={regionsControl}
 						bind:mode
-						bind:defaultLabel
-						bind:activeLabel
 						{adjustTimeCursorPosition}
 						{waveform}
 						{caption}
@@ -197,8 +193,6 @@
 			{#if value}
 				<Caption
 					bind:this={caption}
-					bind:defaultLabel
-					bind:activeLabel
 					bind:isDialogOpen
 					{interactive}
 					{wsGamepad}

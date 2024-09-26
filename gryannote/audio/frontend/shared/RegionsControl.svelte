@@ -18,8 +18,6 @@
     export let interactive = true;
     export let isDialogOpen: boolean = false;
 	export let caption: Caption;
-    export let defaultLabel: Label | null = null;
-    export let activeLabel: Label | null = null;
 	export let mode = "";
 	export let activeRegion: Region | null = null;
 
@@ -395,18 +393,15 @@
 	}
 
     /**
-	 * Handle add region event. The new added region become the active region.
-	 * Do nothing if the component is not in interactive mode
+	 * Handle add region event. The new added region becomes the active one.
+	 * Do nothing if the component is not in interactive mode.
 	 * @param relativeY mouse y-coordinate relative to waveform start
 	 */
 	function handleRegionAdd(relativeY: number): void{
 		if(!interactive) return;
 
-		let label = (activeLabel ? activeLabel : defaultLabel);
-		// if annotations were not initialized, create a new label
-		if (!label){
-			label = caption.createLabel({});
-		}
+		const label = caption.getActiveLabel() || caption.getDefaultLabel();
+
 		let region = addRegion({
 			start: relativeY - 1.0,
 			end: relativeY + 1.0,
