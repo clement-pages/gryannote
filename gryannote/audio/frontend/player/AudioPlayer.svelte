@@ -6,12 +6,12 @@
 	import GamepadPlugin from "wavesurfer.js/dist/plugins/gamepad.js";
 	import MiniMapPlugin from "wavesurfer.js/dist/plugins/minimap.js";
 	import WaveformControls from "../shared/WaveformControls.svelte";
-	import RegionsControl from "../shared/RegionsControl.svelte";
+	import RegionsControl from "./RegionsControl.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
 	import { createEventDispatcher } from "svelte";
-	import Caption from "../shared/Caption.svelte"
+	import Caption from "./Caption.svelte"
 
 	export let label: string;
 	export let i18n: I18nFormatter;

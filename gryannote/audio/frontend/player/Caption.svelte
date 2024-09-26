@@ -1,7 +1,7 @@
 <script lang="ts">
-    import type { Label } from "./types";
-    import Plus from "./icons/Plus.svelte";
-    import Dialog from "./Dialog.svelte";
+    import type { Label } from "../shared/types";
+    import Plus from "../shared/icons/Plus.svelte";
+    import Dialog from "../shared/Dialog.svelte";
     import { createEventDispatcher, onMount} from "svelte";
     import GamepadPlugin, {type ButtonEvent} from "wavesurfer.js/dist/plugins/gamepad";
 

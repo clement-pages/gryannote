@@ -4,9 +4,9 @@
     import RegionsPlugin, { type Region, type RegionParams } from "wavesurfer.js/dist/plugins/regions";
     import { Trim, Undo } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
-    import AnnotatedAudioData from "./AnnotatedAudioData";
-    import type { Annotation, Label } from "./types";
-    import Gum from "./icons/Gum.svelte";
+    import AnnotatedAudioData from "../shared/AnnotatedAudioData";
+    import type { Annotation, Label } from "../shared/types";
+    import Gum from "../shared/icons/Gum.svelte";
     import GamepadPlugin, { type ButtonEvent, type AxeEvent } from "wavesurfer.js/dist/plugins/gamepad";
     import Caption from "./Caption.svelte";
 
