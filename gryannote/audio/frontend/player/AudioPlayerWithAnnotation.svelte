@@ -13,10 +13,9 @@
 	import { createEventDispatcher } from "svelte";
 	import Caption from "../shared/Caption.svelte"
 
-	export let value: null | AnnotatedAudioData = null;
-	$: url = value.file_data?.url;
 	export let label: string;
 	export let i18n: I18nFormatter;
+	export let value: AnnotatedAudioData | null = null;
 	export let interactive = true;
 	export let show_minimap: boolean = true;
 	export let waveform_settings: Record<string, any>;
@@ -129,6 +128,7 @@
 		});
 	}
 
+	$: url = value.file_data?.url;
 	$: url && load_audio(url);
 
 </script>
@@ -196,7 +196,7 @@
 					bind:isDialogOpen
 					{interactive}
 					{wsGamepad}
-					on:select={(e) => regionsControl.setRegionSpeaker(e.detail)}
+					on:select={(e) => regionsControl.setActiveRegionLabel(e.detail)}
 					on:name_update={(e) => {
 						regionsControl.getRegions().forEach(region => {
 							if(region.color === e.detail.color){

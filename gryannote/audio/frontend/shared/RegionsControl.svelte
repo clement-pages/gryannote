@@ -56,15 +56,12 @@
 		updateAnnotations();
 	}
 
-
     /**
 	 * Update active region background style with the specified color.
 	 * @param color new color for the active region
 	 */
 	export function setActiveRegionBackground(color: string): void{
-		if(!activeRegion){
-			return;
-		}
+		if(!activeRegion) return;
 
 		activeRegion.element.style.background = (
             "repeating-linear-gradient(45deg,"
@@ -83,7 +80,7 @@
 	}
 
     /**
-	 * update annotations with current regions' state and dispatch them to backend
+	 * update annotations with current regions' state and dispatch them toward backend
 	 */
 	function updateAnnotations(): void {
 		value.annotations = Array.from(regionsMap.values());
@@ -95,11 +92,8 @@
 	 * @param region
 	 * @param waveformContainer
 	 */
-    function isRegionVisible(region: Region, waveformContainer: HTMLElement | string): boolean {
+    function isRegionVisible(region: Region, waveformContainer: HTMLDivElement): boolean {
 		// Get the left and right boundaries of the waveform view box:
-        if(typeof waveformContainer === "string"){
-            waveformContainer = document.getElementById(waveformContainer);
-        }
 		const viewbox = waveformContainer.getBoundingClientRect();
 		const viewboxLeft = viewbox.left;
 		const viewboxRight = viewbox.right;
@@ -116,7 +110,8 @@
 	}
 
     /**
-	 * Set active region with specified one.
+	 * Set active region with specified one. Use `null` to
+	 * unset active region.
 	 * Do nothing if component is not in interactive mode
 	 * @param region the region to activate
 	 */
@@ -128,9 +123,7 @@
 		}
 
 		activeRegion = region;
-		if(!activeRegion){
-			return;
-		}
+		if(!activeRegion) return; // in the case where active regin is unset
 
 		setActiveRegionBackground(region.color);
 
@@ -149,19 +142,19 @@
 	 * active one. If active region is the last one,
 	 * the next region to be activated is the first one
 	 * on the waveform.
-	 * @param goBackward: go back if true, go ahead otherwise
+	 * @param direction: selection direction
 	 */
-	function selectNextRegion(goBackward: boolean): void {
+	function selectRegion(direction: "backward" | "forward"): void {
 		// go back if shift was pressed, else go ahead:
-		var direction = goBackward ? -1 : 1;
-		var regions = wsRegions.getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
+		const step = direction === "backward" ? -1 : 1;
+		var regions = getRegions().sort((r1, r2) => r1.start > r2.start ? 1 : -1);
 		// if there is no active region, active the first one
 		if(activeRegion === null){
 			setActiveRegion(regions[0]);
 		}
 		else{
 			var activeRegionIdx = regions.indexOf(activeRegion);
-			setActiveRegion(regions.at((activeRegionIdx + direction) % regions.length));
+			setActiveRegion(regions.at((activeRegionIdx + step) % regions.length));
 		}
 	};
 
@@ -378,12 +371,12 @@
 		const region2remove = wsRegions.getRegions().find((region) => region.id === activeRegion.id);
 		// remove active region and set the next region as the active one
 		if(key === "Delete" || (key == "Backspace" && shiftKey)){
-			selectNextRegion(false);
+			selectRegion("forward");
 		}
 
 		else {
 			// remove region and set the previous region as the active one
-			selectNextRegion(true);
+			selectRegion("backward");
 		}
 
 		removeRegion(region2remove);
@@ -430,8 +423,8 @@
 			case 1: onRegionAdd(waveform.getCurrentTime()); break;
 			case 2: onRegionRemove("Delete", false); break;
 			case 3: onRegionSplit(waveform.getCurrentTime()); break;
-			case 4: selectNextRegion(true); break;
-			case 5: selectNextRegion(false);break;
+			case 4: selectRegion("backward"); break;
+			case 5: selectRegion("forward");break;
 			default: // do nothing
 		}
 	}
@@ -511,7 +504,7 @@
 				case "ArrowLeft": onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
 				case "ArrowRight": onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
 				case "Escape": setActiveRegion(null); break;
-				case "Tab": e.preventDefault(); selectNextRegion(e.shiftKey); break;
+				case "Tab": e.preventDefault(); selectRegion(e.shiftKey? "backward" : "forward"); break;
 				case "Delete": onRegionRemove("Delete", e.shiftKey); break;
 				case "Backspace": onRegionRemove("Backspace", e.shiftKey); break;
 				case "Enter":
