@@ -17,7 +17,7 @@
 	import type { WaveformOptions } from "../shared/types";
 	import Help  from "../shared/icons/Help.svelte"
 	import HelpDialog from "../shared/HelpDialog.svelte";
-    import AudioPlayerWithAnnotation from "../player/AudioPlayerWithAnnotation.svelte";
+    import AudioPlayer from "../player/AudioPlayer.svelte";
 
 	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
@@ -269,7 +269,7 @@
 		absolute={true}
 	/>
 
-	<AudioPlayerWithAnnotation
+	<AudioPlayer
 		bind:mode
 		bind:isDialogOpen
 		{value}
