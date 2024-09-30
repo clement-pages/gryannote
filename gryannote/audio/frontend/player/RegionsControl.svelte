@@ -19,7 +19,6 @@
     export let isDialogOpen: boolean = false;
 	export let caption: Caption;
 	export let mode = "";
-	export let activeRegion: Region | null = null;
 
 	let container: HTMLDivElement;
 
@@ -28,6 +27,8 @@
     let leftRegionHandle: HTMLDivElement | null = null;
     let rightRegionHandle: HTMLDivElement | null = null;
     let activeHandle = "";
+
+	let activeRegion: Region | null = null;
 
     let initialAnnotations: Annotation[] | null = null;
     // mapping between a Region and an Annotation
@@ -38,22 +39,34 @@
 	}>();
 
 	/**
-	 * Set active region label. Do nothing if there is no
-	 * active region.
-	 * @param label new label
+	 * Return label name for the specified region id
+	 * @param regionId
 	 */
-	export function setActiveRegionLabel(label: Label){
-		if(!activeRegion) return;
+	export function getRegionLabel(regionId: string): string{
+		return regionsMap.get(regionId).speaker;
+	}
+
+	/**
+	 * Set the specified region's label with the indicated one
+	 * @param label new label for the region
+	 * @param region region to update, optional. Default to active region
+	 */
+	export function setRegionLabel(label: Label, region?: Region, ): void {
+		// if no region was specified, use the active one by default
+		if(!region){
+			if(!activeRegion) return;
+			region = activeRegion;
+		}
 
 		// update region color
-		const {color, ...regionOpt} = activeRegion;
-		activeRegion.setOptions({color: label.color, ...regionOpt})
-		setActiveRegionBackground(activeRegion.color);
+		const {color, ...regionsOpt} = region
+		region.setOptions({color: label.color, ...regionsOpt});
 
-		// update corresponding annotation color
-		let activeAnnotation = regionsMap.get(activeRegion.id);
-		activeAnnotation.speaker = label.name;
+		// update annotation label
+		regionsMap.get(region.id).speaker = label.name;
 		updateAnnotations();
+
+		if(region === activeRegion) setActiveRegionBackground(activeRegion.color);
 	}
 
     /**
@@ -191,7 +204,7 @@
 		}
 
 		const label = regionsMap.get(region.id).speaker;
-		const {start, ...rightRegionOpt} = region
+		const {start, id, ...rightRegionOpt} = region
 		const regionRight = addRegion({
 			start: splitTime,
 			...rightRegionOpt,
@@ -262,7 +275,7 @@
         ))
 
         annotations.forEach(annotation => {
-            let label = caption.createLabel({name: annotation.speaker})
+            let label = caption.getLabel("name", annotation.speaker, true)
             addRegion({
                 start: annotation.start,
                 end: annotation.end,

@@ -179,6 +179,7 @@
 					<RegionsControl
 						bind:this={regionsControl}
 						bind:mode
+						bind:isDialogOpen
 						{adjustTimeCursorPosition}
 						{waveform}
 						{caption}
@@ -196,22 +197,21 @@
 					bind:isDialogOpen
 					{interactive}
 					{wsGamepad}
-					on:select={(e) => regionsControl.setActiveRegionLabel(e.detail)}
+					on:select={(e) => {
+						regionsControl.setRegionLabel(e.detail)
+					}}
 					on:name_update={(e) => {
 						regionsControl.getRegions().forEach(region => {
 							if(region.color === e.detail.color){
-								regionsMap.get(region.id).speaker = e.detail.name;
+								regionsControl.setRegionLabel(e.detail, region);
 							}
 						});
 					}}
 					on:color_update={(e) => {
 						// update all regions associated with the modified label
 						regionsControl.getRegions().forEach(region => {
-							if(regionsMap.get(region.id).speaker === e.detail.name){
-								region.setOptions({color:e.detail.color, ...region});
-								if(region === regionsControl.activeRegion){
-									regionsControl.setActiveRegionBackground(region.color);
-								}
+							if(regionsControl.getRegionLabel(region.id) === e.detail.name){
+								regionsControl.setRegionLabel(e.detail, region);
 							}
 						});
 					}}
