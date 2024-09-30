@@ -2,9 +2,9 @@
 	import type { Annotation, WaveformOptions , Label} from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 	import { Music,} from "@gradio/icons";
-	import WaveSurfer from "wavesurfer.js";
-	import GamepadPlugin from "wavesurfer.js/dist/plugins/gamepad.js";
-	import MiniMapPlugin from "wavesurfer.js/dist/plugins/minimap.js";
+	import WaveSurfer from "@gryannote/wavesurfer.js";
+	import GamepadPlugin from "@gryannote/wavesurfer.js/dist/plugins/gamepad.js";
+	import MiniMapPlugin from "@gryannote/wavesurfer.js/dist/plugins/minimap.js";
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import RegionsControl from "./RegionsControl.svelte";
 	import { Empty } from "@gradio/atoms";

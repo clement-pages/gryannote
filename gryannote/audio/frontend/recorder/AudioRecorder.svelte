@@ -2,12 +2,12 @@
 	import { onMount } from "svelte";
 	import type { I18nFormatter } from "@gradio/utils";
 	import { createEventDispatcher } from "svelte";
-	import WaveSurfer from "wavesurfer.js";
+	import WaveSurfer from "@gryannote/wavesurfer.js";
 	import { skip_audio, process_audio } from "../shared/utils";
-	import WSRecord from "wavesurfer.js/dist/plugins/record.js";
+	import WSRecord from "@gryannote/wavesurfer.js/dist/plugins/record.js";
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import WaveformRecordControls from "../shared/WaveformRecordControls.svelte";
-	import RecordPlugin from "wavesurfer.js/dist/plugins/record.js";
+	import RecordPlugin from "@gryannote/wavesurfer.js/dist/plugins/record.js";
 	import type { WaveformOptions } from "../shared/types";
 	import { format_time } from "@gradio/utils";
 

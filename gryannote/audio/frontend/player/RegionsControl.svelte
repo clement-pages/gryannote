@@ -1,13 +1,13 @@
 <script lang="ts">
-    import WaveSurfer from "wavesurfer.js";
     import { createEventDispatcher, onMount} from "svelte"
-    import RegionsPlugin, { type Region, type RegionParams } from "wavesurfer.js/dist/plugins/regions";
     import { Trim, Undo } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
     import AnnotatedAudioData from "../shared/AnnotatedAudioData";
     import type { Annotation, Label } from "../shared/types";
     import Gum from "../shared/icons/Gum.svelte";
-    import GamepadPlugin, { type ButtonEvent, type AxeEvent } from "wavesurfer.js/dist/plugins/gamepad";
+	import WaveSurfer from "@gryannote/wavesurfer.js";
+	import RegionsPlugin, { type Region, type RegionParams } from "@gryannote/wavesurfer.js/dist/plugins/regions";
+    import GamepadPlugin, { type ButtonEvent, type AxeEvent } from "@gryannote/wavesurfer.js/dist/plugins/gamepad";
     import Caption from "./Caption.svelte";
 
 	export let adjustTimeCursorPosition: (s:string, b:boolean) => void;

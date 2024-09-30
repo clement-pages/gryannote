@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount} from "svelte"
-    import WaveSurfer from "wavesurfer.js";
+    import WaveSurfer from "@gryannote/wavesurfer.js";
 	import GamepadPlugin, {
 		type ButtonEvent
-	} from "wavesurfer.js/dist/plugins/gamepad";
+	} from "@gryannote/wavesurfer.js/dist/plugins/gamepad";
 
 	export let waveform: WaveSurfer;
 	export let wsGamepad: GamepadPlugin;
