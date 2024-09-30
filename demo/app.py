@@ -12,11 +12,7 @@ def apply_pipeline(pipeline: Pipeline, audio):
     except (ValueError, RuntimeError) as e:
         raise gr.Error(f"An error occurred while processing audio: {e}")
 
-    return ((audio, annotations), (audio, annotations))
-
-
-def update_annotations(data):
-    return rttm.on_edit(data)
+    return ((audio, annotations), annotations)
 
 
 with gr.Blocks() as demo:
@@ -24,7 +20,9 @@ with gr.Blocks() as demo:
         "[Gryannote](): The [pyannote](https://github.com/pyannote/pyannote-audio) audio labeling tool"
     )
 
-    pipeline_selector = PipelineSelector()
+    pipeline_selector = PipelineSelector(
+        default_pipeline="pyannote/speaker-diarization-3.1"
+    )
     pipeline_selector.select(
         fn=pipeline_selector.on_select,
         inputs=pipeline_selector,
@@ -47,9 +45,14 @@ with gr.Blocks() as demo:
     run_btn = gr.Button("Run pipeline")
 
     rttm = RTTM()
+    rttm.upload(
+        fn=audio_labeling.load_annotations,
+        inputs=[audio_labeling, rttm],
+        outputs=audio_labeling,
+    )
 
     audio_labeling.edit(
-        fn=update_annotations,
+        fn=rttm.on_edit,
         inputs=audio_labeling,
         outputs=rttm,
         preprocess=False,
