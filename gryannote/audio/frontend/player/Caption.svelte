@@ -3,7 +3,7 @@
     import Plus from "../shared/icons/Plus.svelte";
     import Dialog from "../shared/Dialog.svelte";
     import { createEventDispatcher, onMount} from "svelte";
-    import GamepadPlugin, {type ButtonEvent} from "wavesurfer.js/dist/plugins/gamepad";
+    import GamepadPlugin, {type ButtonEvent} from "@gryannote/wavesurfer.js/dist/plugins/gamepad";
 
     export let isDialogOpen: boolean = false;
     export let interactive: boolean = true;

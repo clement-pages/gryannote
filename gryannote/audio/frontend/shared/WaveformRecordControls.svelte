@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Pause } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
-	import RecordPlugin from "wavesurfer.js/dist/plugins/record.js";
+	import RecordPlugin from "@gryannote/wavesurfer.js/dist/plugins/record.js";
 	import { createEventDispatcher } from "svelte";
 
 	export let record: RecordPlugin;

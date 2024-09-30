@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import WaveSurfer from "wavesurfer.js";
+	import WaveSurfer from "@gryannote/wavesurfer.js";
 
 	export let currentVolume = 1;
 	export let show_volume_slider = false;

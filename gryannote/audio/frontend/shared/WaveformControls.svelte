@@ -3,8 +3,8 @@
 	import Magnifier from "./icons/Magnifier.svelte";
 	import { get_skip_rewind_amount } from "../shared/utils";
 	import type { I18nFormatter } from "@gradio/utils";
-	import WaveSurfer from "wavesurfer.js";
-	import GamepadPlugin, {type ButtonEvent} from "wavesurfer.js/dist/plugins/gamepad";
+	import WaveSurfer from "@gryannote/wavesurfer.js";
+	import GamepadPlugin, {type ButtonEvent} from "@gryannote/wavesurfer.js/dist/plugins/gamepad";
 	import type {WaveformOptions } from "./types";
 	import VolumeLevels from "./VolumeLevels.svelte";
 	import VolumeControl from "./VolumeControl.svelte";
