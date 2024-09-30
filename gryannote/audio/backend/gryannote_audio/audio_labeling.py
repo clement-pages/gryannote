@@ -103,7 +103,6 @@ class AudioLabeling(
         show_download_button=True,
         show_share_button: bool | None = None,
         show_minimap: bool = True,
-        editable: bool = True,
         min_length: int | None = None,
         max_length: int | None = None,
         waveform_options: WaveformOptions | dict | None = None,
@@ -131,7 +130,6 @@ class AudioLabeling(
             autoplay: Whether to automatically play the audio when the component is used as an output. Note: browsers will not autoplay audio files if the user has not interacted with the page yet.
             show_download_button: If True, will show a download button in the corner of the component for saving audio. If False, icon does not appear.
             show_share_button: If True, will show a share icon in the corner of the component that allows user to share outputs to Hugging Face Spaces Discussions. If False, icon does not appear. If set to None (default behavior), then the icon appears if this Gradio app is launched on Spaces, but not otherwise.
-            editable: If True, allows users to manipulate the audio file (if the component is interactive).
             show_minimap: Whether to show audio minimap on the player. Default to True.
             min_length: The minimum length of audio (in seconds) that the user can pass into the prediction function. If None, there is no minimum length.
             max_length: The maximum length of audio (in seconds) that the user can pass into the prediction function. If None, there is no maximum length.
@@ -177,8 +175,6 @@ class AudioLabeling(
             else show_share_button
         )
         self.show_minimap = show_minimap
-
-        self.editable = editable
 
         if waveform_options is None:
             self.waveform_options = WaveformOptions()

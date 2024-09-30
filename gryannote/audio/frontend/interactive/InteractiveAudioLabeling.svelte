@@ -10,14 +10,14 @@
 	import { Music } from "@gradio/icons";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData"
 	import type { IBlobEvent, IMediaRecorder } from "extendable-media-recorder";
-	import type { I18nFormatter } from "js/app/src/gradio_helper";
+	import type { I18nFormatter } from "@gradio/utils";
 	import AudioRecorder from "../recorder/AudioRecorder.svelte";
 	import StreamAudio from "../streaming/StreamAudio.svelte";
 	import { SelectSource } from "@gradio/atoms";
 	import type { WaveformOptions } from "../shared/types";
 	import Help  from "../shared/icons/Help.svelte"
 	import HelpDialog from "../shared/HelpDialog.svelte";
-    import AudioPlayerWithAnnotation from "../player/AudioPlayerWithAnnotation.svelte";
+    import AudioPlayer from "../player/AudioPlayer.svelte";
 
 	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
@@ -37,7 +37,6 @@
 	export let waveform_options: WaveformOptions = {};
 	export let dragging: boolean;
 	export let active_source: "microphone" | "upload";
-	export let editable = true;
 
 	// Needed for wasm support
 	const upload_fn = getContext<typeof upload_files>("upload_files");
@@ -270,7 +269,7 @@
 		absolute={true}
 	/>
 
-	<AudioPlayerWithAnnotation
+	<AudioPlayer
 		bind:mode
 		bind:isDialogOpen
 		{value}
@@ -279,7 +278,6 @@
 		{show_minimap}
 		{waveform_settings}
 		{waveform_options}
-		{editable}
 		interactive
 		on:stop
 		on:play

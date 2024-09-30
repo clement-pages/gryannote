@@ -9,22 +9,27 @@
 	import VolumeLevels from "./VolumeLevels.svelte";
 	import VolumeControl from "./VolumeControl.svelte";
 	import ZoomControl from "./ZoomControl.svelte";
-	import { onMount } from "svelte";
+	import { createEventDispatcher, onMount } from "svelte";
 
 	export let waveform: WaveSurfer;
 	export let wsGamepad: GamepadPlugin;
 	export let audio_duration: number;
 	export let i18n: I18nFormatter;
-	export let playing: boolean;
 	export let waveform_options: WaveformOptions = {};
-	export let show_volume_slider = false;
-	export let showZoomSlider = false;
 	export let isDialogOpen = false;
 
-	let playbackSpeeds = [0.5, 1, 1.5, 2];
-	let playbackSpeed = playbackSpeeds[1];
-
+	let showVolumeSlider = false;
 	let currentVolume = 1;
+	let showZoomSlider = false;
+	const playbackSpeeds = [0.5, 1, 1.5, 2];
+	let playbackSpeed = playbackSpeeds[1];
+	let playing: boolean = false;
+
+	const dispatch = createEventDispatcher<{
+		stop: undefined;
+		play: undefined;
+		pause: undefined;
+	}>();
 
 	function onGamepadButtonPressed(event: ButtonEvent): void {
 		switch(event.idx){
@@ -33,6 +38,29 @@
 			default: // do nothing
 		}
 	}
+
+	$: waveform.on("ready", () => {
+		if(waveform.options.autoplay){
+			waveform.play();
+		} else {
+			waveform.stop();
+		}
+	});
+
+	$: waveform.on("play", () => {
+		playing = true;
+		dispatch("play");
+	});
+
+	$: waveform.on("finish", () => {
+		playing = false;
+		dispatch("stop");
+	});
+
+	$: waveform.on("pause", () => {
+		playing = false;
+		dispatch("pause");
+	});
 
 	$: wsGamepad?.on("button-pressed", (e) => onGamepadButtonPressed(e));
 
@@ -55,17 +83,17 @@
 		<button
 			class="action icon volume"
 			aria-label="Adjust volume"
-			on:click={() => (show_volume_slider = !show_volume_slider)}
+			on:click={() => (showVolumeSlider = !showVolumeSlider)}
 		>
 			<VolumeLevels {currentVolume} />
 		</button>
 
-		{#if show_volume_slider}
-			<VolumeControl bind:currentVolume bind:show_volume_slider {waveform} />
+		{#if showVolumeSlider}
+			<VolumeControl bind:currentVolume bind:show_volume_slider={showVolumeSlider} {waveform} />
 		{/if}
 
 		<button
-			class:hidden={show_volume_slider}
+			class:hidden={showVolumeSlider}
 			class="playback icon"
 			aria-label={`Adjust playback speed to ${
 				playbackSpeeds[
