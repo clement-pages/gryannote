@@ -1,10 +1,12 @@
 <script lang="ts">
-	import type { Annotation, WaveformOptions , Label} from "../shared/types";
+	import type { WaveformOptions } from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 	import { Music,} from "@gradio/icons";
 	import WaveSurfer from "@gryannote/wavesurfer.js";
 	import GamepadPlugin from "@gryannote/wavesurfer.js/dist/plugins/gamepad.js";
 	import MiniMapPlugin from "@gryannote/wavesurfer.js/dist/plugins/minimap.js";
+	import TimelinePlugin from '@gryannote/wavesurfer.js/dist/plugins/timeline.js';
+	import HoverPlugin from '@gryannote/wavesurfer.js/dist/plugins/hover.js';
 	import WaveformControls from "../shared/WaveformControls.svelte";
 	import RegionsControl from "./RegionsControl.svelte";
 	import { Empty } from "@gradio/atoms";
@@ -26,14 +28,13 @@
 	let container: HTMLDivElement;
 	let waveform: WaveSurfer | undefined;
 	let wsGamepad: GamepadPlugin;
+	let wsTimeline: TimelinePlugin;
+	let wsHover: HoverPlugin;
 	let wsMinimap: MiniMapPlugin;
 
 	let timeRef: HTMLTimeElement;
 	let durationRef: HTMLTimeElement;
 	let audio_duration: number;
-
-	// correspondence between a Region and an Annotation
-	let regionsMap: Map<string, Annotation> = new Map();
 
 	let caption: Caption;
 
@@ -109,6 +110,24 @@
 	$: waveform?.on("ready", () => {
 		if(!wsGamepad){
 			wsGamepad = waveform.registerPlugin(GamepadPlugin.create());
+		}
+
+		if(!wsTimeline){
+			wsTimeline = waveform.registerPlugin(TimelinePlugin.create({
+				formatTimeCallback: formatTime,
+				timeInterval:0.5,
+				secondaryLabelOpacity:0.5,
+			}));
+		}
+
+		if(!wsHover){
+			wsHover = waveform.registerPlugin(HoverPlugin.create({
+					lineColor: '#ff0000',
+					lineWidth: 2,
+					labelBackground: '#555',
+					labelColor: '#fff',
+					labelSize: '11px',
+			}));
 		}
 
 		if(show_minimap && !wsMinimap){
