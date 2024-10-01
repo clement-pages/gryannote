@@ -127,6 +127,8 @@
 					labelBackground: '#555',
 					labelColor: '#fff',
 					labelSize: '11px',
+					// just cast seconds to string with 10e-3 precision
+					formatTimeCallback: (seconds: number) => seconds.toFixed(3),
 			}));
 		}
 
