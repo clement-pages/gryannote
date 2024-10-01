@@ -14,7 +14,7 @@
 	import AudioRecorder from "../recorder/AudioRecorder.svelte";
 	import StreamAudio from "../streaming/StreamAudio.svelte";
 	import { SelectSource } from "@gradio/atoms";
-	import type { WaveformOptions } from "../shared/types";
+	import type { WaveformOptions, TimelineOptions } from "../shared/types";
 	import Help  from "../shared/icons/Help.svelte"
 	import HelpDialog from "../shared/HelpDialog.svelte";
     import AudioPlayer from "../player/AudioPlayer.svelte";
@@ -35,6 +35,7 @@
 	export let show_minimap: boolean = true;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions = {};
+	export let timeline_options: TimelineOptions = {};
 	export let dragging: boolean;
 	export let active_source: "microphone" | "upload";
 
@@ -278,6 +279,7 @@
 		{show_minimap}
 		{waveform_settings}
 		{waveform_options}
+		{timeline_options}
 		interactive
 		on:stop
 		on:play

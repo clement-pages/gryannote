@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { WaveformOptions } from "../shared/types";
+	import type { TimelineOptions, WaveformOptions } from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 	import { Music,} from "@gradio/icons";
 	import WaveSurfer from "@gryannote/wavesurfer.js";
@@ -22,6 +22,7 @@
 	export let show_minimap: boolean = true;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
+	export let timeline_options: TimelineOptions;
 	export let isDialogOpen: boolean;
 	export let mode: string = "";
 
@@ -115,8 +116,7 @@
 		if(!wsTimeline){
 			wsTimeline = waveform.registerPlugin(TimelinePlugin.create({
 				formatTimeCallback: formatTime,
-				timeInterval:0.5,
-				secondaryLabelOpacity:0.5,
+				...timeline_options,
 			}));
 		}
 

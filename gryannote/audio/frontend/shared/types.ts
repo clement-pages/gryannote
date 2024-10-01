@@ -7,6 +7,17 @@ export type WaveformOptions = {
 	show_recording_waveform?: boolean;
 };
 
+export type TimelineOptions = {
+	height?: number
+	nsertPosition?: InsertPosition
+	primaryLabelInterval?: number
+	primaryLabelSpacing?: number,
+	secondaryLabelInterval?: number,
+	secondaryLabelOpacity?: number,
+	secondaryLabelSpacing?: number,
+	timeInterval?: number
+}
+
 export type Annotation = {
 	start: number
 	end: number
