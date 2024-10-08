@@ -1,5 +1,14 @@
 # Changelog
 
+## main
+
+### New features
+
+- add a timeline on the audio player. Timeline's style can be customised using the new `timeline_options` attribute of `AudioLabeling` component.
+See `TimelineOptions` documentation for more details about available options
+- add timestamp when hovering over waveform with mouse cursor. This feature can be custom using th nex `hover_options` attribute of `AudioLabeling` component.
+See `HoverOptions` documentation for more details about available options
+
 ## 0.3.0
 
 ### Breaking changes
