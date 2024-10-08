@@ -42,6 +42,56 @@ class WaveformOptions:
     sample_rate: int = 44100
 
 
+@dataclasses.dataclass
+class TimelineOptions:
+    """
+    A dataclass for specifying options for the timeline display in the `AudioLabeling` component.
+    Parameters:
+        height: Timeline height on player, default to 20
+        insertPosition: Timeline relative position
+        primaryLabelInterval: Interval between numeric labels in seconds
+        primaryLabelSpacing: Interval between numeric labels in timeIntervals (i.e notch count)
+        secondaryLabelInterval: Interval between secondary numeric labels in seconds
+        secondaryLabelOpacity: Opacity of the secondary labels, defaults to 0.25
+        secondaryLabelSpacing: Interval between secondary numeric labels in timeIntervals (i.e notch count)
+        timeInterval: Interval between ticks in seconds
+    """
+
+    # camelCase style is used here to match timeline's options in frontend
+    height: int | float = 20
+    insertPosition: Literal[
+        "afterbegin", "afterend", "beforebegin", "beforeend"
+    ] = "afterend"
+    primaryLabelInterval: int | float = 5
+    primaryLabelSpacing: int | float = 5
+    secondaryLabelInterval: int | float = 1
+    secondaryLabelOpacity: int | float = 0.25
+    secondaryLabelSpacing: int | float = 1
+    timeInterval: int | float = 1
+
+
+@dataclasses.dataclass
+class HoverOptions:
+    """
+    A dataclass for specifyinf options for the hover cursor display
+    in the `AudioLabeling` component.
+
+    Parameters:
+        labelBaground: color of the hover label background, default to grey
+        labelColor: color of the hover label text, default to white
+        labelSize: size of the hover label text in pixel, default to 11
+        lineColor: color of the hover line, default to red
+        lineWidth: width of the hover line in pixel, default to 2
+    """
+
+    # camelCase style is used here to match hover's options in frontend
+    labelBackground: str = "#555"
+    labelColor: str = "#fff"
+    labelSize: str | int | float = 11
+    lineColor: str = "#ff0000"
+    lineWidth: str | int | float = 2
+
+
 @document()
 class AudioLabeling(
     StreamingInput,
@@ -106,6 +156,8 @@ class AudioLabeling(
         min_length: int | None = None,
         max_length: int | None = None,
         waveform_options: WaveformOptions | dict | None = None,
+        timeline_options: TimelineOptions | dict | None = None,
+        hover_options: HoverOptions | dict | None = None,
     ):
         """
         Parameters:
@@ -134,6 +186,16 @@ class AudioLabeling(
             min_length: The minimum length of audio (in seconds) that the user can pass into the prediction function. If None, there is no minimum length.
             max_length: The maximum length of audio (in seconds) that the user can pass into the prediction function. If None, there is no maximum length.
             waveform_options: A dictionary of options for the waveform display. Options include: waveform_color (str), waveform_progress_color (str), show_controls (bool), skip_length (int). Default is None, which uses the default values for these options.
+            timeline_options:
+                A dictionary of options for the timeline display.
+                Options include: height, insertPosition, primaryLabelInterval, primaryLabelSpacing,
+                secondaryLabelInterval, secondaryLabelOpacity, secondaryLabelSpacing, timeInterval.
+                See `TimelineOptions` for more detail about these options
+            hover_options:
+                A dictionary of options for the hover cursor display
+                Options include: labelBackground, labelColor, labelSize, lineColor
+                and lineWidth.
+                See `HoverOptions` for more detail about these options
         """
         valid_sources = ["upload", "microphone"]
         if sources is None:
@@ -178,11 +240,30 @@ class AudioLabeling(
 
         if waveform_options is None:
             self.waveform_options = WaveformOptions()
-        self.waveform_options = (
-            WaveformOptions(**waveform_options)
-            if isinstance(waveform_options, dict)
-            else waveform_options
-        )
+        else:
+            self.waveform_options = (
+                WaveformOptions(**waveform_options)
+                if isinstance(waveform_options, dict)
+                else waveform_options
+            )
+
+        if timeline_options is None:
+            self.timeline_options = TimelineOptions()
+        else:
+            self.timeline_options = (
+                TimelineOptions(**timeline_options)
+                if isinstance(timeline_options, dict)
+                else timeline_options
+            )
+
+        if hover_options is None:
+            self.hover_options = HoverOptions()
+        else:
+            self.hover_options = (
+                HoverOptions(**hover_options)
+                if isinstance(hover_options, dict)
+                else hover_options
+            )
 
         # TODO: What if annotations don't match audio?
         if audio:
