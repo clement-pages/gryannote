@@ -2,9 +2,18 @@
 
 ## main
 
+### New features
+
+- add a timeline on the audio player. Timeline's style can be customised using the new `timeline_options` attribute of `AudioLabeling` component.
+See `TimelineOptions` documentation for more details about available options
+- add timestamp when hovering over waveform with mouse cursor. This feature can be custom using th nex `hover_options` attribute of `AudioLabeling` component.
+See `HoverOptions` documentation for more details about available options
+
+## 0.3.0
+
 ### Breaking changes
 
-- RTTM postprocessing does not need anymore the audio to be passed as return value of wrapped function, only `pyannote.core.Annotation`.
+- RTTM postprocessing no longer needs the audio to be passed as return value of the wrapped function, only `pyannote.core.Annotation`. (see `app/demo.py`)
 
 ### backend API
 
@@ -19,12 +28,12 @@ player = Player(audio=audio, annotations=annotations)
 demo = gr.Interface(lambda x : x, inputs=None, outputs=player)
 ```
 
-- add `default_pipeline` parameter to `PipelineSelection`. This parameter allows to select a default pipeline for the component dropdown.
+- add `default_pipeline` parameter to `PipelineSelection`. This parameter allows to select a default pipeline for the component's pipeline dropdown.
 ```python
     pipeline_selector = PipelineSelector(default_pipeline="pyannote/speaker-diarization-3.1")
 ```
 
-- The RTTM component can now be used to upload annotations to the audio labeling one !
+- The RTTM component can now be used to upload annotations to the audio labeling one!
 ```python
 audio_labeling = AudioLabeling(type="filepath")
 
@@ -36,8 +45,8 @@ rttm.upload(
 )
 ```
 
-
 ### improvements
+
 - **label an audio using a gamepad!** See [here](https://github.com/clement-pages/gryannote/tree/audio-labeling-with-gamepad/gryannote/audio#gamepad-shortcuts) to check the available shortcuts.
 ⚠️ This feature has been tested with a Battletron Nintendo Switch on Firefox, and may not work with any other device or browser.
 - add a minimap of the waveform on audio component. This minimap can be enable / disable by setting `show_minimap` to `True` (default) / `False` when instantiating `AudioLabeling`. For now, only the waveform
@@ -46,7 +55,7 @@ is displayed on the minimap, but it is planned to also show annotation in a futu
 - if audio is paused, time cursor will be set to the start of the active annotation only if this annotation is not visible on the screen.
 - replace arithmetic zoom (z = z + delta) by a geometric one (z = z * coef)
 - add new shortcuts to speed up zoom in / zoom out: `SHIFT+UP` / `SHIFT+DOWN`
-- Managing of region overlapped is now devolved to `@gryannote/wavesurfer.js`
+- Management of overlapped regions is now devolved to `@gryannote/wavesurfer.js`
 
 ### fixes
 

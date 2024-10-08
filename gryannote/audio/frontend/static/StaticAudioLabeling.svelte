@@ -4,9 +4,9 @@
 	import { ShareButton, BlockLabel } from "@gradio/atoms";
 	import { Download, Music } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
-	import AudioPlayerWithAnnotation from "../player/AudioPlayerWithAnnotation.svelte";
+	import AudioPlayer from "../player/AudioPlayer.svelte";
 	import { createEventDispatcher } from "svelte";
-	import type { WaveformOptions} from "../shared/types";
+	import type { WaveformOptions, TimelineOptions, HoverOptions } from "../shared/types";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
     import { DownloadLink } from "@gradio/wasm/svelte";
 
@@ -17,7 +17,9 @@
 	export let show_minimap: boolean = true;
 	export let i18n: I18nFormatter;
 	export let waveform_settings: Record<string, any>;
-	export let waveform_options: WaveformOptions;
+	export let waveform_options: WaveformOptions = {};
+	export let timeline_options: TimelineOptions = {};
+	export let hover_options: HoverOptions = {};
 
 	let show_share_button: boolean = false;
 
@@ -65,7 +67,7 @@
 			/>
 		{/if}
 	</div>
-	<AudioPlayerWithAnnotation
+	<AudioPlayer
 		isDialogOpen={false}
 		value={value}
 		interactive={false}
@@ -74,6 +76,8 @@
 		{show_minimap}
 		{waveform_settings}
 		{waveform_options}
+		{timeline_options}
+		{hover_options}
 		on:pause
 		on:play
 		on:stop

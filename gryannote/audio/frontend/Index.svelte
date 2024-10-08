@@ -3,7 +3,7 @@
 <script lang="ts">
 	import type { Gradio, ShareData } from "@gradio/utils";
 	import type { LoadingStatus } from "@gradio/statustracker";
-	import type { WaveformOptions} from "./shared/types";
+	import type { WaveformOptions, TimelineOptions, HoverOptions} from "./shared/types";
 	import AnnotatedAudioData from "./shared/AnnotatedAudioData"
 	import StaticAudioLabeling from "./static/StaticAudioLabeling.svelte";
 	import InteractiveAudioLabeling from "./interactive/InteractiveAudioLabeling.svelte";
@@ -30,8 +30,9 @@
 	export let min_width: number | undefined = undefined;
 	export let loading_status: LoadingStatus;
 	export let autoplay = false;
-	export let editable = true;
 	export let waveform_options: WaveformOptions = {};
+	export let timeline_options: TimelineOptions = {};
+	export let hover_options: HoverOptions = {};
 	export let pending: boolean;
 	export let streaming: boolean;
 	export let gradio: Gradio<{
@@ -139,6 +140,8 @@
 			{label}
 			{waveform_settings}
 			{waveform_options}
+			{timeline_options}
+			{hover_options}
 			on:share={(e) => gradio.dispatch("share", e.detail)}
 			on:error={(e) => gradio.dispatch("error", e.detail)}
 			on:play={() => gradio.dispatch("play")}
@@ -180,7 +183,6 @@
 			{active_source}
 			{pending}
 			{streaming}
-			{editable}
 			bind:dragging
 			on:edit={(e) => gradio.dispatch("edit", e.detail)}
 			on:play={() => gradio.dispatch("play")}
@@ -195,6 +197,8 @@
 			i18n={gradio.i18n}
 			{waveform_settings}
 			{waveform_options}
+			{timeline_options}
+			{hover_options}
 		>
 			<UploadText i18n={gradio.i18n} type="audio" />
 		</InteractiveAudioLabeling>
