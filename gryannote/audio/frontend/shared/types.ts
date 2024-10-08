@@ -8,24 +8,32 @@ export type WaveformOptions = {
 };
 
 export type TimelineOptions = {
-	height?: number
-	nsertPosition?: InsertPosition
-	primaryLabelInterval?: number
-	primaryLabelSpacing?: number,
-	secondaryLabelInterval?: number,
-	secondaryLabelOpacity?: number,
-	secondaryLabelSpacing?: number,
-	timeInterval?: number
+	height?: number;
+	insertPosition?: InsertPosition;
+	primaryLabelInterval?: number;
+	primaryLabelSpacing?: number;
+	secondaryLabelInterval?: number;
+	secondaryLabelOpacity?: number;
+	secondaryLabelSpacing?: number;
+	timeInterval?: number;
+}
+
+export type HoverOptions = {
+	labelBackground?: string;
+	labelColor?: string;
+	labelSize?: string | number;
+	lineColor?: string;
+	lineWidth?: string | number;
 }
 
 export type Annotation = {
-	start: number
-	end: number
-	speaker: string
+	start: number;
+	end: number;
+	speaker: string;
 }
 
 export type Label = {
-	name: string
-	color: string
-	shortcut: string
+	name: string;
+	color: string;
+	shortcut: string;
 }

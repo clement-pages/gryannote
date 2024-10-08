@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TimelineOptions, WaveformOptions } from "../shared/types";
+	import type { HoverOptions, TimelineOptions, WaveformOptions } from "../shared/types";
 	import type { I18nFormatter } from "@gradio/utils";
 	import { Music,} from "@gradio/icons";
 	import WaveSurfer from "@gryannote/wavesurfer.js";
@@ -23,6 +23,7 @@
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let timeline_options: TimelineOptions;
+	export let hover_options: HoverOptions;
 	export let isDialogOpen: boolean;
 	export let mode: string = "";
 
@@ -122,13 +123,9 @@
 
 		if(!wsHover){
 			wsHover = waveform.registerPlugin(HoverPlugin.create({
-					lineColor: '#ff0000',
-					lineWidth: 2,
-					labelBackground: '#555',
-					labelColor: '#fff',
-					labelSize: '11px',
-					// just cast seconds to string with 10e-3 precision
-					formatTimeCallback: (seconds: number) => seconds.toFixed(3),
+				// cast seconds to a string with 10e-3 precision
+				formatTimeCallback: (seconds: number) => seconds.toFixed(3),
+				...hover_options,
 			}));
 		}
 
