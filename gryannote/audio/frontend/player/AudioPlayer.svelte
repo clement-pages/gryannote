@@ -132,8 +132,8 @@
 
 		if(show_minimap && !wsMinimap){
 			wsMinimap = waveform.registerPlugin(MiniMapPlugin.create({
-				waveColor: "#9ca3af",
-            	progressColor: "#f97316",
+				waveColor: waveform_options.waveform_color,
+            	progressColor: waveform_options.waveform_color,
 				insertPosition: "beforebegin",
 				height: 30,
 			}));
