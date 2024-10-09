@@ -74,3 +74,48 @@ export const get_skip_rewind_amount = (
 	}
 	return (audio_duration / 100) * skip_length || 5;
 };
+
+export function renderLineWaveform(
+    channelData: Array<Float32Array | number[]>,
+    ctx: CanvasRenderingContext2D,
+    vScale?: number,
+  ) {
+
+	vScale = vScale || 1;
+
+    const drawChannel = (index: number) => {
+      const channel = channelData[index] || channelData[0];
+      const length = channel.length;
+      const { height } = ctx.canvas;
+      const halfHeight = height / 2;
+      const hScale = ctx.canvas.width / length;
+
+      ctx.moveTo(0, halfHeight);
+
+      let prevX = 0;
+      let max = 0;
+      for (let i = 0; i <= length; i++) {
+        const x = Math.round(i * hScale);
+
+        if (x > prevX) {
+          const h = Math.round(max * halfHeight * vScale) || 1;
+          const y = halfHeight + h * (index === 0 ? -1 : 1);
+          ctx.lineTo(prevX, y);
+          prevX = x;
+          max = 0;
+        }
+
+        const value = Math.abs(channel[i] || 0);
+        if (value > max) max = value;
+      }
+
+      ctx.lineTo(prevX, halfHeight);
+    }
+
+    ctx.beginPath();
+
+    drawChannel(0);
+    drawChannel(1);
+    ctx.fill();
+    ctx.closePath();
+  }

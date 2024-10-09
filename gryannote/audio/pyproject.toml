@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gryannote_audio"
-version = "0.8.0"
+version = "0.8.1"
 description = "audio component with speaker annotations"
 readme = "README.md"
 license = "MIT"

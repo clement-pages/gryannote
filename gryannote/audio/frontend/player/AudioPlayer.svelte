@@ -8,12 +8,13 @@
 	import TimelinePlugin from '@gryannote/wavesurfer.js/dist/plugins/timeline.js';
 	import HoverPlugin from '@gryannote/wavesurfer.js/dist/plugins/hover.js';
 	import WaveformControls from "../shared/WaveformControls.svelte";
+	import Caption from "./Caption.svelte";
 	import RegionsControl from "./RegionsControl.svelte";
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
 	import { createEventDispatcher } from "svelte";
-	import Caption from "./Caption.svelte"
+	import { renderLineWaveform } from "../shared/utils";
 
 	export let label: string;
 	export let i18n: I18nFormatter;
@@ -131,11 +132,29 @@
 
 		if(show_minimap && !wsMinimap){
 			wsMinimap = waveform.registerPlugin(MiniMapPlugin.create({
-				waveColor: "#9ca3af",
-            	progressColor: "#f97316",
+				waveColor: waveform_options.waveform_color,
+            	progressColor: waveform_options.waveform_color,
 				insertPosition: "beforebegin",
 				height: 30,
 			}));
+
+			wsMinimap.on("init", () => {
+				const miniWaveform = wsMinimap.getWaveform();
+				miniWaveform.setOptions({
+					renderFunction: (peaks, ctx) => {
+						// render mini waveform
+						renderLineWaveform(peaks, ctx);
+
+						// color waveform according to region's color:
+						ctx.globalCompositeOperation = "source-atop";
+						const pxPerSecond = miniWaveform.getWidth() / miniWaveform.getDuration();
+						regionsControl.getRegions().forEach(region => {
+							ctx.fillStyle = region.color.substring(0, 7);
+							ctx.fillRect(region.start * pxPerSecond, 0, (region.end -region.start) * pxPerSecond, 30);
+						});
+					}
+				});
+			});
 		}
 	});
 
@@ -204,7 +223,13 @@
 						{wsGamepad}
 						{i18n}
 						{value}
-						on:edit={(e) => dispatch("edit", e.detail)}
+						on:edit={(e) => {
+							if(wsMinimap){
+								// force mini-map to be redraw with updated regions
+								wsMinimap.getWaveform().setOptions({});
+							}
+							dispatch("edit", e.detail)
+						}}
 					/>
 
 				</div>
