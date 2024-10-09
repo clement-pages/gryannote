@@ -9,6 +9,10 @@ See `TimelineOptions` documentation for more details about available options
 - add timestamp when hovering over waveform with mouse cursor. This feature can be custom using th nex `hover_options` attribute of `AudioLabeling` component.
 See `HoverOptions` documentation for more details about available options
 
+### improvements
+
+- minimap's waveform is now colored according to segments added on the player.
+
 ## 0.3.0
 
 ### Breaking changes
