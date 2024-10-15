@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- Fix: update `gradio` version in package dependencies to 4.27.0.
+
 ## 0.3.0
 
 ### Breaking changes
