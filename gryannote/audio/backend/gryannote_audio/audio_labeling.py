@@ -14,6 +14,7 @@ from gradio.events import Events
 from gradio.exceptions import Error
 from gradio_client import utils as client_utils
 from gradio_client.documentation import document, set_documentation_group
+from moviepy.editor import VideoFileClip
 from pyannote.core import Annotation as PyannoteAnnotation
 
 from .core import AnnotadedAudioData
@@ -161,7 +162,9 @@ class AudioLabeling(
     ):
         """
         Parameters:
-            value: A [audio, pyannote annotations] tuple for the default value that `AudioLabeling` component is going to take. If callable, the function will be called whenever the app loads to set the initial value of the component.
+            value: A [path (audio/video) or numpy array (audio), pyannote annotations] tuple for the default value that `AudioLabeling` component is going to take.
+              File type (audio or video) is inferred from file extension. If a video is provided, audio will be extracted from the video.
+              If callable, the function will be called whenever the app loads to set the initial value of the component.
             audio: Init the `AudioLabeling` component with this audio
             annotations: Init the `AudioLabeling` with these annotations. Can be specified only if audio was set with the corresponding audio.
             sources: A list of sources permitted for audio. "upload" creates a box where user can drop an audio file, "microphone" creates a microphone input. The first element in the list will be used as the default source. If None, defaults to ["upload", "microphone"], or ["microphone"] if `streaming` is True.
@@ -277,6 +280,8 @@ class AudioLabeling(
         self.min_length = min_length
         self.max_length = max_length
 
+        self._video: FileData | None = None
+
         super().__init__(
             label=label,
             every=every,
@@ -301,12 +306,24 @@ class AudioLabeling(
         if payload is None:
             return payload
 
-        file_data = payload.file_data
+        # User can upload video or audio. If video has been provided, extract audio from it
+        if not payload.audio and payload.video:
+            video_clip = VideoFileClip(payload.video.path)
+            video_path = Path(payload.video.path).stem
+            audio_clip = video_clip.audio
+            audio_path = video_path + ".wav"
+            audio_clip.write_audiofile(audio_path)
+            audio = FileData(path=audio_path)
 
-        assert file_data.path
+            # keep track of video data
+            self._video = payload.video
+        else:
+            audio = payload.audio
+
+        assert audio.path
         # Need a unique name for the file to avoid re-using the same audio file if
         # a user submits the same audio file twice
-        temp_file_path = Path(file_data.path)
+        temp_file_path = Path(audio.path)
         output_file_name = str(
             temp_file_path.with_name(f"{temp_file_path.stem}{temp_file_path.suffix}")
         )
@@ -382,9 +399,11 @@ class AudioLabeling(
             audio_path = Path(audio)
             orig_name = audio_path.name if audio_path.exists() else None
 
-        file_data = FileData(path=str(audio_path), orig_name=orig_name)
+        audio_file = FileData(path=str(audio_path), orig_name=orig_name)
 
-        return AnnotadedAudioData(file_data=file_data, annotations=annotations)
+        return AnnotadedAudioData(
+            audio=audio_file, video=self._video, annotations=annotations
+        )
 
     def load_annotations(
         self,

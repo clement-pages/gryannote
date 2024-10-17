@@ -30,12 +30,14 @@ class Annotation(GradioModel):
 
 
 class AnnotadedAudioData(GradioModel):
-    file_data: FileData
+    audio: Optional[FileData] = None
+    video: Optional[FileData] = None
     annotations: Optional[List[Annotation]] = None
 
     def __init__(
         self,
-        file_data: FileData,
+        audio: Optional[FileData] = None,
+        video: Optional[FileData] = None,
         annotations: Optional[PyannoteAnnotation | List[Annotation]] = None,
         **kwargs,
     ):
@@ -44,7 +46,8 @@ class AnnotadedAudioData(GradioModel):
             annotations = self._prepare_annotations(annotations)
 
         super().__init__(
-            file_data=file_data,
+            audio=audio,
+            video=video,
             annotations=annotations,
             **kwargs,
         )

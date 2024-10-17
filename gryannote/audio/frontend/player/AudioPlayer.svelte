@@ -62,7 +62,7 @@
 			container: container,
 			...waveform_settings
 		});
-		resolve_wasm_src(value.file_data?.url).then((resolved_src) => {
+		resolve_wasm_src(value.audio?.url).then((resolved_src) => {
 			if (resolved_src && waveform) {
 				return waveform.load(resolved_src);
 			}
@@ -160,12 +160,12 @@
 
 	async function load_audio(data: string): Promise<void> {
 		await resolve_wasm_src(data).then((resolved_src) => {
-			if (!resolved_src || value.file_data?.is_stream) return;
+			if (!resolved_src || value.audio?.is_stream) return;
 			return waveform?.load(resolved_src);
 		});
 	}
 
-	$: url = value.file_data?.url;
+	$: url = value.audio?.url;
 	$: url && load_audio(url);
 
 </script>
@@ -174,10 +174,10 @@
 	<Empty size="small">
 		<Music />
 	</Empty>
-{:else if value.file_data.is_stream}
+{:else if value.audio?.is_stream}
 	<audio
 		class="standard-player"
-		src={value.file_data.url}
+		src={value.audio.url}
 		controls
 		autoplay={waveform_settings.autoplay}
 	/>

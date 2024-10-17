@@ -43,11 +43,11 @@
 
 {#if value !== null}
 	<div class="icon-buttons">
-		{#if show_download_button && value.file_data !== null}
+		{#if show_download_button && value.audio !== null}
 			<div class="download-button">
 				<DownloadLink
-					href={value.file_data.url}
-					download={value.file_data.orig_name || value.file_data.path}
+					href={value.audio.url}
+					download={value.audio.orig_name || value.audio.path}
 				>
 					<IconButton Icon={Download} label={i18n("common.download")}/>
 				</DownloadLink>

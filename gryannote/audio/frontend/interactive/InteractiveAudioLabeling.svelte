@@ -18,6 +18,7 @@
 	import Help  from "../shared/icons/Help.svelte"
 	import HelpDialog from "../shared/HelpDialog.svelte";
     import AudioPlayer from "../player/AudioPlayer.svelte";
+    import Video from "../shared/Video.svelte"
 
 	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
@@ -105,12 +106,7 @@
 				Boolean
 			) as FileData[]
 		)[0];
-		if(value === null){
-			value = new AnnotatedAudioData(fileData);
-		}
-		else{
-			value.file_data = fileData;
-		}
+		value = new AnnotatedAudioData(fileData, value?.annotations);
 		dispatch(event, value);
 	};
 
@@ -253,7 +249,7 @@
 	{:else if active_source === "upload"}
 		<!-- explicitly listed out audio mimetypes due to iOS bug not recognizing audio/* -->
 		<Upload
-			filetype="audio/aac,audio/midi,audio/mpeg,audio/ogg,audio/wav,audio/x-wav,audio/opus,audio/webm,audio/flac,audio/vnd.rn-realaudio,audio/x-ms-wma,audio/x-aiff,audio/amr,audio/*"
+			filetype="audio/aac,audio/midi,audio/mpeg,audio/ogg,audio/wav,audio/x-wav,audio/opus,audio/webm,audio/flac,audio/vnd.rn-realaudio,audio/x-ms-wma,audio/x-aiff,audio/amr,audio/*,video/mp4,video/avi,video/*"
 			on:load={handle_load}
 			bind:dragging
 			on:error={({ detail }) => dispatch("error", detail)}
@@ -265,11 +261,21 @@
 {:else}
 	<ModifyUpload
 		{i18n}
-		download={show_download_button ? value.file_data.url : null}
+		download={show_download_button ? value.audio?.url || value.video?.url : null}
 		on:clear={clear}
 		on:edit={() => (mode = "edit")}
 		absolute={true}
 	/>
+
+	{#if value.video !== null}
+		<Video
+			src={value.video.url}
+			preload="auto",
+			autoplay={false}
+		>
+
+		</Video>
+	{/if}
 
 	<AudioPlayer
 		bind:mode
