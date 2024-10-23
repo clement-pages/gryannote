@@ -47,6 +47,7 @@
 		stop: undefined;
 		play: undefined;
 		pause: undefined;
+		timeupdate: number;
 		edit: typeof value;
 	}>();
 
@@ -106,8 +107,11 @@
 
 	$: waveform?.on(
 		"timeupdate",
-		(currentTime: any) =>
-			timeRef && (timeRef.textContent = formatTime(currentTime))
+		(currentTime: number) =>{
+			timeRef && (timeRef.textContent = formatTime(currentTime));
+			// avoid submerging event listerners when audio is played
+			if(!waveform.isPlaying()) dispatch("timeupdate", currentTime);
+		}
 	);
 
 	$: waveform?.on("ready", () => {
@@ -271,7 +275,7 @@
 	}
 
 	.component-wrapper {
-		padding: 4em;
+		padding: 0.5em 4em 4em;
 	}
 
 	:global(::part(wrapper)) {

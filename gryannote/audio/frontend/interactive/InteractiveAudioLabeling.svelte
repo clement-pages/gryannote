@@ -18,6 +18,7 @@
 	import Help  from "../shared/icons/Help.svelte"
 	import HelpDialog from "../shared/HelpDialog.svelte";
     import AudioPlayer from "../player/AudioPlayer.svelte";
+	import VideoPlayer from "../player/VideoPlayer.svelte";
 
 	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
@@ -54,6 +55,9 @@
 	let pending_stream: Uint8Array[] = [];
 	let submit_pending_stream_on_pending_end = false;
 	let inited = false;
+
+	let video: HTMLVideoElement | undefined;
+	let videoCurrentTime: number = 0.;
 
 	let isDialogOpen = false;
 	let helpDialog: HelpDialog;
@@ -253,7 +257,7 @@
 	{:else if active_source === "upload"}
 		<!-- explicitly listed out audio mimetypes due to iOS bug not recognizing audio/* -->
 		<Upload
-			filetype="audio/aac,audio/midi,audio/mpeg,audio/ogg,audio/wav,audio/x-wav,audio/opus,audio/webm,audio/flac,audio/vnd.rn-realaudio,audio/x-ms-wma,audio/x-aiff,audio/amr,audio/*"
+			filetype="audio/aac,audio/midi,audio/mpeg,audio/ogg,audio/wav,audio/x-wav,audio/opus,audio/webm,audio/flac,audio/vnd.rn-realaudio,audio/x-ms-wma,audio/x-aiff,audio/amr,audio/*,video/mp4,video/mpeg,video/x-msvideo,video/ogg,video/webm,video/mp2t,video/3gpp,video/*"
 			on:load={handle_load}
 			bind:dragging
 			on:error={({ detail }) => dispatch("error", detail)}
@@ -271,6 +275,17 @@
 		absolute={true}
 	/>
 
+	{#if value.file_data.mime_type.includes("video") && value.file_data.url}
+		<VideoPlayer
+			bind:node={video}
+			bind:currentTime={videoCurrentTime}
+			src={value.file_data.url}
+			preload="auto"
+			autoplay={false}
+			muted={true}
+		/>
+	{/if}
+
 	<AudioPlayer
 		bind:mode
 		bind:isDialogOpen
@@ -284,9 +299,10 @@
 		{hover_options}
 		interactive
 		on:stop
-		on:play
-		on:pause
+		on:play={() => video?.play()}
+		on:pause={() => video?.pause()}
 		on:edit={(e) => dispatch("edit", e.detail)}
+		on:timeupdate={(e) => video.currentTime = e.detail}
 	/>
 {/if}
 

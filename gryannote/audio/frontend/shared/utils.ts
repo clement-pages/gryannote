@@ -49,7 +49,7 @@ export const process_audio = async (
 	return audioBufferToWav(trimmedAudioBuffer);
 };
 
-export function loaded(
+export function audio_loaded(
 	node: HTMLAudioElement,
 	{ autoplay }: LoadedParams = {}
 ): void {
@@ -119,3 +119,21 @@ export function renderLineWaveform(
     ctx.fill();
     ctx.closePath();
   }
+
+export function video_loaded(
+	node: HTMLVideoElement,
+	{ autoplay }: { autoplay: boolean }
+): any {
+	async function handle_playback(): Promise<void> {
+		if (!autoplay) return;
+		await node.play();
+	}
+
+	node.addEventListener("loadeddata", handle_playback);
+
+	return {
+		destroy(): void {
+			node.removeEventListener("loadeddata", handle_playback);
+		}
+	};
+}

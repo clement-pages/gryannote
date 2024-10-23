@@ -1,4 +1,4 @@
-"""gr.Audio() component."""
+"""gryannote_audio.AudioLabeling() component."""
 
 import dataclasses
 import warnings
@@ -7,6 +7,7 @@ from typing import Any, Callable, Literal, Tuple
 
 import httpx
 import numpy as np
+import torchaudio
 from gradio import Warning, processing_utils, utils
 from gradio.components.base import Component, StreamingInput, StreamingOutput
 from gradio.data_classes import FileData
@@ -133,6 +134,7 @@ class AudioLabeling(
         ) = None,
         *,
         audio: str | Path | Tuple[int, np.ndarray] | None = None,
+        video: str | Path | None = None,
         annotations: PyannoteAnnotation | None = None,
         sources: list[Literal["upload", "microphone"]] | str | None = None,
         type: Literal["numpy", "filepath"] = "numpy",
@@ -163,7 +165,8 @@ class AudioLabeling(
         Parameters:
             value: A [audio, pyannote annotations] tuple for the default value that `AudioLabeling` component is going to take. If callable, the function will be called whenever the app loads to set the initial value of the component.
             audio: Init the `AudioLabeling` component with this audio
-            annotations: Init the `AudioLabeling` with these annotations. Can be specified only if audio was set with the corresponding audio.
+            video: Init the `AudioLabeling` component with this video. Note: ignored if `audio` is not `None`
+            annotations: Init the `AudioLabeling` with these annotations. Can be specified only if audio was set with the corresponding audio or video.
             sources: A list of sources permitted for audio. "upload" creates a box where user can drop an audio file, "microphone" creates a microphone input. The first element in the list will be used as the default source. If None, defaults to ["upload", "microphone"], or ["microphone"] if `streaming` is True.
             type: The format the audio file is converted to before being passed into the prediction function. "numpy" converts the audio to a tuple consisting of: (int sample rate, numpy.array for the data), "filepath" passes a str path to a temporary file containing the audio.
             label: The label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.
@@ -265,13 +268,13 @@ class AudioLabeling(
                 else hover_options
             )
 
-        # TODO: What if annotations don't match audio?
-        if audio:
-            value = (audio, annotations)
+        # TODO: What if annotations don't match audio / video?
+        if audio or video:
+            value = (audio or video, annotations)
         else:
             if annotations:
                 warnings.warn(
-                    "Value for annotation parameter was ignored as no audio was provided"
+                    "Value for annotation parameter was ignored as no audio nor video was provided"
                 )
 
         self.min_length = min_length
@@ -311,7 +314,8 @@ class AudioLabeling(
             temp_file_path.with_name(f"{temp_file_path.stem}{temp_file_path.suffix}")
         )
 
-        sample_rate, data = processing_utils.audio_from_file(temp_file_path)
+        data, sample_rate = torchaudio.load(temp_file_path)
+        # sample_rate, data = processing_utils.audio_from_file(temp_file_path)
 
         duration = len(data) / sample_rate
         if self.min_length is not None and duration < self.min_length:
@@ -463,14 +467,17 @@ class AudioLabeling(
 
 
 def Player(
-    audio: str | Path | Tuple[int, np.ndarray],
+    audio: str | Path | Tuple[int, np.ndarray] | None = None,
+    video: str | Path | None = None,
     annotations: PyannoteAnnotation | None = None,
     label: str | None = None,
 ):
     """
     Parameters:
-        audio: str | Path | Tuple(int, np.ndarray)
+        audio: str | Path | Tuple(int, np.ndarray), optional
             audio to play, as a string, Path object or tuple (sample rate, data)
+        video: str | Path, optional
+            video to play. Note: ignored if `audio` is not `None`.
         annotations: pyannote.core.Annotation, optional
             annotations to load on the audio, for visualization purposes only.
         If you want be able to edit them, use `AudioLabeling` component instead.
@@ -480,17 +487,17 @@ def Player(
             in a `gr.Interface`, the label will be the name of the parameter this component
             is assigned to.
     """
-    if isinstance(audio, (str, Path)):
+    if not audio and not video:
+        raise ValueError("At least audio or video must be specified")
+
+    if isinstance(audio, (str, Path)) or video:
         type = "filepath"
-    elif isinstance(audio, tuple):
-        type = "numpy"
     else:
-        raise ValueError(
-            "audio must be a passed as a string, a Path object or tuple (int, numpy.array)"
-        )
+        type = "numpy"
 
     return AudioLabeling(
         audio=audio,
+        video=video,
         annotations=annotations,
         type=type,
         interactive=False,
