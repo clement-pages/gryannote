@@ -19,6 +19,7 @@ A video file can also be upload directly from the interface when using `AudioLab
 ### Fixes
 
 - fix(audio): fix playback of a previously loaded audio when loading and playing a new one
+- fix(audio): do not allow to edit regions and caption when using static mode of `gryannote_audio`
 
 ### improvements
 
