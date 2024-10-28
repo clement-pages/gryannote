@@ -302,7 +302,9 @@
 		on:play={() => video?.play()}
 		on:pause={() => video?.pause()}
 		on:edit={(e) => dispatch("edit", e.detail)}
-		on:timeupdate={(e) => video.currentTime = e.detail}
+		on:timeupdate={(e) => {
+			if(video) video.currentTime = e.detail
+		}}
 	/>
 {/if}
 
