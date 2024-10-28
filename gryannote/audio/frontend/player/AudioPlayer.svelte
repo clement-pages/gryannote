@@ -21,7 +21,7 @@
 	export let value: AnnotatedAudioData | null = null;
 	export let interactive = true;
 	export let show_minimap: boolean = true;
-	export let waveform: WaveSurfer | undefined;
+	export let waveform: WaveSurfer | null = null;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let timeline_options: TimelineOptions;
@@ -224,6 +224,7 @@
 						{adjustTimeCursorPosition}
 						{waveform}
 						{caption}
+						{interactive}
 						{wsGamepad}
 						{i18n}
 						{value}
