@@ -61,6 +61,10 @@
 
 	let video: HTMLVideoElement | undefined;
 	let videoCurrentTime: number = 0.;
+	let videoURL: string | undefined;
+	$: if(!videoURL && value?.file_data?.mime_type?.includes("video")){
+		videoURL = value.file_data.url;
+	}
 
 	let isDialogOpen = false;
 	let helpDialog: HelpDialog;
@@ -206,6 +210,7 @@
 		dispatch("clear");
 		mode = "";
 		value = null;
+		videoURL = "";
 
 		if(waveform) waveform.destroy();
 	}
@@ -280,11 +285,11 @@
 		absolute={true}
 	/>
 
-	{#if value.file_data.mime_type.includes("video") && value.file_data.url}
+	{#if videoURL}
 		<VideoPlayer
 			bind:node={video}
 			bind:currentTime={videoCurrentTime}
-			src={value.file_data.url}
+			src={videoURL}
 			preload="auto"
 			autoplay={false}
 			muted={true}

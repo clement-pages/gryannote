@@ -69,6 +69,7 @@
 			/>
 		{/if}
 	</div>
+	<!--TODO: do not hardcore following format list-->
 	{#if ["mp4", "avi", "webm", "mov",].includes(value.file_data.url.split(".").pop())}
 		<VideoPlayer
 			bind:node={video}
