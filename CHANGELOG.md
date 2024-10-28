@@ -16,6 +16,10 @@ player = Player(video="video.mp4")
 
 A video file can also be upload directly from the interface when using `AudioLabeling` in interactive mode.
 
+### Fixes
+
+- fix(audio): fix playback of a previously loaded audio when loading and playing a new one
+
 ### improvements
 
 - minimap's waveform is now colored according to segments added on the player.

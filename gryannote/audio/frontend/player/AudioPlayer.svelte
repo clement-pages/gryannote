@@ -21,6 +21,7 @@
 	export let value: AnnotatedAudioData | null = null;
 	export let interactive = true;
 	export let show_minimap: boolean = true;
+	export let waveform: WaveSurfer | undefined;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let timeline_options: TimelineOptions;
@@ -29,7 +30,6 @@
 	export let mode: string = "";
 
 	let container: HTMLDivElement;
-	let waveform: WaveSurfer | undefined;
 	let wsGamepad: GamepadPlugin;
 	let wsTimeline: TimelinePlugin;
 	let wsHover: HoverPlugin;
