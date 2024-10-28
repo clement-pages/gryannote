@@ -7,6 +7,7 @@ from typing import Any, Callable, Literal, Tuple
 
 import httpx
 import numpy as np
+import torch
 import torchaudio
 from gradio import Warning, processing_utils, utils
 from gradio.components.base import Component, StreamingInput, StreamingOutput
@@ -314,8 +315,13 @@ class AudioLabeling(
             temp_file_path.with_name(f"{temp_file_path.stem}{temp_file_path.suffix}")
         )
 
-        data, sample_rate = torchaudio.load(temp_file_path)
-        # sample_rate, data = processing_utils.audio_from_file(temp_file_path)
+        if file_data.mime_type and "video" in file_data.mime_type:
+            # extract audio from video and temporary save it into the cache
+            data, sample_rate = torchaudio.load(temp_file_path)
+            # save in cache is needed to avoid conversion issue(s) in the rest of the method
+            torchaudio.save(temp_file_path, data, sample_rate)
+
+        sample_rate, data = processing_utils.audio_from_file(temp_file_path)
 
         duration = len(data) / sample_rate
         if self.min_length is not None and duration < self.min_length:
