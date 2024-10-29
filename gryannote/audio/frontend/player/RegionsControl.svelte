@@ -451,6 +451,25 @@
 		}
 	}
 
+	function setMode(newMode: string): void {
+		if(!mode && !newMode) return;
+
+		if(mode){
+			// disabling mode case
+			if(!newMode || mode == newMode){
+				document.getElementById(`${mode}-button`).blur();
+				mode = "";
+				return;
+			}
+			// switching mode case
+			mode = newMode;
+		} else{
+			// enabling mode case
+			 mode = newMode;
+			 document.getElementById(`${mode}-button`).focus();
+		}
+	}
+
 	$: waveform.on("ready", () => {
 		if(!wsGamepad){
 			wsGamepad = waveform.registerPlugin(GamepadPlugin.create());
@@ -472,7 +491,6 @@
 						case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
 						default: setActiveRegion(region); region.play();
 					}
-					mode = "";
 				});
 				wsRegions?.on("region-updated", (region) => {
 					onRegionUpdate(region);
@@ -516,7 +534,7 @@
 			switch(e.key){
 				case "ArrowLeft": onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
 				case "ArrowRight": onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
-				case "Escape": setActiveRegion(null); break;
+				case "Escape": setActiveRegion(null); setMode(""); break;
 				case "Tab": e.preventDefault(); selectRegion(e.shiftKey? "backward" : "forward"); break;
 				case "Delete": onRegionRemove("Delete", e.shiftKey); break;
 				case "Backspace": onRegionRemove("Backspace", e.shiftKey); break;
@@ -531,6 +549,11 @@
 				default: //do nothing
 			}
 		});
+		// this is needed to keep focus on mode button
+		window.addEventListener("click", (e: MouseEvent) => {
+			if(!mode) return;
+			document.getElementById(`${mode}-button`).focus();
+		})
 	});
 
 </script>
@@ -539,7 +562,7 @@
 	<div class="regions-actions">
 		{#if interactive}
 			<button
-				class="action icon"
+				class="icon"
 				aria-label="Reset annotations"
 				title={i18n("Reset annotations")}
 				on:click={resetRegions}
@@ -548,18 +571,20 @@
 			</button>
 		{/if}
 		<button
-			class="action icon remove-button"
+			class="icon"
+			id="remove-button"
 			aria-label="Remove an annotation"
 			title={i18n("Remove an annotation")}
-			on:click={() => mode = "remove"}
+			on:click={() => setMode("remove")}
 		>
 			<Gum/>
 		</button>
 		<button
-			class="action icon trim-button"
+			class="icon"
+			id="split-button"
 			aria-label="Split an annotation"
 			title={i18n("Split an annotation")}
-			on:click={() => mode = "split"}
+			on:click={() => setMode("split")}
 		>
 			<Trim/>
 		</button>
@@ -567,32 +592,22 @@
 {/if}
 
 <style>
-	.action {
-		width: var(--size-5);
-		width: var(--size-5);
-		color: var(--neutral-400);
-		margin-left: var(--spacing-md);
-	}
-
 	.regions-actions {
 		display: flex;
 		justify-self: self-end;
 		align-items: center;
 	}
 
-	.icon:hover {
-		color: var(--color-accent);
-	}
-
-	.remove-button, .trim-button {
+	.icon {
+		width: var(--size-5);
+		width: var(--size-5);
+		color: var(--neutral-400);
+		margin-left: var(--spacing-md);
 		fill: var(--neutral-400);
 	}
 
-	.remove-button:hover, .remove-button:focus {
-		fill: var(--color-accent);
+	.icon:hover, .icon:focus {
+		color: var(--color-accent);
 	}
 
-	.trim-button:hover, .trim-button:focus {
-		fill: var(--color-accent);
-	}
 </style>
