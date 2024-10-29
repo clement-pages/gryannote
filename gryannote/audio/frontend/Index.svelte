@@ -195,6 +195,8 @@
 			on:clear={() => gradio.dispatch("clear")}
 			on:error={handle_error}
 			i18n={gradio.i18n}
+			upload={gradio.client.upload}
+			stream_handler={gradio.client.stream}
 			{waveform_settings}
 			{waveform_options}
 			{timeline_options}

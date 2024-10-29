@@ -2,9 +2,9 @@
 	import { getContext, onDestroy, createEventDispatcher } from "svelte";
 	import { Upload, ModifyUpload } from "@gradio/upload";
 	import {
-		upload,
 		prepare_files, FileData,
-		type upload_files
+		type upload_files,
+		type Client
 	} from "@gradio/client";
 	import { BlockLabel } from "@gradio/atoms";
 	import { Music } from "@gradio/icons";
@@ -39,6 +39,9 @@
 	export let hover_options: HoverOptions = {};
 	export let dragging: boolean;
 	export let active_source: "microphone" | "upload";
+	export let max_file_size: number | null = null;
+	export let upload: Client["upload"];
+	export let stream_handler: Client["stream"];
 
 	// Needed for wasm support
 	const upload_fn = getContext<typeof upload_files>("upload_files");
@@ -101,7 +104,7 @@
 		let _audio_blob = new File(blobs, "audio.wav");
 		const val = await prepare_files([_audio_blob], event === "stream");
 		let fileData = (
-			(await upload(val, root, undefined, upload_fn))?.filter(
+			(await upload(val, root, undefined, max_file_size || undefined))?.filter(
 				Boolean
 			) as FileData[]
 		)[0];
@@ -258,6 +261,9 @@
 			bind:dragging
 			on:error={({ detail }) => dispatch("error", detail)}
 			{root}
+			{max_file_size}
+			{upload}
+			{stream_handler}
 		>
 			<slot />
 		</Upload>
