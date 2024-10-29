@@ -10,6 +10,7 @@
 	import { Music } from "@gradio/icons";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData"
 	import type { IBlobEvent, IMediaRecorder } from "extendable-media-recorder";
+	import WaveSurfer from "@gryannote/wavesurfer.js";
 	import type { I18nFormatter } from "@gradio/utils";
 	import AudioRecorder from "../recorder/AudioRecorder.svelte";
 	import StreamAudio from "../streaming/StreamAudio.svelte";
@@ -18,6 +19,7 @@
 	import Help  from "../shared/icons/Help.svelte"
 	import HelpDialog from "../shared/HelpDialog.svelte";
     import AudioPlayer from "../player/AudioPlayer.svelte";
+	import VideoPlayer from "../player/VideoPlayer.svelte";
 
 	export let value: null | AnnotatedAudioData = null;
 	export let label: string;
@@ -57,6 +59,15 @@
 	let pending_stream: Uint8Array[] = [];
 	let submit_pending_stream_on_pending_end = false;
 	let inited = false;
+
+	let waveform: WaveSurfer | undefined;
+
+	let video: HTMLVideoElement | undefined;
+	let videoCurrentTime: number = 0.;
+	let videoURL: string | undefined;
+	$: if(!videoURL && value?.file_data?.mime_type?.includes("video")){
+		videoURL = value.file_data.url;
+	}
 
 	let isDialogOpen = false;
 	let helpDialog: HelpDialog;
@@ -202,6 +213,9 @@
 		dispatch("clear");
 		mode = "";
 		value = null;
+		videoURL = "";
+
+		if(waveform) waveform.destroy();
 	}
 
 	function handle_load({ detail }: { detail: FileData }): void {
@@ -256,7 +270,7 @@
 	{:else if active_source === "upload"}
 		<!-- explicitly listed out audio mimetypes due to iOS bug not recognizing audio/* -->
 		<Upload
-			filetype="audio/aac,audio/midi,audio/mpeg,audio/ogg,audio/wav,audio/x-wav,audio/opus,audio/webm,audio/flac,audio/vnd.rn-realaudio,audio/x-ms-wma,audio/x-aiff,audio/amr,audio/*"
+			filetype="audio/aac,audio/midi,audio/mpeg,audio/ogg,audio/wav,audio/x-wav,audio/opus,audio/webm,audio/flac,audio/vnd.rn-realaudio,audio/x-ms-wma,audio/x-aiff,audio/amr,audio/*,video/mp4,video/mpeg,video/x-msvideo,video/ogg,video/webm,video/mp2t,video/3gpp,video/*"
 			on:load={handle_load}
 			bind:dragging
 			on:error={({ detail }) => dispatch("error", detail)}
@@ -277,9 +291,21 @@
 		absolute={true}
 	/>
 
+	{#if videoURL}
+		<VideoPlayer
+			bind:node={video}
+			bind:currentTime={videoCurrentTime}
+			src={videoURL}
+			preload="auto"
+			autoplay={false}
+			muted={true}
+		/>
+	{/if}
+
 	<AudioPlayer
 		bind:mode
 		bind:isDialogOpen
+		bind:waveform
 		{value}
 		{label}
 		{i18n}
@@ -290,9 +316,12 @@
 		{hover_options}
 		interactive
 		on:stop
-		on:play
-		on:pause
+		on:play={() => video?.play()}
+		on:pause={() => video?.pause()}
 		on:edit={(e) => dispatch("edit", e.detail)}
+		on:timeupdate={(e) => {
+			if(video) video.currentTime = e.detail
+		}}
 	/>
 {/if}
 

@@ -21,6 +21,7 @@
 	export let value: AnnotatedAudioData | null = null;
 	export let interactive = true;
 	export let show_minimap: boolean = true;
+	export let waveform: WaveSurfer | null = null;
 	export let waveform_settings: Record<string, any>;
 	export let waveform_options: WaveformOptions;
 	export let timeline_options: TimelineOptions;
@@ -29,7 +30,6 @@
 	export let mode: string = "";
 
 	let container: HTMLDivElement;
-	let waveform: WaveSurfer | undefined;
 	let wsGamepad: GamepadPlugin;
 	let wsTimeline: TimelinePlugin;
 	let wsHover: HoverPlugin;
@@ -47,6 +47,7 @@
 		stop: undefined;
 		play: undefined;
 		pause: undefined;
+		timeupdate: number;
 		edit: typeof value;
 	}>();
 
@@ -106,8 +107,11 @@
 
 	$: waveform?.on(
 		"timeupdate",
-		(currentTime: any) =>
-			timeRef && (timeRef.textContent = formatTime(currentTime))
+		(currentTime: number) =>{
+			timeRef && (timeRef.textContent = formatTime(currentTime));
+			// avoid submerging event listerners when audio is played
+			if(!waveform.isPlaying()) dispatch("timeupdate", currentTime);
+		}
 	);
 
 	$: waveform?.on("ready", () => {
@@ -220,6 +224,7 @@
 						{adjustTimeCursorPosition}
 						{waveform}
 						{caption}
+						{interactive}
 						{wsGamepad}
 						{i18n}
 						{value}
@@ -271,7 +276,7 @@
 	}
 
 	.component-wrapper {
-		padding: 4em;
+		padding: 0.5em 4em 4em;
 	}
 
 	:global(::part(wrapper)) {

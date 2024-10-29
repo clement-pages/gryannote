@@ -5,6 +5,7 @@
 	import { Download, Music } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
 	import AudioPlayer from "../player/AudioPlayer.svelte";
+	import VideoPlayer from "../player/VideoPlayer.svelte";
 	import { createEventDispatcher } from "svelte";
 	import type { WaveformOptions, TimelineOptions, HoverOptions } from "../shared/types";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
@@ -22,6 +23,7 @@
 	export let hover_options: HoverOptions = {};
 
 	let show_share_button: boolean = false;
+	let video: HTMLVideoElement | undefined;
 
 	const dispatch = createEventDispatcher<{
 		change: typeof value;
@@ -67,6 +69,16 @@
 			/>
 		{/if}
 	</div>
+	<!--TODO: do not hardcore following format list-->
+	{#if ["mp4", "avi", "webm", "mov",].includes(value.file_data.url.split(".").pop())}
+		<VideoPlayer
+			bind:node={video}
+			src={value.file_data.url}
+			preload="auto"
+			autoplay={false}
+			muted={true}
+		/>
+	{/if}
 	<AudioPlayer
 		isDialogOpen={false}
 		value={value}
@@ -78,9 +90,12 @@
 		{waveform_options}
 		{timeline_options}
 		{hover_options}
-		on:pause
-		on:play
 		on:stop
+		on:play={() => video?.play()}
+		on:pause={() => video?.pause()}
+		on:timeupdate={(e) => {
+			if(video) video.currentTime = e.detail;
+		}}
 	/>
 {:else}
 	<Empty size="small">

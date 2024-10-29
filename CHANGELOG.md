@@ -8,6 +8,18 @@
 See `TimelineOptions` documentation for more details about available options
 - add timestamp when hovering over waveform with mouse cursor. This feature can be custom using th nex `hover_options` attribute of `AudioLabeling` component.
 See `HoverOptions` documentation for more details about available options
+- add support for video:
+```python
+from gryannote_audio import Player
+player = Player(video="video.mp4")
+```
+
+A video file can also be upload directly from the interface when using `AudioLabeling` in interactive mode.
+
+### Fixes
+
+- fix(audio): fix playback of a previously loaded audio when loading and playing a new one
+- fix(audio): do not allow to edit regions and caption when using static mode of `gryannote_audio`
 
 ### improvements
 

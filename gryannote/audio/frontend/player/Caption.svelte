@@ -211,6 +211,9 @@
             // do not process keyboard shortcuts when a dialog popup is open
             if(isDialogOpen) return;
 
+            // if component is in static mode, do not allow to use keyboard shortcuts
+            if(!interactive) return;
+
             if(e.key.match(/^[a-zA-Z]$/)){
                 let shortcut = e.key.toUpperCase();
                 setActiveLabel(shortcut);
