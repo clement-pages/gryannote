@@ -1,13 +1,13 @@
 <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg 
-	version="1.1" 
-	id="Capa_1" 
-	xmlns="http://www.w3.org/2000/svg" 
-	xmlns:xlink="http://www.w3.org/1999/xlink" 
-	width="100%" 
+<svg
+	version="1.1"
+	id="Capa_1"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="100%"
 	height="100%"
 	viewBox="0 0 360 360"
-	color="#9CA3AF"
+	fill="currentColor"
 
 >
 <g>
