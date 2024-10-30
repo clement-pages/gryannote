@@ -24,6 +24,8 @@ A video file can also be upload directly from the interface when using `AudioLab
 ### improvements
 
 - minimap's waveform is now colored according to segments added on the player.
+- improve behavior of region's button (remove and trim button). Now these buttons will keep focus while the user is in removing or trimming mode, respectively. Also, it is now possible to remove or trim several regions in a row, without having to click
+again on the corresponding button.
 
 ## 0.3.0
 
