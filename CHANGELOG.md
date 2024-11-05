@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- Fix annotation removing issue when trying to remove overlapped annotation
+
 ## 0.3.1
 
 - Fix: update `gradio` version in package dependencies to 4.27.0.
