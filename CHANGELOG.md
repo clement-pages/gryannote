@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+
+- dependency: downgrade `fastapi` version to 0.112.4 instead of 0.115.4
+
 ## 0.3.2
 
 - Fix annotation removing issue when trying to remove overlapped annotation
