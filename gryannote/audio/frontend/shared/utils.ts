@@ -60,6 +60,14 @@ export function audio_loaded(
 	}
 }
 
+export function createBeep(audioContext: AudioContext, options: {"type": OscillatorType, "freq": number}){
+	const beep = audioContext.createOscillator();
+	beep.type = options.type;
+	beep.frequency.value = options.freq;
+
+	return beep
+}
+
 export const skip_audio = (waveform: WaveSurfer, amount: number): void => {
 	if (!waveform) return;
 	waveform.skip(amount);

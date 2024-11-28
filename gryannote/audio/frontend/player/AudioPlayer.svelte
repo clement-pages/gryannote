@@ -13,8 +13,9 @@
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
-	import { createEventDispatcher } from "svelte";
 	import { renderLineWaveform } from "../shared/utils";
+	import { createBeep } from "../shared/utils"
+	import { createEventDispatcher, onMount } from "svelte";
 
 	export let label: string;
 	export let i18n: I18nFormatter;
@@ -43,6 +44,9 @@
 
 	let regionsControl: RegionsControl;
 
+	const audioContext = new AudioContext()
+	const gainNode = audioContext.createGain()
+
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
 		play: undefined;
@@ -68,6 +72,16 @@
 				return waveform.load(resolved_src);
 			}
 		});
+	}
+
+	/**
+	 * Play beep for `duration` seconds
+	 * @param duration beep duration, in seconds
+	 */
+	function playBeep(duration: number): void {
+		const now = audioContext.currentTime
+		gainNode.gain.setValueAtTime(1, now);
+		gainNode.gain.setValueAtTime(0, now + duration);
 	}
 
 	/**
@@ -172,6 +186,14 @@
 	$: url = value.file_data?.url;
 	$: url && load_audio(url);
 
+	onMount(() => {
+		gainNode.connect(audioContext.destination);
+		gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+		const beep = createBeep(audioContext, {"type": "sine", "freq": 800});
+		beep.connect(gainNode);
+		beep.start();
+	});
+
 </script>
 
 {#if value === null}
@@ -235,6 +257,9 @@
 							}
 							dispatch("edit", e.detail)
 						}}
+						on:edit={(e) => dispatch("edit", e.detail)}
+						on:region-in={(region) => {if(waveform.isPlaying()) playBeep(0.05)}}
+						on:region-out={(region) => {if(waveform.isPlaying()) playBeep(0.05)}}
 					/>
 
 				</div>

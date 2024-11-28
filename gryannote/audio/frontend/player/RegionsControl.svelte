@@ -36,6 +36,8 @@
 
     const dispatch = createEventDispatcher<{
 		edit: typeof value;
+		"region-in": Region;
+		"region-out": Region;
 	}>();
 
 	/**
@@ -485,15 +487,21 @@
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
 			if(interactive){
 				// add region-clicked event listener
-				wsRegions?.on("region-clicked", (region, e) => {
+				wsRegions.on("region-clicked", (region, e) => {
 					switch(mode){
 						case "remove": removeRegion(region); break;
 						case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
 						default: setActiveRegion(region); region.play();
 					}
 				});
-				wsRegions?.on("region-updated", (region) => {
+				wsRegions.on("region-updated", (region) => {
 					onRegionUpdate(region);
+				});
+				wsRegions.on("region-in", (region: Region) => {
+					dispatch("region-in", region);
+				});
+				wsRegions.on("region-out", (region: Region) => {
+					dispatch("region-out", region);
 				});
 			}
 		}
