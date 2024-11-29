@@ -44,8 +44,10 @@
 
 	let regionsControl: RegionsControl;
 
-	const audioContext = new AudioContext()
-	const gainNode = audioContext.createGain()
+	const audioContext = new AudioContext();
+	const gainNodeIn = audioContext.createGain();
+	const gainNodeOut = audioContext.createGain();
+	const beepDuration = 0.05;
 
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
@@ -76,12 +78,23 @@
 
 	/**
 	 * Play beep for `duration` seconds
+	 * @param gainNode gain mapped to the bepp tp play
 	 * @param duration beep duration, in seconds
 	 */
-	function playBeep(duration: number): void {
+	function playBeep(gainNode: GainNode, duration: number): void {
 		const now = audioContext.currentTime
 		gainNode.gain.setValueAtTime(1, now);
 		gainNode.gain.setValueAtTime(0, now + duration);
+	}
+
+	function onRegionInOut(event: "region-in" | "region-out"): void {
+		const checkbox = document.getElementById("beep-checkbox") as HTMLInputElement;
+		const beepOn = checkbox.checked;
+		const gainNode = (event === "region-in") ? gainNodeIn : gainNodeOut;
+
+		if(waveform.isPlaying() && beepOn){
+			playBeep(gainNode, beepDuration);
+		}
 	}
 
 	/**
@@ -187,11 +200,17 @@
 	$: url && load_audio(url);
 
 	onMount(() => {
-		gainNode.connect(audioContext.destination);
-		gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-		const beep = createBeep(audioContext, {"type": "sine", "freq": 800});
-		beep.connect(gainNode);
-		beep.start();
+		gainNodeIn.connect(audioContext.destination);
+		gainNodeIn.gain.setValueAtTime(0, audioContext.currentTime);
+		const beepIn = createBeep(audioContext, {"type": "sine", "freq": 1000});
+		beepIn.connect(gainNodeIn);
+		beepIn.start();
+
+		gainNodeOut.connect(audioContext.destination);
+		gainNodeOut.gain.setValueAtTime(0, audioContext.currentTime);
+		const beepOut = createBeep(audioContext, {"type": "sine", "freq": 500});
+		beepOut.connect(gainNodeOut);
+		beepOut.start();
 	});
 
 </script>
@@ -237,6 +256,7 @@
 						on:stop={() => dispatch("stop")}
 						on:pause={() => dispatch("pause")}
 					/>
+					<input type="checkbox" id="beep-checkbox">
 				</div>
 				<div class="regions-controls">
 					<RegionsControl
@@ -258,10 +278,9 @@
 							dispatch("edit", e.detail)
 						}}
 						on:edit={(e) => dispatch("edit", e.detail)}
-						on:region-in={(region) => {if(waveform.isPlaying()) playBeep(0.05)}}
-						on:region-out={(region) => {if(waveform.isPlaying()) playBeep(0.05)}}
+						on:region-in={(region) => onRegionInOut("region-in")}
+						on:region-out={(region) => onRegionInOut("region-out")}
 					/>
-
 				</div>
 			</div>
 			{#if value}
