@@ -256,7 +256,6 @@
 .caption-container {
     display: flex;
     justify-content: center;
-    margin-top: 1em;
 }
 
 div:global(.caption-container button){

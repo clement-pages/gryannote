@@ -256,7 +256,10 @@
 						on:stop={() => dispatch("stop")}
 						on:pause={() => dispatch("pause")}
 					/>
-					<input type="checkbox" id="beep-checkbox">
+					<label>
+						<input type="checkbox" id="beep-checkbox">
+						beep on annotation in/out
+					</label>
 				</div>
 				<div class="regions-controls">
 					<RegionsControl
@@ -314,6 +317,25 @@
 {/if}
 
 <style>
+	label {
+		font-family: var(--font);
+		font-size: var(--text-md);
+	}
+
+	input[type="checkbox"] {
+		appearance: none;
+		border-color: var(--neutral-400);
+		border-radius: 20%;
+		margin-left: 0.3em;
+		transform: translateY(-0.075em);
+	}
+
+	input[type="checkbox"]:checked {
+		background-color: var(--color-accent);
+		border-color: var(--color-accent);
+		border-radius: 20%;
+	}
+
 	.commands {
 		display: flex;
 		justify-content: space-between;
