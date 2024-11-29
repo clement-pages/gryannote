@@ -13,8 +13,9 @@ See `HoverOptions` documentation for more details about available options
 from gryannote_audio import Player
 player = Player(video="video.mp4")
 ```
-
 A video file can also be upload directly from the interface when using `AudioLabeling` in interactive mode.
+- beep on annotation in/out, to check alignment between audio and annotation. This feature can be enabled directly
+from `AudioLabeling`'s interface.
 
 ### Fixes
 
