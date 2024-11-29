@@ -13,8 +13,9 @@
 	import { Empty } from "@gradio/atoms";
 	import { resolve_wasm_src } from "@gradio/wasm/svelte";
 	import AnnotatedAudioData from "../shared/AnnotatedAudioData";
-	import { createEventDispatcher } from "svelte";
 	import { renderLineWaveform } from "../shared/utils";
+	import { createBeep } from "../shared/utils"
+	import { createEventDispatcher, onMount } from "svelte";
 
 	export let label: string;
 	export let i18n: I18nFormatter;
@@ -43,6 +44,11 @@
 
 	let regionsControl: RegionsControl;
 
+	const audioContext = new AudioContext();
+	const gainNodeIn = audioContext.createGain();
+	const gainNodeOut = audioContext.createGain();
+	const beepDuration = 0.05;
+
 	const dispatch = createEventDispatcher<{
 		stop: undefined;
 		play: undefined;
@@ -68,6 +74,27 @@
 				return waveform.load(resolved_src);
 			}
 		});
+	}
+
+	/**
+	 * Play beep for `duration` seconds
+	 * @param gainNode gain mapped to the bepp tp play
+	 * @param duration beep duration, in seconds
+	 */
+	function playBeep(gainNode: GainNode, duration: number): void {
+		const now = audioContext.currentTime
+		gainNode.gain.setValueAtTime(1, now);
+		gainNode.gain.setValueAtTime(0, now + duration);
+	}
+
+	function onRegionInOut(event: "region-in" | "region-out"): void {
+		const checkbox = document.getElementById("beep-checkbox") as HTMLInputElement;
+		const beepOn = checkbox.checked;
+		const gainNode = (event === "region-in") ? gainNodeIn : gainNodeOut;
+
+		if(waveform.isPlaying() && beepOn){
+			playBeep(gainNode, beepDuration);
+		}
 	}
 
 	/**
@@ -172,6 +199,20 @@
 	$: url = value.file_data?.url;
 	$: url && load_audio(url);
 
+	onMount(() => {
+		gainNodeIn.connect(audioContext.destination);
+		gainNodeIn.gain.setValueAtTime(0, audioContext.currentTime);
+		const beepIn = createBeep(audioContext, {"type": "sine", "freq": 1000});
+		beepIn.connect(gainNodeIn);
+		beepIn.start();
+
+		gainNodeOut.connect(audioContext.destination);
+		gainNodeOut.gain.setValueAtTime(0, audioContext.currentTime);
+		const beepOut = createBeep(audioContext, {"type": "sine", "freq": 500});
+		beepOut.connect(gainNodeOut);
+		beepOut.start();
+	});
+
 </script>
 
 {#if value === null}
@@ -215,6 +256,10 @@
 						on:stop={() => dispatch("stop")}
 						on:pause={() => dispatch("pause")}
 					/>
+					<label>
+						<input type="checkbox" id="beep-checkbox">
+						beep on annotation in/out
+					</label>
 				</div>
 				<div class="regions-controls">
 					<RegionsControl
@@ -235,8 +280,10 @@
 							}
 							dispatch("edit", e.detail)
 						}}
+						on:edit={(e) => dispatch("edit", e.detail)}
+						on:region-in={(region) => onRegionInOut("region-in")}
+						on:region-out={(region) => onRegionInOut("region-out")}
 					/>
-
 				</div>
 			</div>
 			{#if value}
@@ -270,6 +317,25 @@
 {/if}
 
 <style>
+	label {
+		font-family: var(--font);
+		font-size: var(--text-md);
+	}
+
+	input[type="checkbox"] {
+		appearance: none;
+		border-color: var(--neutral-400);
+		border-radius: 20%;
+		margin-left: 0.3em;
+		transform: translateY(-0.075em);
+	}
+
+	input[type="checkbox"]:checked {
+		background-color: var(--color-accent);
+		border-color: var(--color-accent);
+		border-radius: 20%;
+	}
+
 	.commands {
 		display: flex;
 		justify-content: space-between;
