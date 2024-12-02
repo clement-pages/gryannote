@@ -13,6 +13,7 @@
 	export let adjustTimeCursorPosition: (s:string, b:boolean) => void;
 	export let i18n: I18nFormatter;
 	export let waveform: WaveSurfer;
+	export let wsRegions: RegionsPlugin;
 	export let wsGamepad: GamepadPlugin;
     export let value: null | AnnotatedAudioData = null;
     export let interactive = true;
@@ -21,8 +22,6 @@
 	export let mode = "";
 
 	let container: HTMLDivElement;
-
-	let wsRegions: RegionsPlugin;
 
     let leftRegionHandle: HTMLDivElement | null = null;
     let rightRegionHandle: HTMLDivElement | null = null;
@@ -186,7 +185,6 @@
 			drag: interactive,
 			resize: interactive,
 		});
-
 		return region;
 	}
 
@@ -476,31 +474,29 @@
 			});
 		}
 
-		if(!wsRegions){
-			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
-			if(interactive){
-				// add region-clicked event listener
-				wsRegions.on("region-clicked", (region, e) => {
-					switch(mode){
-						case "remove": removeRegion(region); break;
-						case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
-						default: setActiveRegion(region); region.play();
-					}
-				});
-				wsRegions.enableDragSelection({color: 'rgba(255, 0, 0, 0.1)'})
-				wsRegions.on("region-created", (region: Region) => {
-					onRegionCreated(region);
-				});
-				wsRegions.on("region-updated", (region) => {
-					onRegionUpdate(region);
-				});
-				wsRegions.on("region-in", (region: Region) => {
-					dispatch("region-in", region);
-				});
-				wsRegions.on("region-out", (region: Region) => {
-					dispatch("region-out", region);
-				});
-			}
+		if(wsRegions && interactive){
+			// add region-clicked event listener
+			wsRegions.on("region-clicked", (region, e) => {
+				switch(mode){
+					case "remove": removeRegion(region); break;
+					case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
+					default: setActiveRegion(region); region.play();
+				}
+			});
+
+			wsRegions.on("region-created", (region: Region) => {
+				console.log("new-region");
+				onRegionCreated(region);
+			});
+			wsRegions.on("region-updated", (region) => {
+				onRegionUpdate(region);
+			});
+			wsRegions.on("region-in", (region: Region) => {
+				dispatch("region-in", region);
+			});
+			wsRegions.on("region-out", (region: Region) => {
+				dispatch("region-out", region);
+			});
 		}
 	});
 
@@ -548,7 +544,8 @@
 					if(e.shiftKey){
 						onRegionSplit(waveform.getCurrentTime());
 					} else {
-						addRegion(waveform.getCurrentTime() -1, waveform.getCurrentTime() + 1);
+						const currentTime = waveform.getCurrentTime();
+						addRegion(currentTime -1, currentTime + 1);
 					}
 					break;
 				default: //do nothing

@@ -3,6 +3,7 @@
 	import type { I18nFormatter } from "@gradio/utils";
 	import { Music,} from "@gradio/icons";
 	import WaveSurfer from "@gryannote/wavesurfer.js";
+	import RegionsPlugin from "@gryannote/wavesurfer.js/dist/plugins/regions";
 	import GamepadPlugin from "@gryannote/wavesurfer.js/dist/plugins/gamepad.js";
 	import MiniMapPlugin from "@gryannote/wavesurfer.js/dist/plugins/minimap.js";
 	import TimelinePlugin from '@gryannote/wavesurfer.js/dist/plugins/timeline.js';
@@ -31,6 +32,8 @@
 	export let mode: string = "";
 
 	let container: HTMLDivElement;
+
+	let wsRegions: RegionsPlugin;
 	let wsGamepad: GamepadPlugin;
 	let wsTimeline: TimelinePlugin;
 	let wsHover: HoverPlugin;
@@ -43,6 +46,7 @@
 	let caption: Caption;
 
 	let regionsControl: RegionsControl;
+	let disableDragSelection: () => void;
 
 	const audioContext = new AudioContext();
 	const gainNodeIn = audioContext.createGain();
@@ -141,7 +145,12 @@
 		}
 	);
 
-	$: waveform?.on("ready", () => {
+	$: waveform?.on("init", () => {
+		if(!wsRegions){
+			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
+			disableDragSelection = wsRegions.enableDragSelection({color: caption.getDefaultLabel().color});
+		}
+
 		if(!wsGamepad){
 			wsGamepad = waveform.registerPlugin(GamepadPlugin.create());
 		}
@@ -270,6 +279,7 @@
 						{waveform}
 						{caption}
 						{interactive}
+						{wsRegions}
 						{wsGamepad}
 						{i18n}
 						{value}
@@ -293,7 +303,10 @@
 					{interactive}
 					{wsGamepad}
 					on:select={(e) => {
-						regionsControl.setRegionLabel(e.detail)
+						regionsControl.setRegionLabel(e.detail);
+						// following line is needed to not add multiple region at the same time
+						disableDragSelection();
+						disableDragSelection = wsRegions.enableDragSelection({"color": e.detail.color});
 					}}
 					on:name_update={(e) => {
 						regionsControl.getRegions().forEach(region => {
