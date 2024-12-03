@@ -202,7 +202,7 @@
 		const speaker = regionsMap.get(region.id).speaker;
 		const {start, id, ...rightRegionOpt} = region
 		const regionRight = addRegion(
-			start,
+			splitTime,
 			rightRegionOpt.end,
 			caption.getLabel("name", speaker),
 		);
