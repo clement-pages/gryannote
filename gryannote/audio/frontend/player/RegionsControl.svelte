@@ -269,16 +269,19 @@
             annotation.start === currentAnnotation.start &&
             annotation.end === currentAnnotation.end &&
             annotation.speaker === currentAnnotation.speaker
-        ))
+        ));
 
         annotations.forEach(annotation => {
-            let label = caption.getLabel("name", annotation.speaker, true)
+            let label = caption.getLabel("name", annotation.speaker, true);
+			caption.setActiveLabel(label.shortcut);
             addRegion(
 				annotation.start,
             	annotation.end,
             	label,
 			);
         });
+		// unselect active label
+		caption.setActiveLabel();
     }
 
 	/**

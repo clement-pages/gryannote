@@ -128,6 +128,35 @@
     }
 
     /**
+     * Set the label mapped to specified shortcut as the active one
+     * @param shortcut shortcut mapped to the label to activate. If shortcut does not correspond
+     * to any existing label, a new one will be created and assigned to this shortcut. If not value
+     * is specified, will deselect active label, if any.
+     */
+    export function setActiveLabel(shortcut?: string): void {
+        let label = null;
+
+        // retrieve label and create it if not found
+        if(shortcut !== undefined){
+            label = getLabel("shortcut", shortcut, true);
+        }
+
+        // reset active label
+        if(activeLabel){
+            document.getElementById(activeLabel.shortcut).classList.remove("active-button");
+            document.getElementById(activeLabel.shortcut).blur();
+        }
+
+        // update active label
+        activeLabel = label;
+        if(activeLabel){
+            document.getElementById(activeLabel.shortcut).classList.add("active-button");
+            document.getElementById(activeLabel.shortcut).focus();
+            dispatch("select", activeLabel);
+        }
+    }
+
+    /**
      * Update the User Interface of the specified label.
      * @param label label to update
      */
@@ -164,35 +193,6 @@
             labelButton.id = label.shortcut;
         }
         updateLabelUI(label);
-    }
-
-    /**
-     * Set the label mapped to specified shortcut as the active one
-     * @param shortcut shortcut mapped to the label to activate. If shortcut does not correspond
-     * to any existing label, a new one will be created and assigned to this shortcut. If not value
-     * is specified, will deselect active label, if any.
-     */
-    function setActiveLabel(shortcut?: string): void {
-        let label = null;
-
-        // retrieve label and create it if not found
-        if(shortcut !== undefined){
-            label = getLabel("shortcut", shortcut, true);
-        }
-
-        // reset active label
-        if(activeLabel){
-            document.getElementById(activeLabel.shortcut).classList.remove("active-button");
-            document.getElementById(activeLabel.shortcut).blur();
-        }
-
-        // update active label
-        activeLabel = label;
-        if(activeLabel){
-            document.getElementById(activeLabel.shortcut).classList.add("active-button");
-            document.getElementById(activeLabel.shortcut).focus();
-            dispatch("select", activeLabel);
-        }
     }
 
     function onGamepadAxeValueUpdated(event: ButtonEvent): void {
