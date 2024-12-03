@@ -27,6 +27,7 @@ from `AudioLabeling`'s interface.
 - minimap's waveform is now colored according to segments added on the player.
 - improve behavior of region's button (remove and trim button). Now these buttons will keep focus while the user is in removing or trimming mode, respectively. Also, it is now possible to remove or trim several regions in a row, without having to click
 again on the corresponding button.
+- add a region by dragging on an empty space of the waveform, instead of double clicking. This allows to set a region with custom end bound.
 
 ## 0.3.0
 
