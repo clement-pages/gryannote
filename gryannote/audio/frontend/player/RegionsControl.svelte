@@ -173,8 +173,10 @@
 	};
 
 	/**
-	 * Add a region onto waveform at timePos-time
-	 * @returns the added region
+	 * Add a region on the waveform.
+	 * @param start	start bound of the region to add, in seconds
+	 * @param end end bound of the region to add, in seconds
+	 * @param label label associated to the region to add
 	 */
     function addRegion(start: number, end: number, label?: Label): Region {
 		label = label || caption.getActiveLabel() || caption.getDefaultLabel();
@@ -478,9 +480,10 @@
 			});
 		}
 
-		if(wsRegions && interactive){
+		if(wsRegions){
 			// add region-clicked event listener
 			wsRegions.on("region-clicked", (region, e) => {
+				if(!interactive) return;
 				switch(mode){
 					case "remove": removeRegion(region); break;
 					case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;

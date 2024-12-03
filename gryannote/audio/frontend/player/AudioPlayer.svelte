@@ -147,7 +147,7 @@
 	$: waveform?.on("init", () => {
 		if(!wsRegions){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
-			wsRegions.enableDragSelection({});
+			if(interactive) wsRegions.enableDragSelection({});
 		}
 
 		if(!wsGamepad){
