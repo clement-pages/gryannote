@@ -354,6 +354,9 @@
 		regionsMap.set(region.id, annotation);
 		updateAnnotations();
 
+		region.color = label.color;
+		region.setOptions(region);
+
 		// if this is the first region added on the waveform
 		if(!initialAnnotations){
 			initialAnnotations = [annotation];

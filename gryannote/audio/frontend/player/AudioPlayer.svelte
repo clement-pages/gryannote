@@ -46,7 +46,6 @@
 	let caption: Caption;
 
 	let regionsControl: RegionsControl;
-	let disableDragSelection: () => void;
 
 	const audioContext = new AudioContext();
 	const gainNodeIn = audioContext.createGain();
@@ -148,7 +147,7 @@
 	$: waveform?.on("init", () => {
 		if(!wsRegions){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
-			disableDragSelection = wsRegions.enableDragSelection({color: caption.getDefaultLabel().color});
+			wsRegions.enableDragSelection({});
 		}
 
 		if(!wsGamepad){
@@ -304,9 +303,6 @@
 					{wsGamepad}
 					on:select={(e) => {
 						regionsControl.setRegionLabel(e.detail);
-						// following line is needed to not add multiple region at the same time
-						disableDragSelection();
-						disableDragSelection = wsRegions.enableDragSelection({"color": e.detail.color});
 					}}
 					on:name_update={(e) => {
 						regionsControl.getRegions().forEach(region => {
