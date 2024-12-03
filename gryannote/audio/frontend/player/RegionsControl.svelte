@@ -13,6 +13,7 @@
 	export let adjustTimeCursorPosition: (s:string, b:boolean) => void;
 	export let i18n: I18nFormatter;
 	export let waveform: WaveSurfer;
+	export let wsRegions: RegionsPlugin;
 	export let wsGamepad: GamepadPlugin;
     export let value: null | AnnotatedAudioData = null;
     export let interactive = true;
@@ -21,8 +22,6 @@
 	export let mode = "";
 
 	let container: HTMLDivElement;
-
-	let wsRegions: RegionsPlugin;
 
     let leftRegionHandle: HTMLDivElement | null = null;
     let rightRegionHandle: HTMLDivElement | null = null;
@@ -174,23 +173,20 @@
 	};
 
 	/**
-	 * Add a region onto waveform given its parameters and speaker label
-	 * @param options region's params (start, end, color)
-	 * @param label region's label
-	 *
-	 * @returns the added region
+	 * Add a region on the waveform.
+	 * @param start	start bound of the region to add, in seconds
+	 * @param end end bound of the region to add, in seconds
+	 * @param label label associated to the region to add
 	 */
-    function addRegion(options: RegionParams, label: string): Region {
-		let region = wsRegions.addRegion(options);
-		const annotation = {start: region.start, end: region.end, speaker: label, color: region.color};
-		regionsMap.set(region.id, annotation);
-
-		// if this is the first region added on the waveform
-		if(!initialAnnotations){
-			initialAnnotations = [annotation];
-		}
-		updateAnnotations();
-
+    function addRegion(start: number, end: number, label?: Label): Region {
+		label = label || caption.getActiveLabel() || caption.getDefaultLabel();
+		let region = wsRegions.addRegion({
+			start: start,
+			end: end,
+			color: label.color,
+			drag: interactive,
+			resize: interactive,
+		});
 		return region;
 	}
 
@@ -205,12 +201,13 @@
 			throw new RangeError("split time out of region bounds");
 		}
 
-		const label = regionsMap.get(region.id).speaker;
+		const speaker = regionsMap.get(region.id).speaker;
 		const {start, id, ...rightRegionOpt} = region
-		const regionRight = addRegion({
-			start: splitTime,
-			...rightRegionOpt,
-		}, label);
+		const regionRight = addRegion(
+			splitTime,
+			rightRegionOpt.end,
+			caption.getLabel("name", speaker),
+		);
 
 		const {end, ...leftRegionOpt} = region
 		region.setOptions({end: splitTime, ...leftRegionOpt});
@@ -274,17 +271,16 @@
             annotation.start === currentAnnotation.start &&
             annotation.end === currentAnnotation.end &&
             annotation.speaker === currentAnnotation.speaker
-        ))
+        ));
 
         annotations.forEach(annotation => {
-            let label = caption.getLabel("name", annotation.speaker, true)
-            addRegion({
-                start: annotation.start,
-                end: annotation.end,
-                color: label.color,
-                drag: interactive,
-                resize: interactive,
-            }, annotation.speaker);
+            let label = caption.getLabel("name", annotation.speaker, true);
+			caption.setActiveLabel(label.shortcut);
+            addRegion(
+				annotation.start,
+            	annotation.end,
+            	label,
+			);
         });
     }
 
@@ -351,22 +347,23 @@
 	}
 
     /**
-	 * Handle add region event. The new added region becomes the active one.
-	 * Do nothing if the component is not in interactive mode.
-	 * @param relativeY mouse y-coordinate relative to waveform start
+	 * Handle the region creation event. The new added region becomes the active one.
+	 * @param region the created region
 	 */
-	function onRegionAdd(relativeY: number): void{
-		if(!interactive) return;
-
+	function onRegionCreated(region: Region): void{
+		// map an annotation object to current region
 		const label = caption.getActiveLabel() || caption.getDefaultLabel();
+		const annotation = {start: region.start, end: region.end, speaker: label.name};
+		regionsMap.set(region.id, annotation);
+		updateAnnotations();
 
-		let region = addRegion({
-			start: relativeY - 1.0,
-			end: relativeY + 1.0,
-			color: label.color,
-			drag: true,
-			resize: true,
-		}, label.name);
+		region.color = label.color;
+		region.setOptions(region);
+
+		// if this is the first region added on the waveform
+		if(!initialAnnotations){
+			initialAnnotations = [annotation];
+		}
 
 		// set region as active one
 		setActiveRegion(region);
@@ -435,7 +432,7 @@
 	function onGamepadButtonPressed(event: ButtonEvent): void  {
 		switch(event.idx){
 			case 0: setActiveRegion(null); break;
-			case 1: onRegionAdd(waveform.getCurrentTime()); break;
+			case 1: addRegion(waveform.getCurrentTime() -1, waveform.getCurrentTime() + 1); break;
 			case 2: onRegionRemove("Delete", false); break;
 			case 3: onRegionSplit(waveform.getCurrentTime()); break;
 			case 4: selectRegion("backward"); break;
@@ -483,32 +480,34 @@
 			});
 		}
 
-		if(!wsRegions){
-			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
-			if(interactive){
-				// add region-clicked event listener
-				wsRegions.on("region-clicked", (region, e) => {
-					switch(mode){
-						case "remove": removeRegion(region); break;
-						case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
-						default: setActiveRegion(region); region.play();
-					}
-				});
-				wsRegions.on("region-updated", (region) => {
-					onRegionUpdate(region);
-				});
-				wsRegions.on("region-in", (region: Region) => {
-					dispatch("region-in", region);
-				});
-				wsRegions.on("region-out", (region: Region) => {
-					dispatch("region-out", region);
-				});
-			}
+		if(wsRegions){
+			// add region-clicked event listener
+			wsRegions.on("region-clicked", (region, e) => {
+				if(!interactive) return;
+				switch(mode){
+					case "remove": removeRegion(region); break;
+					case "split": splitRegion(region, region.start + (region.end - region.start) / 2); break;
+					default: setActiveRegion(region); region.play();
+				}
+			});
+
+			wsRegions.on("region-created", (region: Region) => {
+				onRegionCreated(region);
+			});
+			wsRegions.on("region-updated", (region) => {
+				onRegionUpdate(region);
+			});
+			wsRegions.on("region-in", (region: Region) => {
+				dispatch("region-in", region);
+			});
+			wsRegions.on("region-out", (region: Region) => {
+				dispatch("region-out", region);
+			});
 		}
 	});
 
 	$: waveform.on("dblclick", () => {
-			onRegionAdd(waveform.getCurrentTime());
+			window.alert("To add a new annotation, please drag on an empty space of the waveform.");
 	});
 
 	$: if (activeRegion) {
@@ -551,7 +550,8 @@
 					if(e.shiftKey){
 						onRegionSplit(waveform.getCurrentTime());
 					} else {
-						onRegionAdd(waveform.getCurrentTime());
+						const currentTime = waveform.getCurrentTime();
+						addRegion(currentTime -1, currentTime + 1);
 					}
 					break;
 				default: //do nothing
