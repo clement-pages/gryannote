@@ -280,8 +280,6 @@
             	label,
 			);
         });
-		// unselect active label
-		caption.setActiveLabel();
     }
 
 	/**
@@ -491,7 +489,6 @@
 			});
 
 			wsRegions.on("region-created", (region: Region) => {
-				console.log("new-region");
 				onRegionCreated(region);
 			});
 			wsRegions.on("region-updated", (region) => {
