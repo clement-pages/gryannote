@@ -15,7 +15,7 @@
     "@gradio/upload": "0.8.2",
     "@gradio/utils": "0.3.0",
     "@gradio/wasm": "0.10.0",
-    "@gryannote/wavesurfer.js": "^7.8.9",
+    "@gryannote/wavesurfer.js": "^7.8.11",
     "@types/wavesurfer.js": "^6.0.10",
     "extendable-media-recorder": "^9.0.0",
     "extendable-media-recorder-wav-encoder": "^7.0.76",
