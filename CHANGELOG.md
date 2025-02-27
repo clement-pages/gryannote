@@ -13,8 +13,9 @@ See `HoverOptions` documentation for more details about available options
 from gryannote_audio import Player
 player = Player(video="video.mp4")
 ```
-
 A video file can also be upload directly from the interface when using `AudioLabeling` in interactive mode.
+- beep on annotation in/out, to check alignment between audio and annotation. This feature can be enabled directly
+from `AudioLabeling`'s interface.
 
 ### Fixes
 
@@ -24,6 +25,9 @@ A video file can also be upload directly from the interface when using `AudioLab
 ### improvements
 
 - minimap's waveform is now colored according to segments added on the player.
+- improve behavior of region's button (remove and trim button). Now these buttons will keep focus while the user is in removing or trimming mode, respectively. Also, it is now possible to remove or trim several regions in a row, without having to click
+again on the corresponding button.
+- add a region by dragging on an empty space of the waveform, instead of double clicking. This allows to set a region with custom end bound.
 
 ## 0.3.0
 
