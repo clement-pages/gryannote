@@ -8,7 +8,7 @@
 	import FilePreview from "./FilePreview.svelte";
 	import type { I18nFormatter } from "@gradio/utils";
 
-	export let value: FileData | FileData[] | undefined;
+	export let value: FileData | FileData[] | null;
 
 	export let label: string;
 	export let show_label = true;

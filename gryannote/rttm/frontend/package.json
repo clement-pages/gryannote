@@ -7,10 +7,10 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "@gradio/atoms": "0.8.1",
-    "@gradio/client": "1.5.2",
-    "@gradio/icons": "0.7.2",
-    "@gradio/statustracker": "0.7.6",
+    "@gradio/atoms": "^0.13.3",
+    "@gradio/client": "^1.12.0",
+    "@gradio/icons": "^0.10.0",
+    "@gradio/statustracker": "^0.10.4",
     "@gradio/upload": "0.12.4",
     "@gradio/utils": "0.6.1",
     "@gradio/wasm": "0.13.1"
@@ -23,7 +23,7 @@
     "./package.json": "./package.json"
   },
   "devDependencies": {
-    "@gradio/preview": "^0.11.2"
+    "@gradio/preview": "^0.10.2"
   },
   "peerDependencies": {
     "svelte": "^4.2.19"
