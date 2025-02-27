@@ -23,7 +23,7 @@ classifiers = [
 ]
 keywords = ["gradio-custom-component", "speaker-diarization", "pyannote", "annotation-tool", "audio"]
 dependencies = [
-    "gradio>=4.0,<5.0",
+    "gradio==5.19.0",
     "pyannote.audio>=3.1.1",
     "pyannote.core>=5.0.0",
 ]
