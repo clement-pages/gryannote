@@ -11,7 +11,7 @@
 	import type { Gradio, SelectData } from "@gradio/utils";
 	import File from "./shared/File.svelte";
 	import FileUpload from "./shared/FileUpload.svelte";
-	import { normalise_file, type FileData } from "@gradio/client";
+	import type { FileData } from "@gradio/client";
 	import { Block, UploadText } from "@gradio/atoms";
 
 	import { StatusTracker } from "@gradio/statustracker";
@@ -28,7 +28,6 @@
 	export let show_label: boolean;
 	export let height: number | undefined = undefined;
 
-	export let proxy_url: null | string;
 	export let _selectable = false;
 	export let loading_status: LoadingStatus;
 	export let container = true;
@@ -41,14 +40,13 @@
 		clear: never;
 		select: SelectData;
 	}>;
-	export let file_count: string;
+	export let file_count: "single" | "multiple" | "directory";
 	export let file_types: string[] = ["file"];
-	$: _value = normalise_file(value, root, proxy_url);
 
-	let old_value = _value;
-	$: if (JSON.stringify(old_value) !== JSON.stringify(_value)) {
+	let oldvalue = value;
+	$: if (JSON.stringify(oldvalue) !== JSON.stringify(value)) {
 		gradio.dispatch("change");
-		old_value = _value;
+		oldvalue = value;
 	}
 
 	let dragging = false;
@@ -57,7 +55,7 @@
 
 <Block
 	{visible}
-	variant={value === null ? "dashed" : "solid"}
+	variant={value === null ? "solid" : "dashed"}
 	border_mode={dragging ? "focus" : "base"}
 	padding={false}
 	{elem_id}
@@ -79,7 +77,7 @@
 		<File
 			on:select={({ detail }) => gradio.dispatch("select", detail)}
 			selectable={_selectable}
-			value={_value}
+			value={value}
 			{label}
 			{show_label}
 			{height}
@@ -87,14 +85,17 @@
 		/>
 	{:else}
 		<FileUpload
+			upload={gradio.client.upload}
+			stream_handler={gradio.client.stream}
 			{label}
 			{show_label}
-			value={_value}
+			value={value}
 			{file_count}
 			{file_types}
 			selectable={_selectable}
 			{root}
 			{height}
+			max_file_size={gradio.max_file_size}
 			on:change={({ detail }) => {
 				value = detail;
 			}}

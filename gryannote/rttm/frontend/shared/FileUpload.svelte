@@ -1,23 +1,26 @@
 <script lang="ts">
 	import { createEventDispatcher, tick } from "svelte";
 	import { Upload, ModifyUpload } from "@gradio/upload";
-	import type { FileData } from "@gradio/client";
+	import { FileData, type Client } from "@gradio/client";
 	import { BlockLabel } from "@gradio/atoms";
 	import { File } from "@gradio/icons";
 
 	import FilePreview from "./FilePreview.svelte";
 	import type { I18nFormatter } from "@gradio/utils";
 
-	export let value: FileData | FileData[] | undefined;
+	export let value: FileData | FileData[] | null;
 
 	export let label: string;
 	export let show_label = true;
-	export let file_count = "single";
+	export let file_count: "single" | "multiple" | "directory" = "single";
 	export let file_types: string[] | null = null;
 	export let selectable = false;
 	export let root: string;
 	export let height: number | undefined = undefined;
 	export let i18n: I18nFormatter;
+	export let max_file_size: number | null = null;
+	export let upload: Client["upload"];
+	export let stream_handler: Client["stream"];
 
 	async function handle_upload({
 		detail
@@ -76,6 +79,9 @@
 		filetype={accept_file_types}
 		{file_count}
 		{root}
+		{max_file_size}
+		{upload}
+		{stream_handler}
 		bind:dragging
 	>
 		<slot />

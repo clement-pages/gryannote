@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { FileData } from "@gradio/client";
+	import {prettyBytes} from "./utils";
 	import { createEventDispatcher } from "svelte";
 	import type { I18nFormatter, SelectData } from "@gradio/utils";
-	import IconButton from "@gradio/atoms/src/IconButton.svelte";
-	import { Download } from "@gradio/icons";
+	import { DownloadLink } from "@gradio/wasm/svelte";
 
 	const dispatch = createEventDispatcher<{
 		select: SelectData;
@@ -38,6 +38,8 @@
 			filename_ext
 		};
 	});
+
+	const is_browser = typeof window !== "undefined";
 </script>
 
 <div
@@ -64,11 +66,16 @@
 
 					<td class="download">
 						{#if file.url}
-							<button>
-								<a href={file.url} target="_blank" download={file.orig_name}>
-									<IconButton Icon={Download}/>
-								</a>
-							</button>
+							<DownloadLink
+								href={file.url}
+								download={is_browser
+									? null
+									: file.orig_name}
+							>
+								{@html file.size != null
+									? prettyBytes(file.size)
+									: "(size unknown)"}&nbsp;&#8675;
+							</DownloadLink>
 						{:else}
 							{i18n("file.uploading")}
 						{/if}

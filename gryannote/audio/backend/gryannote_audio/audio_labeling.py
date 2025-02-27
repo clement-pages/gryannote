@@ -16,6 +16,7 @@ from gradio.events import Events
 from gradio.exceptions import Error
 from gradio_client import utils as client_utils
 from gradio_client.documentation import document, set_documentation_group
+from pydub import AudioSegment
 from pyannote.core import Annotation as PyannoteAnnotation
 
 from .core import AnnotadedAudioData
@@ -298,6 +299,15 @@ class AudioLabeling(
 
     def example_inputs(self) -> Any:
         return "https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav"
+    
+    def process_example(
+        self, value: Tuple[int, np.ndarray] | str | Path | bytes | None
+    ) -> str:
+        if value is None:
+            return ""
+        elif isinstance(value, (str, Path)):
+            return Path(value).name
+        return "(audio)"
 
     def preprocess(
         self, payload: AnnotadedAudioData | None
@@ -452,15 +462,6 @@ class AudioLabeling(
                     binary_data = binary_data[44:]
         return binary_data, output_file
 
-    def process_example(
-        self, value: Tuple[int, np.ndarray] | str | Path | bytes | None
-    ) -> str:
-        if value is None:
-            return ""
-        elif isinstance(value, (str, Path)):
-            return Path(value).name
-        return "(audio)"
-
     def check_streamable(self):
         if (
             self.sources is not None
@@ -470,6 +471,27 @@ class AudioLabeling(
             raise ValueError(
                 "AudioLabeling streaming only available if source includes 'microphone'."
             )
+    
+    async def combine_stream(
+        self,
+        stream: list[bytes],
+        desired_output_format: str | None = None,
+        only_file=False,  # noqa: ARG002
+    ) -> FileData:
+        output_file = FileData(
+            path=processing_utils.save_bytes_to_cache(
+                b"".join(stream), "audio.mp3", cache_dir=self.GRADIO_CACHE
+            ),
+            is_stream=False,
+            orig_name="audio-stream.mp3",
+        )
+        if desired_output_format and desired_output_format != "mp3":
+            new_path = Path(output_file.path).with_suffix(f".{desired_output_format}")
+            AudioSegment.from_file(output_file.path).export(
+                new_path, format=desired_output_format
+            )
+            output_file.path = str(new_path)
+        return output_file
 
 
 def Player(
