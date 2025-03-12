@@ -148,7 +148,7 @@
 	$: waveform?.on("init", () => {
 		if(!wsRegions){
 			wsRegions = waveform.registerPlugin(RegionsPlugin.create());
-			disableDragSelection = wsRegions.enableDragSelection({color: caption.getDefaultLabel().color});
+			disableDragSelection = wsRegions.enableDragSelection({});
 		}
 
 		if(!wsGamepad){
@@ -304,9 +304,9 @@
 					{wsGamepad}
 					on:select={(e) => {
 						regionsControl.setRegionLabel(e.detail);
-						// following line is needed to not add multiple region at the same time
-						disableDragSelection();
-						disableDragSelection = wsRegions.enableDragSelection({"color": e.detail.color});
+						// // following line is needed to not add multiple region at the same time
+						// disableDragSelection();
+						// disableDragSelection = wsRegions.enableDragSelection({"color": e.detail.color});
 					}}
 					on:name_update={(e) => {
 						regionsControl.getRegions().forEach(region => {

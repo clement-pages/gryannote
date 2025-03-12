@@ -202,7 +202,7 @@
 		const speaker = regionsMap.get(region.id).speaker;
 		const {start, id, ...rightRegionOpt} = region
 		const regionRight = addRegion(
-			start,
+			splitTime,
 			rightRegionOpt.end,
 			caption.getLabel("name", speaker),
 		);
@@ -354,6 +354,10 @@
 		regionsMap.set(region.id, annotation);
 		updateAnnotations();
 
+		// update region color:
+		region.color = label.color;
+		region.setOptions({...region});
+
 		// if this is the first region added on the waveform
 		if(!initialAnnotations){
 			initialAnnotations = [annotation];
@@ -485,7 +489,6 @@
 			});
 
 			wsRegions.on("region-created", (region: Region) => {
-				console.log("new-region");
 				onRegionCreated(region);
 			});
 			wsRegions.on("region-updated", (region) => {
