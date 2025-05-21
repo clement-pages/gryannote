@@ -54,7 +54,34 @@ RTTM annotations in RTTM component are dynamically updated according to the audi
 
 ## Try it!
 
-A `gryannote` app can be runned in this [Hugging Face space](https://huggingface.co/spaces/clement-pages/gryannote)
+A `gryannote` app can be run in this [Hugging Face space](https://huggingface.co/spaces/clement-pages/gryannote)
+
+## Build components from source
+
+To build the `gryannote` components from source (e.g., for development purposes), follow these steps:
+
+First, make sure your environment is ready for [Gradio custom component development](https://www.gradio.app/guides/custom-components-in-five-minutes#installation).
+
+Clone the `gryannote` repository:
+```bash
+git clone git@github.com:clement-pages/gryannote.git
+```
+Navigate to a component directory (for example the audio component) and install it using the Gradio CLI:
+```bash
+cd gryannote/audio
+gradio cc install
+```
+To start a development server and test the component in real time:
+```bash
+gradio cc dev
+```
+Once you're done with development, build the component:
+```bash
+gradio cc build
+```
+
+For more information on `gradio cc` commands and custom component development, refer to the official [Gradio documentation](https://www.gradio.app/guides/custom-components-in-five-minutes).
+
 
 ## Citation
 
