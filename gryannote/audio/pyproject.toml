@@ -16,7 +16,7 @@ requires-python = ">=3.10"
 authors = [{ name = "Clément Pagés", email = "clement.pages@irit.fr" }]
 keywords = ["gradio-custom-component", "gradio-template-Audio", "pyannote.audio", "speaker diarization"]
 # Add dependencies here
-dependencies = ["gradio==5.19.0"]
+dependencies = ["gradio==5.31.0"]
 classifiers = [
   'Development Status :: 3 - Alpha',
   'License :: OSI Approved :: MIT License',
