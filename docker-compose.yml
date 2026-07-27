@@ -9,4 +9,6 @@ services:
       - ./demo:/app/demo
     environment:
       - GRADIO_SERVER_NAME=0.0.0.0
+      - PYTHONUNBUFFERED=1
       - HF_TOKEN=${HF_TOKEN:-}
+    stop_grace_period: 5s
