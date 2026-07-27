@@ -17,6 +17,11 @@ COPY gryannote/__init__.py gryannote/__init__.py
 
 RUN pip install --no-cache-dir -e ".[dev]"
 
+# Patch gradio_client bug: boolean additionalProperties crashes schema parsing
+# (fixed in gradio_client>=1.8.0, but gradio==5.19.0 pins 1.7.2)
+COPY patches/fix-gradio-client-bool-schema.py /tmp/
+RUN python /tmp/fix-gradio-client-bool-schema.py && rm /tmp/fix-gradio-client-bool-schema.py
+
 COPY gryannote/audio/pyproject.toml gryannote/audio/pyproject.toml
 COPY gryannote/audio/README.md gryannote/audio/README.md
 COPY gryannote/audio/backend gryannote/audio/backend
