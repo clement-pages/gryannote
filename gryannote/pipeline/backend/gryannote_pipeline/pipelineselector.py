@@ -259,7 +259,7 @@ class PipelineSelector(FormComponent):
         available_pipelines = [
             p.modelId
             for p in HfApi().list_models(
-                filter="pyannote-audio-pipeline", sort="last_modified", direction=-1
+                filter="pyannote-audio-pipeline", sort="last_modified"
             )
         ]
         return list(filter(lambda p: p.startswith("pyannote/"), available_pipelines))

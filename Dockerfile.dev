@@ -1,57 +1,39 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    git \
-    build-essential \
     ffmpeg \
     libsndfile1 \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY pyproject.toml pyproject.lock LICENSE README.md ./
-COPY gryannote/__init__.py gryannote/__init__.py
+# Install from source (gradio==5.19.0, compatible pyannote)
+COPY pyproject.toml README.md LICENSE ./
+COPY gryannote/ gryannote/
+RUN pip install --no-cache-dir . pydub
 
-RUN pip install --no-cache-dir -e ".[dev]"
+# Extract pre-built frontend templates from PyPI wheel into site-packages
+RUN pip download gryannote==0.3.0 --no-deps -d /tmp/wheel && \
+    python -c "
+import zipfile, site, os
+wheel = '/tmp/wheel/gryannote-0.3.0-py3-none-any.whl'
+sp = site.getsitepackages()[0]
+with zipfile.ZipFile(wheel) as z:
+    for name in z.namelist():
+        if '/templates/' in name:
+            dest = os.path.join(sp, name)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            with z.open(name) as src, open(dest, 'wb') as dst:
+                dst.write(src.read())
+            print(f'Copied: {name}')
+" && rm -rf /tmp/wheel
 
 # Patch gradio_client bug: boolean additionalProperties crashes schema parsing
-# (fixed in gradio_client>=1.8.0, but gradio==5.19.0 pins 1.7.2)
 COPY patches/fix-gradio-client-bool-schema.py /tmp/
 RUN python /tmp/fix-gradio-client-bool-schema.py && rm /tmp/fix-gradio-client-bool-schema.py
 
-COPY gryannote/audio/pyproject.toml gryannote/audio/pyproject.toml
-COPY gryannote/audio/README.md gryannote/audio/README.md
-COPY gryannote/audio/backend gryannote/audio/backend
+COPY demo/ demo/
 
-COPY gryannote/pipeline/pyproject.toml gryannote/pipeline/pyproject.toml
-COPY gryannote/pipeline/README.md gryannote/pipeline/README.md
-COPY gryannote/pipeline/backend gryannote/pipeline/backend
+EXPOSE 7860
 
-COPY gryannote/rttm/pyproject.toml gryannote/rttm/pyproject.toml
-COPY gryannote/rttm/README.md gryannote/rttm/README.md
-COPY gryannote/rttm/backend gryannote/rttm/backend
-
-RUN pip install --no-cache-dir \
-    -e gryannote/audio \
-    -e gryannote/pipeline \
-    -e gryannote/rttm
-
-COPY gryannote/audio/frontend/package.json gryannote/audio/frontend/package-lock.json gryannote/audio/frontend/
-COPY gryannote/pipeline/frontend/package.json gryannote/pipeline/frontend/
-COPY gryannote/rttm/frontend/package.json gryannote/rttm/frontend/
-
-RUN cd gryannote/audio/frontend && npm ci \
-    && cd /app/gryannote/pipeline/frontend && npm install \
-    && cd /app/gryannote/rttm/frontend && npm install
-
-COPY . .
-
-RUN chmod +x docker-entrypoint.sh
-
-EXPOSE 7861
-
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["gradio", "cc", "dev", "--host", "0.0.0.0"]
+CMD ["python", "demo/app.py"]
