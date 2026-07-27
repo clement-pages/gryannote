@@ -49,6 +49,9 @@ RUN cd gryannote/audio/frontend && npm ci \
 
 COPY . .
 
+RUN chmod +x docker-entrypoint.sh
+
 EXPOSE 7861
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["gradio", "cc", "dev", "--host", "0.0.0.0"]

@@ -6,19 +6,17 @@ services:
     ports:
       - "7861:7861"
     volumes:
-      - ./gryannote/audio/frontend:/app/gryannote/audio/frontend
+      - ./gryannote/audio/frontend/interactive:/app/gryannote/audio/frontend/interactive
+      - ./gryannote/audio/frontend/player:/app/gryannote/audio/frontend/player
+      - ./gryannote/audio/frontend/recorder:/app/gryannote/audio/frontend/recorder
+      - ./gryannote/audio/frontend/shared:/app/gryannote/audio/frontend/shared
+      - ./gryannote/audio/frontend/static:/app/gryannote/audio/frontend/static
+      - ./gryannote/audio/frontend/streaming:/app/gryannote/audio/frontend/streaming
+      - ./gryannote/audio/frontend/Index.svelte:/app/gryannote/audio/frontend/Index.svelte
+      - ./gryannote/audio/frontend/Example.svelte:/app/gryannote/audio/frontend/Example.svelte
+      - ./gryannote/audio/frontend/index.ts:/app/gryannote/audio/frontend/index.ts
       - ./gryannote/audio/backend:/app/gryannote/audio/backend
       - ./gryannote/audio/demo:/app/gryannote/audio/demo
-      - ./gryannote/pipeline/frontend:/app/gryannote/pipeline/frontend
-      - ./gryannote/pipeline/backend:/app/gryannote/pipeline/backend
-      - ./gryannote/pipeline/demo:/app/gryannote/pipeline/demo
-      - ./gryannote/rttm/frontend:/app/gryannote/rttm/frontend
-      - ./gryannote/rttm/backend:/app/gryannote/rttm/backend
-      - ./gryannote/rttm/demo:/app/gryannote/rttm/demo
-      - ./demo:/app/demo
-      - audio_node_modules:/app/gryannote/audio/frontend/node_modules
-      - pipeline_node_modules:/app/gryannote/pipeline/frontend/node_modules
-      - rttm_node_modules:/app/gryannote/rttm/frontend/node_modules
     working_dir: /app/gryannote/audio
     environment:
       - GRADIO_SERVER_NAME=0.0.0.0
@@ -37,9 +35,5 @@ services:
     environment:
       - GRADIO_SERVER_NAME=0.0.0.0
       - HF_TOKEN=${HF_TOKEN:-}
-    command: ["python", "demo/app.py"]
-
-volumes:
-  audio_node_modules:
-  pipeline_node_modules:
-  rttm_node_modules:
+    entrypoint: ["python"]
+    command: ["demo/app.py"]
