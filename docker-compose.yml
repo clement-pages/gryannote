@@ -1,0 +1,45 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "7861:7861"
+    volumes:
+      - ./gryannote/audio/frontend:/app/gryannote/audio/frontend
+      - ./gryannote/audio/backend:/app/gryannote/audio/backend
+      - ./gryannote/audio/demo:/app/gryannote/audio/demo
+      - ./gryannote/pipeline/frontend:/app/gryannote/pipeline/frontend
+      - ./gryannote/pipeline/backend:/app/gryannote/pipeline/backend
+      - ./gryannote/pipeline/demo:/app/gryannote/pipeline/demo
+      - ./gryannote/rttm/frontend:/app/gryannote/rttm/frontend
+      - ./gryannote/rttm/backend:/app/gryannote/rttm/backend
+      - ./gryannote/rttm/demo:/app/gryannote/rttm/demo
+      - ./demo:/app/demo
+      - audio_node_modules:/app/gryannote/audio/frontend/node_modules
+      - pipeline_node_modules:/app/gryannote/pipeline/frontend/node_modules
+      - rttm_node_modules:/app/gryannote/rttm/frontend/node_modules
+    working_dir: /app/gryannote/audio
+    environment:
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - HF_TOKEN=${HF_TOKEN:-}
+
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./demo:/app/demo
+      - ./gryannote:/app/gryannote
+    working_dir: /app
+    environment:
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - HF_TOKEN=${HF_TOKEN:-}
+    command: ["python", "demo/app.py"]
+
+volumes:
+  audio_node_modules:
+  pipeline_node_modules:
+  rttm_node_modules:

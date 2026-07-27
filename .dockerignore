@@ -1,0 +1,12 @@
+__pycache__/
+*.egg-info
+.eggs/
+dist/
+*.pyc
+node_modules/
+.git
+.github
+.trunk
+*.egg
+.env
+.secrets
