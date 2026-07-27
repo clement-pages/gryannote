@@ -289,7 +289,7 @@ class PipelineSelector(FormComponent):
             pipeline = self._pipeline_map[pipeline_info.name]
         else:
             pipeline = Pipeline.from_pretrained(
-                pipeline_info.name, use_auth_token=self.token
+                pipeline_info.name, token=self.token
             )
             if not pipeline:
                 raise Error(
