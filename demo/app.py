@@ -7,6 +7,8 @@ from pyannote.audio import Pipeline
 
 def apply_pipeline(pipeline: Pipeline, audio):
     """Apply specified pipeline on the indicated audio file"""
+    print(f"[DEBUG] audio type={type(audio)}, value={repr(audio)[:200]}")
+    print(f"[DEBUG] pipeline type={type(pipeline)}, value={repr(pipeline)[:200]}")
     try:
         annotations = pipeline(audio)
     except (ValueError, RuntimeError) as e:
