@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { FileData } from "@gradio/client";
 	import {prettyBytes} from "./utils";
-	import { createEventDispatcher } from "svelte";
+	import { createEventDispatcher, onMount, onDestroy } from "svelte";
 	import type { I18nFormatter, SelectData } from "@gradio/utils";
 	import { DownloadLink } from "@gradio/wasm/svelte";
 
@@ -29,6 +29,33 @@
 			})
 			.catch(error => console.error("Error while fetching file:", error))
 	}
+
+	function downloadFile() {
+		const files = Array.isArray(value) ? value : [value];
+		if (files.length > 0 && files[0].url) {
+			const a = document.createElement("a");
+			a.href = files[0].url;
+			a.download = files[0].orig_name ?? "output.rttm";
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		}
+	}
+
+	function onKeydown(e: KeyboardEvent) {
+		if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+			e.preventDefault();
+			downloadFile();
+		}
+	}
+
+	onMount(() => {
+		window.addEventListener("keydown", onKeydown);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener("keydown", onKeydown);
+	});
 
 	$: normalized_files = (Array.isArray(value) ? value : [value]).map((file) => {
 		const [filename_stem, filename_ext] = splitFilename(file.orig_name ?? "");
@@ -72,9 +99,14 @@
 									? null
 									: file.orig_name}
 							>
-								{@html file.size != null
-									? prettyBytes(file.size)
-									: "(size unknown)"}&nbsp;&#8675;
+								<span class="save-btn" title="Save RTTM (Ctrl+S)">
+									<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+										<polyline points="7 10 12 15 17 10"/>
+										<line x1="12" y1="15" x2="12" y2="3"/>
+									</svg>
+									Save
+								</span>
 							</DownloadLink>
 						{:else}
 							{i18n("file.uploading")}
@@ -132,6 +164,24 @@
 		width: 10%;
 		white-space: nowrap;
 		text-align: right;
+	}
+
+	.save-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 8px;
+		border: 1px solid var(--neutral-400);
+		border-radius: 4px;
+		font-size: var(--text-sm);
+		color: var(--neutral-400);
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.save-btn:hover {
+		color: var(--color-accent);
+		border-color: var(--color-accent);
 	}
 
 	.selectable {
