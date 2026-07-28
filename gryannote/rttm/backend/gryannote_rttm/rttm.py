@@ -17,6 +17,24 @@ from pyannote.database.util import load_rttm
 set_documentation_group("component")
 
 
+def _ensure_utf8(path: str) -> str:
+    """Re-encode a file to UTF-8 if it isn't already."""
+    raw = Path(path).read_bytes()
+    try:
+        raw.decode("utf-8")
+        return path
+    except UnicodeDecodeError:
+        pass
+    for enc in ("euc-kr", "cp949", "latin-1"):
+        try:
+            text = raw.decode(enc)
+            Path(path).write_text(text, encoding="utf-8")
+            return path
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            continue
+    return path
+
+
 @document()
 class RTTM(Component):
     """
@@ -166,6 +184,7 @@ class RTTM(Component):
                 return self._process_single_file(payload[0])
             if isinstance(payload, FileData):
                 file_rttm = self._process_single_file(payload)
+                file_rttm = _ensure_utf8(file_rttm)
                 annotations = load_rttm(file_rttm)
                 # we suppose there are annotations for only one file
                 return annotations[list(annotations.keys())[0]]
