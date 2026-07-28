@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, onMount} from "svelte"
-    import { Trim, Undo } from "@gradio/icons";
+    import { Play, Trim, Undo } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
     import AnnotatedAudioData from "../shared/AnnotatedAudioData";
     import type { Annotation, Label } from "../shared/types";
@@ -534,11 +534,37 @@
 		}
 	}
 
+	function playActiveRegion(): void {
+		if(!activeRegion) return;
+
+		const regionEnd = activeRegion.end;
+		waveform.setTime(activeRegion.start);
+		waveform.play();
+
+		const unsubscribe = waveform.on("timeupdate", (currentTime: number) => {
+			if(currentTime >= regionEnd){
+				waveform.pause();
+				unsubscribe();
+			}
+		});
+
+		waveform.once("pause", () => {
+			unsubscribe();
+		});
+	}
+
 	onMount(() => {
 		window.addEventListener("keydown", (e) => {
 			// do not process keyboard shortcuts when a dialog popup is open
 			if(isDialogOpen) return;
 			switch(e.key){
+				case " ":
+					if(e.shiftKey && activeRegion){
+						e.preventDefault();
+						e.stopImmediatePropagation();
+						playActiveRegion();
+					}
+					break;
 				case "ArrowLeft": onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
 				case "ArrowRight": onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
 				case "Escape": setActiveRegion(null); setMode(""); break;
@@ -596,6 +622,15 @@
 		>
 			<Trim/>
 		</button>
+		<button
+			class="icon play-region"
+			aria-label="Play selected region (Shift+Space)"
+			title={i18n("Play selected region (Shift+Space)")}
+			on:click={playActiveRegion}
+			disabled={!activeRegion}
+		>
+			<Play/>
+		</button>
 	</div>
 {/if}
 
@@ -616,6 +651,15 @@
 
 	.icon:hover, .icon:focus {
 		color: var(--color-accent);
+	}
+
+	.play-region:disabled {
+		opacity: 0.3;
+		cursor: not-allowed;
+	}
+
+	.play-region:disabled:hover {
+		color: var(--neutral-400);
 	}
 
 </style>
