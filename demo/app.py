@@ -7,6 +7,9 @@ from pyannote.audio import Pipeline
 
 def apply_pipeline(pipeline: Pipeline, audio):
     """Apply specified pipeline on the indicated audio file"""
+    if not audio or not isinstance(audio, str):
+        raise gr.Error("Please upload an audio file first")
+
     try:
         output = pipeline(audio)
     except (ValueError, RuntimeError) as e:
