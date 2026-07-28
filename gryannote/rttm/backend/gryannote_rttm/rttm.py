@@ -150,7 +150,8 @@ class RTTM(Component):
             path to rttm file
         """
 
-        uri = annotations.uri
+        uri = annotations.uri.replace(" ", "_") if annotations.uri else "output"
+        annotations.uri = uri
         with open(f"{self.GRADIO_CACHE}/{uri}.rttm", "w", encoding="utf-8") as file:
             annotations.write_rttm(file)
 
