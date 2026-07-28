@@ -11,4 +11,12 @@ services:
       - GRADIO_SERVER_NAME=0.0.0.0
       - PYTHONUNBUFFERED=1
       - HF_TOKEN=${HF_TOKEN:-}
+      - NVIDIA_VISIBLE_DEVICES=4
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['4']
+              capabilities: [gpu]
     stop_grace_period: 5s

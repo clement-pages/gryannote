@@ -13,6 +13,7 @@ WORKDIR /app
 # Install Python package (editable so gradio cc build outputs templates to source tree)
 COPY pyproject.toml README.md LICENSE ./
 COPY gryannote/ gryannote/
+RUN pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 RUN pip install --no-cache-dir -e . pydub build
 
 # Patch gradio_client bug: boolean additionalProperties crashes schema parsing

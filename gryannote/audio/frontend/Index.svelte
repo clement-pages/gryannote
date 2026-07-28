@@ -99,6 +99,8 @@
 		dragToSeek: true,
 		normalize: true,
 		minPxPerSec: 20,
+		autoScroll: true,
+		autoCenter: true,
 		mediaControls: waveform_options.show_controls
 	};
 
