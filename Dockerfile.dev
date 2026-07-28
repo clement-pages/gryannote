@@ -1,24 +1,40 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
     ffmpeg \
     libsndfile1 \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install from source (gradio==5.19.0, compatible pyannote)
+# Install Python package (editable so gradio cc build outputs templates to source tree)
 COPY pyproject.toml README.md LICENSE ./
 COPY gryannote/ gryannote/
-RUN pip install --no-cache-dir . pydub
-
-# Extract pre-built frontend templates from PyPI wheel into site-packages
-COPY patches/extract-pypi-templates.py /tmp/
-RUN python /tmp/extract-pypi-templates.py && rm /tmp/extract-pypi-templates.py
+RUN pip install --no-cache-dir -e . pydub
 
 # Patch gradio_client bug: boolean additionalProperties crashes schema parsing
 COPY patches/fix-gradio-client-bool-schema.py /tmp/
 RUN python /tmp/fix-gradio-client-bool-schema.py && rm /tmp/fix-gradio-client-bool-schema.py
+
+# Install npm deps for each component frontend
+RUN cd gryannote/audio/frontend && npm install && \
+    cd /app/gryannote/pipeline/frontend && npm install && \
+    cd /app/gryannote/rttm/frontend && npm install
+
+# Patch @gradio/preview to handle 'import type' syntax
+COPY patches/fix-gradio-preview-type-imports.py /tmp/
+RUN cd /app/gryannote/audio/frontend && python /tmp/fix-gradio-preview-type-imports.py && \
+    cd /app/gryannote/pipeline/frontend && python /tmp/fix-gradio-preview-type-imports.py && \
+    cd /app/gryannote/rttm/frontend && python /tmp/fix-gradio-preview-type-imports.py && \
+    rm /tmp/fix-gradio-preview-type-imports.py
+
+# Build frontend templates for gradio 5.x
+RUN cd /app/gryannote/audio && gradio cc build --no-generate-docs && \
+    cd /app/gryannote/pipeline && gradio cc build --no-generate-docs && \
+    cd /app/gryannote/rttm && gradio cc build --no-generate-docs
 
 COPY demo/ demo/
 
