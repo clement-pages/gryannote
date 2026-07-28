@@ -7,12 +7,16 @@ from pyannote.audio import Pipeline
 
 def apply_pipeline(pipeline: Pipeline, audio):
     """Apply specified pipeline on the indicated audio file"""
-    print(f"[DEBUG] audio type={type(audio)}, value={repr(audio)[:200]}")
-    print(f"[DEBUG] pipeline type={type(pipeline)}, value={repr(pipeline)[:200]}")
     try:
-        annotations = pipeline(audio)
+        output = pipeline(audio)
     except (ValueError, RuntimeError) as e:
         raise gr.Error(f"An error occurred while processing audio: {e}")
+
+    # pyannote 3.x returns DiarizeOutput; extract the Annotation
+    if hasattr(output, "speaker_diarization"):
+        annotations = output.speaker_diarization
+    else:
+        annotations = output
 
     return ((audio, annotations), annotations)
 
