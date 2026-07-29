@@ -145,6 +145,26 @@ Branch: `claude/gryannote-dev-server-badnxp`
 
 ---
 
+## 10. Reset 버튼 좀비상태 수정
+
+**요청**: 반시계 방향 원화살표(Reset) 버튼 클릭 시 UI가 먹통(좀비상태)이 되는 문제 수정
+
+**원인 분석**:
+- 글로벌 `click` 이벤트 리스너가 모드 활성 시 모든 클릭의 포커스를 강탈
+- `document.getElementById()` null 참조로 TypeError 발생 가능
+- `onDestroy`에서 글로벌 이벤트 리스너 미해제 → 컴포넌트 재생성 시 중복 핸들러 쌓임
+- `$: waveform.on("ready")` reactive statement로 이벤트 중복 등록
+
+**변경사항**:
+- 글로벌 `keydown`/`click` 리스너를 named function으로 분리, `onDestroy`에서 해제
+- `setMode()`와 글로벌 클릭 핸들러에 null 체크 추가
+- `resetRegions()`에 `initialAnnotations` guard 및 `setMode("")` 호출 추가
+- `waveformEventsInitialized` guard로 이벤트 중복 등록 방지
+
+**관련 파일**: `gryannote/audio/frontend/player/RegionsControl.svelte`
+
+---
+
 ## 키보드 단축키 요약
 
 | 단축키 | 동작 |

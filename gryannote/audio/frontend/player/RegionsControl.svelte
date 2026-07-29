@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount} from "svelte"
+    import { createEventDispatcher, onMount, onDestroy} from "svelte"
     import { Play, Trim, Undo } from "@gradio/icons";
 	import type { I18nFormatter } from "@gradio/utils";
     import AnnotatedAudioData from "../shared/AnnotatedAudioData";
@@ -300,6 +300,8 @@
      * initialAnnotations
 	 */
      function resetRegions(): void {
+		if(!initialAnnotations || initialAnnotations.length === 0) return;
+		setMode("");
 		clearRegions();
 		initialAnnotations.forEach(
 				annotation => value.annotations.push(Object.assign({}, annotation))
@@ -456,7 +458,8 @@
 		if(mode){
 			// disabling mode case
 			if(!newMode || mode == newMode){
-				document.getElementById(`${mode}-button`).blur();
+				const btn = document.getElementById(`${mode}-button`);
+				if(btn) btn.blur();
 				mode = "";
 				return;
 			}
@@ -464,11 +467,13 @@
 			mode = newMode;
 		} else{
 			// enabling mode case
-			 mode = newMode;
-			 document.getElementById(`${mode}-button`).focus();
+			mode = newMode;
+			const btn = document.getElementById(`${mode}-button`);
+			if(btn) btn.focus();
 		}
 	}
 
+	let waveformEventsInitialized = false;
 	$: waveform.on("ready", () => {
 		if(!wsGamepad){
 			wsGamepad = waveform.registerPlugin(GamepadPlugin.create());
@@ -480,8 +485,8 @@
 			});
 		}
 
-		if(wsRegions){
-			// add region-clicked event listener
+		if(wsRegions && !waveformEventsInitialized){
+			waveformEventsInitialized = true;
 			wsRegions.on("region-clicked", (region, e) => {
 				if(!interactive) return;
 				switch(mode){
@@ -553,47 +558,56 @@
 		});
 	}
 
-	onMount(() => {
-		window.addEventListener("keydown", (e) => {
-			// do not process keyboard shortcuts when a dialog popup is open
-			if(isDialogOpen) return;
-			switch(e.key){
-				case " ":
-					if(e.shiftKey && activeRegion){
-						e.preventDefault();
-						e.stopImmediatePropagation();
-						playActiveRegion();
-					}
-					break;
-				case "ArrowLeft":
-					if(activeRegion || e.altKey) e.preventDefault();
-					onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey);
-					break;
-				case "ArrowRight":
-					if(activeRegion || e.altKey) e.preventDefault();
-					onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey);
-					break;
-				case "Escape": setActiveRegion(null); setMode(""); break;
-				case "Tab": e.preventDefault(); selectRegion(e.shiftKey? "backward" : "forward"); break;
-				case "Delete": onRegionRemove("Delete", e.shiftKey); break;
-				case "Backspace": onRegionRemove("Backspace", e.shiftKey); break;
-				case "Enter":
+	function handleKeydown(e: KeyboardEvent): void {
+		// do not process keyboard shortcuts when a dialog popup is open
+		if(isDialogOpen) return;
+		switch(e.key){
+			case " ":
+				if(e.shiftKey && activeRegion){
 					e.preventDefault();
-					if(e.shiftKey){
-						onRegionSplit(waveform.getCurrentTime());
-					} else {
-						const currentTime = waveform.getCurrentTime();
-						addRegion(currentTime -1, currentTime + 1);
-					}
-					break;
-				default: //do nothing
-			}
-		});
-		// this is needed to keep focus on mode button
-		window.addEventListener("click", (e: MouseEvent) => {
-			if(!mode) return;
-			document.getElementById(`${mode}-button`).focus();
-		})
+					e.stopImmediatePropagation();
+					playActiveRegion();
+				}
+				break;
+			case "ArrowLeft":
+				if(activeRegion || e.altKey) e.preventDefault();
+				onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey);
+				break;
+			case "ArrowRight":
+				if(activeRegion || e.altKey) e.preventDefault();
+				onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey);
+				break;
+			case "Escape": setActiveRegion(null); setMode(""); break;
+			case "Tab": e.preventDefault(); selectRegion(e.shiftKey? "backward" : "forward"); break;
+			case "Delete": onRegionRemove("Delete", e.shiftKey); break;
+			case "Backspace": onRegionRemove("Backspace", e.shiftKey); break;
+			case "Enter":
+				e.preventDefault();
+				if(e.shiftKey){
+					onRegionSplit(waveform.getCurrentTime());
+				} else {
+					const currentTime = waveform.getCurrentTime();
+					addRegion(currentTime -1, currentTime + 1);
+				}
+				break;
+			default: //do nothing
+		}
+	}
+
+	function handleGlobalClick(e: MouseEvent): void {
+		if(!mode) return;
+		const btn = document.getElementById(`${mode}-button`);
+		if(btn) btn.focus();
+	}
+
+	onMount(() => {
+		window.addEventListener("keydown", handleKeydown);
+		window.addEventListener("click", handleGlobalClick);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener("keydown", handleKeydown);
+		window.removeEventListener("click", handleGlobalClick);
 	});
 
 </script>
