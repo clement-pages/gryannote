@@ -181,6 +181,45 @@ Branch: `claude/gryannote-dev-server-badnxp`
 
 ---
 
+## 12. Docker 빌드 시간 최적화
+
+**요청**: `docker compose build`가 소스 한 줄 변경에도 PyTorch(346s) + pip install(408s)을 매번 재실행하는 문제 해결
+
+**변경사항**:
+- Dockerfile 레이어 순서 재배치: PyTorch → pip deps → npm deps → 소스 복사 → gradio cc build
+- `package.json`/`package-lock.json`만 먼저 복사하여 npm install 캐싱
+
+**주의사항 (실수 기록)**:
+> **절대 `gradio cc build` 이후에 `COPY gryannote/ gryannote/`를 실행하지 말 것!**
+> `gradio cc build`는 `backend/*/templates/` 디렉토리에 빌드 결과를 생성하는데,
+> 이후 `COPY gryannote/`가 실행되면 해당 templates가 덮어쓰여 무한 로딩 발생.
+> 올바른 순서: 소스 전체 복사 → gradio cc build (빌드 결과 보존)
+
+**빌드 시간 비교**:
+| 변경 유형 | 최적화 전 | 최적화 후 |
+|-----------|----------|-----------|
+| 백엔드(Python)만 변경 | ~750s | ~135s |
+| pyproject.toml 변경 | ~750s | ~750s (불가피) |
+
+**관련 파일**: `Dockerfile.dev`, `.dockerignore`
+
+---
+
+## 13. Speaker Diarization 3.1 하이퍼파라미터 적용
+
+**요청**: 최적의 하이퍼파라미터 값을 파이프라인에 적용
+
+**변경사항**:
+- `demo/app.py`에 `OPTIMAL_PARAMS` 정의 및 `pipeline.instantiate()` 호출
+- `segmentation.min_duration_off`: 0.0
+- `clustering.method`: centroid
+- `clustering.min_cluster_size`: 12
+- `clustering.threshold`: 0.7045654963945799
+
+**관련 파일**: `demo/app.py`
+
+---
+
 ## 키보드 단축키 요약
 
 | 단축키 | 동작 |
