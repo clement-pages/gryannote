@@ -418,12 +418,12 @@ class AudioLabeling(
         if not audio:
             raise Error("Please load an audio first")
 
-        # TODO How to check if annotations match audio when using numpy type ?
         if isinstance(audio, (str, Path)):
             audioname = Path(audio).name
             uri = audioname.split(".")[0]
-            if uri != annotations.uri:
-                Warning(
+            ann_uri = annotations.uri or ""
+            if not ann_uri.startswith(uri) and not uri.startswith(ann_uri):
+                warnings.warn(
                     "It seems that loaded annotations doesn't correspond to current audio."
                     " Bad things may happen."
                 )
