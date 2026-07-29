@@ -5,10 +5,22 @@ from gryannote_rttm import RTTM
 from pyannote.audio import Pipeline
 
 
+OPTIMAL_PARAMS = {
+    "segmentation": {"min_duration_off": 0.0},
+    "clustering": {
+        "method": "centroid",
+        "min_cluster_size": 12,
+        "threshold": 0.7045654963945799,
+    },
+}
+
+
 def apply_pipeline(pipeline: Pipeline, audio):
     """Apply specified pipeline on the indicated audio file"""
     if not audio or not isinstance(audio, str):
         raise gr.Error("Please upload an audio file first")
+
+    pipeline.instantiate(OPTIMAL_PARAMS)
 
     try:
         output = pipeline(audio)
