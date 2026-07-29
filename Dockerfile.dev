@@ -10,15 +10,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python package (editable so gradio cc build outputs templates to source tree)
-COPY pyproject.toml README.md LICENSE ./
-COPY gryannote/ gryannote/
+# Layer 1: PyTorch (~346s) — only rebuilds when CUDA version changes
 RUN pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cu121
-RUN pip install --no-cache-dir -e . pydub build
 
-# Patch gradio_client bug: boolean additionalProperties crashes schema parsing
+# Layer 2: Python deps (~408s) — only rebuilds when pyproject.toml changes
+COPY pyproject.toml README.md LICENSE ./
+RUN mkdir -p gryannote/audio/backend/gryannote_audio \
+             gryannote/pipeline/backend/gryannote_pipeline \
+             gryannote/rttm/backend/gryannote_rttm && \
+    touch gryannote/audio/backend/gryannote_audio/__init__.py \
+          gryannote/pipeline/backend/gryannote_pipeline/__init__.py \
+          gryannote/rttm/backend/gryannote_rttm/__init__.py && \
+    pip install --no-cache-dir -e . pydub build
+
+# Patch gradio_client bug
 COPY patches/fix-gradio-client-bool-schema.py /tmp/
 RUN python /tmp/fix-gradio-client-bool-schema.py && rm /tmp/fix-gradio-client-bool-schema.py
+
+# Layer 3: Source code — changes frequently, but layers 1-2 stay cached
+COPY gryannote/ gryannote/
 
 # Install npm deps for each component frontend
 RUN cd gryannote/audio/frontend && npm install && \
