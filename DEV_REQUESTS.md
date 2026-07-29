@@ -132,6 +132,19 @@ Branch: `claude/gryannote-dev-server-badnxp`
 
 ---
 
+## 9. RTTM 미리보기 실시간 갱신
+
+**요청**: 어노테이션 구간의 시작점/끝점을 화살표 키 또는 드래그로 편집할 때, RTTM 파일 미리보기가 실시간으로 갱신되어야 함
+
+**변경사항**:
+- URL/size 비교 기반 fetch 트리거를 version 기반으로 교체 (같은 URL에 내용이 변경되는 경우 감지)
+- 150ms 디바운스로 빈번한 편집 시 과도한 fetch 방지
+- `cache: "no-store"` 유지하여 브라우저 캐시 우회
+
+**관련 파일**: `gryannote/rttm/frontend/shared/FilePreview.svelte`
+
+---
+
 ## 키보드 단축키 요약
 
 | 단축키 | 동작 |

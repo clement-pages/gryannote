@@ -16,8 +16,8 @@
 	const MAX_PREVIEW_LINES = 200;
 	let fileContentText = "";
 	let isLoading = false;
-	let lastFetchedUrl = "";
-	let lastValueSize = -1;
+	let fetchVersion = 0;
+	let debounceTimer: any = null;
 
 	function splitFilename(filename: string): [string, string] {
 		const last_dot = filename.lastIndexOf(".");
@@ -27,14 +27,13 @@
 		return [filename.slice(0, last_dot), filename.slice(last_dot)];
 	}
 
-	function fetchFileContent(fileUrl: string): void {
+	function fetchFileContent(fileUrl: string, version: number): void {
 		isLoading = true;
-		lastFetchedUrl = fileUrl;
 
 		fetch(fileUrl, { cache: "no-store" })
 			.then(response => response.text())
 			.then(content => {
-				if (lastFetchedUrl !== fileUrl) return;
+				if (fetchVersion !== version) return;
 				const lines = content.split("\n");
 				fileContentText = lines.length > MAX_PREVIEW_LINES
 					? lines.slice(0, MAX_PREVIEW_LINES).join("\n") + `\n... (${lines.length - MAX_PREVIEW_LINES} more lines)`
@@ -43,7 +42,7 @@
 			})
 			.catch(error => {
 				console.error("Error while fetching file:", error);
-				if (lastFetchedUrl === fileUrl) isLoading = false;
+				if (fetchVersion === version) isLoading = false;
 			});
 	}
 
@@ -87,11 +86,10 @@
 		const files = Array.isArray(value) ? value : [value];
 		const file = files[0];
 		if (file?.url) {
-			const currentSize = file.size ?? 0;
-			if (file.url !== lastFetchedUrl || currentSize !== lastValueSize) {
-				lastValueSize = currentSize;
-				fetchFileContent(file.url);
-			}
+			fetchVersion++;
+			const version = fetchVersion;
+			if (debounceTimer) clearTimeout(debounceTimer);
+			debounceTimer = setTimeout(() => fetchFileContent(file.url, version), 150);
 		}
 	}
 
