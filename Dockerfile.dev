@@ -10,10 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Layer 1: PyTorch (~346s) — only rebuilds when CUDA version changes
+# Layer 1: PyTorch — only rebuilds when CUDA version changes
 RUN pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 
-# Layer 2: Python deps (~408s) — only rebuilds when pyproject.toml changes
+# Layer 2: Python deps — only rebuilds when pyproject.toml changes
 COPY pyproject.toml README.md LICENSE ./
 RUN mkdir -p gryannote/audio/backend/gryannote_audio \
              gryannote/pipeline/backend/gryannote_pipeline \
@@ -27,26 +27,34 @@ RUN mkdir -p gryannote/audio/backend/gryannote_audio \
 COPY patches/fix-gradio-client-bool-schema.py /tmp/
 RUN python /tmp/fix-gradio-client-bool-schema.py && rm /tmp/fix-gradio-client-bool-schema.py
 
-# Layer 3: Source code — changes frequently, but layers 1-2 stay cached
-COPY gryannote/ gryannote/
-
-# Install npm deps for each component frontend
+# Layer 3: npm deps (~32s) — only rebuilds when package.json changes
+COPY gryannote/audio/frontend/package.json gryannote/audio/frontend/package-lock.json gryannote/audio/frontend/
+COPY gryannote/pipeline/frontend/package.json gryannote/pipeline/frontend/package-lock.json gryannote/pipeline/frontend/
+COPY gryannote/rttm/frontend/package.json gryannote/rttm/frontend/package-lock.json gryannote/rttm/frontend/
 RUN cd gryannote/audio/frontend && npm install && \
     cd /app/gryannote/pipeline/frontend && npm install && \
     cd /app/gryannote/rttm/frontend && npm install
 
-# Patch @gradio/preview to handle 'import type' syntax
+# Patch @gradio/preview (depends on node_modules)
 COPY patches/fix-gradio-preview-type-imports.py /tmp/
 RUN cd /app/gryannote/audio/frontend && python /tmp/fix-gradio-preview-type-imports.py && \
     cd /app/gryannote/pipeline/frontend && python /tmp/fix-gradio-preview-type-imports.py && \
     cd /app/gryannote/rttm/frontend && python /tmp/fix-gradio-preview-type-imports.py && \
     rm /tmp/fix-gradio-preview-type-imports.py
 
-# Build frontend templates for gradio 5.x
+# Layer 4: Frontend source + build (~132s) — only rebuilds when frontend code changes
+COPY gryannote/audio/frontend/ gryannote/audio/frontend/
+COPY gryannote/pipeline/frontend/ gryannote/pipeline/frontend/
+COPY gryannote/rttm/frontend/ gryannote/rttm/frontend/
+COPY gryannote/audio/pyproject.toml gryannote/audio/
+COPY gryannote/pipeline/pyproject.toml gryannote/pipeline/
+COPY gryannote/rttm/pyproject.toml gryannote/rttm/
 RUN cd /app/gryannote/audio && gradio cc build --no-generate-docs && \
     cd /app/gryannote/pipeline && gradio cc build --no-generate-docs && \
     cd /app/gryannote/rttm && gradio cc build --no-generate-docs
 
+# Layer 5: Backend source (~1s) — only Python, no frontend rebuild
+COPY gryannote/ gryannote/
 COPY demo/ demo/
 
 EXPOSE 7860
