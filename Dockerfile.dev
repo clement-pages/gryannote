@@ -46,9 +46,9 @@ RUN cd /app/gryannote/audio/frontend && python /tmp/fix-gradio-preview-type-impo
 COPY gryannote/audio/frontend/ gryannote/audio/frontend/
 COPY gryannote/pipeline/frontend/ gryannote/pipeline/frontend/
 COPY gryannote/rttm/frontend/ gryannote/rttm/frontend/
-COPY gryannote/audio/pyproject.toml gryannote/audio/
-COPY gryannote/pipeline/pyproject.toml gryannote/pipeline/
-COPY gryannote/rttm/pyproject.toml gryannote/rttm/
+COPY gryannote/audio/pyproject.toml gryannote/audio/README.md gryannote/audio/
+COPY gryannote/pipeline/pyproject.toml gryannote/pipeline/README.md gryannote/pipeline/
+COPY gryannote/rttm/pyproject.toml gryannote/rttm/README.md gryannote/rttm/
 RUN cd /app/gryannote/audio && gradio cc build --no-generate-docs && \
     cd /app/gryannote/pipeline && gradio cc build --no-generate-docs && \
     cd /app/gryannote/rttm && gradio cc build --no-generate-docs
