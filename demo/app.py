@@ -2,7 +2,6 @@ import gradio as gr
 from gryannote_audio import AudioLabeling
 from gryannote_pipeline import PipelineSelector
 from gryannote_rttm import RTTM
-from pyannote.audio import Pipeline
 
 
 OPTIMAL_PARAMS = {
@@ -15,7 +14,7 @@ OPTIMAL_PARAMS = {
 }
 
 
-def apply_pipeline(pipeline: Pipeline, audio):
+def apply_pipeline(pipeline, audio):
     """Apply specified pipeline on the indicated audio file"""
     if not audio or not isinstance(audio, str):
         raise gr.Error("Please upload an audio file first")
@@ -42,7 +41,10 @@ with gr.Blocks() as demo:
     )
 
     pipeline_selector = PipelineSelector(
-        default_pipeline="pyannote/speaker-diarization-3.1"
+        pipelines=[
+            ("pyannote/speaker-diarization-3.1", "pyannote/speaker-diarization-3.1"),
+        ],
+        default_pipeline="pyannote/speaker-diarization-3.1",
     )
     pipeline_selector.select(
         fn=pipeline_selector.on_select,
