@@ -1,3 +1,4 @@
+import threading
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -232,11 +233,45 @@ class PipelineSelector(FormComponent):
             return None
         return value.__repr__
 
+    _LOADING_PHASES = [
+        "모델 다운로드 중...",
+        "모델 가중치 로딩 중...",
+        "모델 초기화 중...",
+    ]
+
     def on_select(self, value: Dict, progress=Progress()):
         """Update pipeline according to selected value from frontend"""
         pipeline_info = PipelineInfo(**value)
-        progress(0.1, desc="파이프라인 모델 로딩 중...")
-        self._pipeline = self._load_pipeline(pipeline_info)
+
+        result_holder = [None]
+        error_holder = [None]
+
+        def load():
+            try:
+                result_holder[0] = self._load_pipeline(pipeline_info)
+            except Exception as e:
+                error_holder[0] = e
+
+        thread = threading.Thread(target=load)
+        thread.start()
+
+        tick = 0
+        progress(0.05, desc="파이프라인 모델 로딩 중...")
+        while thread.is_alive():
+            thread.join(timeout=2.0)
+            if thread.is_alive():
+                tick += 1
+                frac = min(0.05 + tick * 0.05, 0.65)
+                msg = self._LOADING_PHASES[
+                    min(tick // 3, len(self._LOADING_PHASES) - 1)
+                ]
+                progress(frac, desc=msg)
+
+        if error_holder[0]:
+            raise Error(str(error_holder[0]))
+
+        self._pipeline = result_holder[0]
+
         progress(0.7, desc="하이퍼파라미터 정보 추출 중...")
         param_types = self._pipeline.parameters(instantiated=False)
         param_values = self._pipeline.parameters(instantiated=True)
