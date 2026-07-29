@@ -165,6 +165,22 @@ Branch: `claude/gryannote-dev-server-badnxp`
 
 ---
 
+## 11. RTTM 로딩 후 동영상 재생 불가 수정
+
+**요청**: RTTM 파일을 로딩한 후 동영상이 재생되지 않는 문제 수정
+
+**원인 분석**:
+- `preprocess`에서 비디오 파일의 오디오를 추출할 때 원본 비디오 파일을 오디오로 **덮어씀** (`torchaudio.save(temp_file_path, ...)`)
+- RTTM 로딩 시 `load_annotations` → `preprocess` → `postprocess` 순서로 호출되면서 원본 비디오 파일이 파괴됨
+- 프론트엔드의 `videoURL`은 유지되지만, 해당 URL이 가리키는 파일이 오디오로 변경되어 재생 불가
+
+**변경사항**:
+- `preprocess`에서 비디오 오디오 추출 시 별도 `.wav` 파일로 저장하여 원본 비디오 파일 보존
+
+**관련 파일**: `gryannote/audio/backend/gryannote_audio/audio_labeling.py`
+
+---
+
 ## 키보드 단축키 요약
 
 | 단축키 | 동작 |

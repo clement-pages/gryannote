@@ -326,10 +326,12 @@ class AudioLabeling(
         )
 
         if file_data.mime_type and "video" in file_data.mime_type:
-            # extract audio from video and temporary save it into the cache
+            # extract audio from video into a separate file to preserve the original video
             data, sample_rate = torchaudio.load(temp_file_path)
-            # save in cache is needed to avoid conversion issue(s) in the rest of the method
-            torchaudio.save(temp_file_path, data, sample_rate)
+            audio_only_path = temp_file_path.with_suffix(".wav")
+            torchaudio.save(audio_only_path, data, sample_rate)
+            temp_file_path = audio_only_path
+            output_file_name = str(audio_only_path)
 
         sample_rate, data = processing_utils.audio_from_file(temp_file_path)
 
