@@ -14,9 +14,10 @@
 	export let i18n: I18nFormatter;
 
 	const MAX_PREVIEW_LINES = 200;
-	let fileContents: Map<string, string> = new Map();
-	let loadingUrls: Set<string> = new Set();
-	let fetchedUrls: Set<string> = new Set();
+	let fileContentText = "";
+	let isLoading = false;
+	let lastFetchedUrl = "";
+	let lastValueSize = -1;
 
 	function splitFilename(filename: string): [string, string] {
 		const last_dot = filename.lastIndexOf(".");
@@ -27,27 +28,22 @@
 	}
 
 	function fetchFileContent(fileUrl: string): void {
-		if (fetchedUrls.has(fileUrl) || loadingUrls.has(fileUrl)) return;
-		loadingUrls.add(fileUrl);
-		loadingUrls = loadingUrls;
+		isLoading = true;
+		lastFetchedUrl = fileUrl;
 
-		fetch(fileUrl)
+		fetch(fileUrl, { cache: "no-store" })
 			.then(response => response.text())
 			.then(content => {
+				if (lastFetchedUrl !== fileUrl) return;
 				const lines = content.split("\n");
-				const truncated = lines.length > MAX_PREVIEW_LINES
+				fileContentText = lines.length > MAX_PREVIEW_LINES
 					? lines.slice(0, MAX_PREVIEW_LINES).join("\n") + `\n... (${lines.length - MAX_PREVIEW_LINES} more lines)`
 					: content;
-				fileContents.set(fileUrl, truncated);
-				fileContents = fileContents;
-				fetchedUrls.add(fileUrl);
-				loadingUrls.delete(fileUrl);
-				loadingUrls = loadingUrls;
+				isLoading = false;
 			})
 			.catch(error => {
 				console.error("Error while fetching file:", error);
-				loadingUrls.delete(fileUrl);
-				loadingUrls = loadingUrls;
+				if (lastFetchedUrl === fileUrl) isLoading = false;
 			});
 	}
 
@@ -80,9 +76,6 @@
 
 	$: normalized_files = (Array.isArray(value) ? value : [value]).map((file) => {
 		const [filename_stem, filename_ext] = splitFilename(file.orig_name ?? "");
-		if (file.url && !fetchedUrls.has(file.url)) {
-			fetchFileContent(file.url);
-		}
 		return {
 			...file,
 			filename_stem,
@@ -90,15 +83,16 @@
 		};
 	});
 
-	let prevValueJson = "";
 	$: {
-		const newJson = JSON.stringify(value);
-		if (prevValueJson && prevValueJson !== newJson) {
-			fileContents = new Map();
-			fetchedUrls = new Set();
-			loadingUrls = new Set();
+		const files = Array.isArray(value) ? value : [value];
+		const file = files[0];
+		if (file?.url) {
+			const currentSize = file.size ?? 0;
+			if (file.url !== lastFetchedUrl || currentSize !== lastValueSize) {
+				lastValueSize = currentSize;
+				fetchFileContent(file.url);
+			}
 		}
-		prevValueJson = newJson;
 	}
 
 	const is_browser = typeof window !== "undefined";
@@ -151,10 +145,10 @@
 				<!-- File content -->
 				<tr class="file-content">
 					<td class="file-content-cell">
-						{#if file.url && loadingUrls.has(file.url)}
+						{#if isLoading}
 							<span class="loading-text">Loading...</span>
-						{:else if file.url && fileContents.has(file.url)}
-							<pre class="rttm-content">{fileContents.get(file.url)}</pre>
+						{:else if fileContentText}
+							<pre class="rttm-content">{fileContentText}</pre>
 						{/if}
 					</td>
 				</tr>

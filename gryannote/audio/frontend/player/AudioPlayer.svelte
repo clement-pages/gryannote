@@ -260,7 +260,10 @@
 						{audio_duration}
 						{i18n}
 						{waveform_options}
-						on:play={() => dispatch("play")}
+						on:play={() => {
+							dispatch("timeupdate", waveform.getCurrentTime());
+							dispatch("play");
+						}}
 						on:stop={() => dispatch("stop")}
 						on:pause={() => dispatch("pause")}
 					/>
