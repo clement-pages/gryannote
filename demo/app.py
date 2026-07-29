@@ -1,3 +1,5 @@
+import threading
+
 import gradio as gr
 from gryannote_audio import AudioLabeling
 from gryannote_pipeline import PipelineSelector
@@ -13,6 +15,13 @@ OPTIMAL_PARAMS = {
     },
 }
 
+PHASE_MESSAGES = [
+    "세그멘테이션 처리 중...",
+    "음성 임베딩 추출 중...",
+    "클러스터링 분석 중...",
+    "화자 분리 마무리 중...",
+]
+
 
 def apply_pipeline(pipeline, audio, progress=gr.Progress()):
     """Apply specified pipeline on the indicated audio file"""
@@ -22,26 +31,34 @@ def apply_pipeline(pipeline, audio, progress=gr.Progress()):
     progress(0.05, desc="하이퍼파라미터 적용 중...")
     pipeline.instantiate(OPTIMAL_PARAMS)
 
-    step_labels = {
-        "segmentation": (0.15, "세그멘테이션 처리 중..."),
-        "embeddings": (0.45, "음성 임베딩 추출 중..."),
-        "clustering": (0.70, "클러스터링 분석 중..."),
-        "discrete_diarization": (0.55, "화자 인식 처리 중..."),
-        "count": (0.30, "화자 수 추정 중..."),
-    }
+    result_holder = [None]
+    error_holder = [None]
 
-    def on_pipeline_step(step_name, step_artifact, file):
-        if step_name in step_labels:
-            frac, desc = step_labels[step_name]
-            progress(frac, desc=desc)
+    def run_inference():
+        try:
+            result_holder[0] = pipeline(audio)
+        except Exception as e:
+            error_holder[0] = e
 
+    thread = threading.Thread(target=run_inference)
+    thread.start()
+
+    tick = 0
     progress(0.1, desc="화자 분리 파이프라인 실행 중...")
-    try:
-        output = pipeline(audio, hook=on_pipeline_step)
-    except TypeError:
-        output = pipeline(audio)
-    except (ValueError, RuntimeError) as e:
-        raise gr.Error(f"An error occurred while processing audio: {e}")
+    while thread.is_alive():
+        thread.join(timeout=2.0)
+        if thread.is_alive():
+            tick += 1
+            frac = min(0.10 + tick * 0.05, 0.85)
+            msg = PHASE_MESSAGES[min(tick // 3, len(PHASE_MESSAGES) - 1)]
+            progress(frac, desc=msg)
+
+    if error_holder[0]:
+        raise gr.Error(
+            f"An error occurred while processing audio: {error_holder[0]}"
+        )
+
+    output = result_holder[0]
 
     progress(0.9, desc="결과 처리 중...")
 
