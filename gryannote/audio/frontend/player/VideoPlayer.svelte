@@ -127,6 +127,12 @@ Then, even when `controls` is false, the compiled DOM would be `<video controls=
 	.video-wrapper {
 		display: flex;
 		justify-content: center;
+		width: 100%;
+	}
+
+	.video-wrapper video {
+		width: 12.5%;
+		height: auto;
 	}
 
 	@keyframes shadowPulse {
