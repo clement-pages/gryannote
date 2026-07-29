@@ -566,11 +566,11 @@
 					}
 					break;
 				case "ArrowLeft":
-					if(e.altKey) e.preventDefault();
+					if(activeRegion || e.altKey) e.preventDefault();
 					onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey);
 					break;
 				case "ArrowRight":
-					if(e.altKey) e.preventDefault();
+					if(activeRegion || e.altKey) e.preventDefault();
 					onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey);
 					break;
 				case "Escape": setActiveRegion(null); setMode(""); break;
