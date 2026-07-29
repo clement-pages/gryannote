@@ -565,8 +565,14 @@
 						playActiveRegion();
 					}
 					break;
-				case "ArrowLeft": onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey); break;
-				case "ArrowRight": onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey); break;
+				case "ArrowLeft":
+					if(e.altKey) e.preventDefault();
+					onTimeAdjustement("ArrowLeft", e.shiftKey, e.altKey);
+					break;
+				case "ArrowRight":
+					if(e.altKey) e.preventDefault();
+					onTimeAdjustement("ArrowRight", e.shiftKey, e.altKey);
+					break;
 				case "Escape": setActiveRegion(null); setMode(""); break;
 				case "Tab": e.preventDefault(); selectRegion(e.shiftKey? "backward" : "forward"); break;
 				case "Delete": onRegionRemove("Delete", e.shiftKey); break;
