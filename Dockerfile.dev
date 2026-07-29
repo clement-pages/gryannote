@@ -42,19 +42,12 @@ RUN cd /app/gryannote/audio/frontend && python /tmp/fix-gradio-preview-type-impo
     cd /app/gryannote/rttm/frontend && python /tmp/fix-gradio-preview-type-imports.py && \
     rm /tmp/fix-gradio-preview-type-imports.py
 
-# Layer 4: Frontend source + build (~132s) — only rebuilds when frontend code changes
-COPY gryannote/audio/frontend/ gryannote/audio/frontend/
-COPY gryannote/pipeline/frontend/ gryannote/pipeline/frontend/
-COPY gryannote/rttm/frontend/ gryannote/rttm/frontend/
-COPY gryannote/audio/pyproject.toml gryannote/audio/README.md gryannote/audio/
-COPY gryannote/pipeline/pyproject.toml gryannote/pipeline/README.md gryannote/pipeline/
-COPY gryannote/rttm/pyproject.toml gryannote/rttm/README.md gryannote/rttm/
+# Layer 4: Full source + frontend build
+COPY gryannote/ gryannote/
 RUN cd /app/gryannote/audio && gradio cc build --no-generate-docs && \
     cd /app/gryannote/pipeline && gradio cc build --no-generate-docs && \
     cd /app/gryannote/rttm && gradio cc build --no-generate-docs
 
-# Layer 5: Backend source (~1s) — only Python, no frontend rebuild
-COPY gryannote/ gryannote/
 COPY demo/ demo/
 
 EXPOSE 7860

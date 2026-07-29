@@ -4,7 +4,6 @@ __pycache__/
 dist/
 *.pyc
 node_modules/
-**/templates/
 .git
 .github
 .trunk

@@ -41,10 +41,7 @@ with gr.Blocks() as demo:
     )
 
     pipeline_selector = PipelineSelector(
-        pipelines=[
-            ("pyannote/speaker-diarization-3.1", "pyannote/speaker-diarization-3.1"),
-        ],
-        default_pipeline="pyannote/speaker-diarization-3.1",
+        default_pipeline="pyannote/speaker-diarization-3.1"
     )
     pipeline_selector.select(
         fn=pipeline_selector.on_select,
