@@ -65,14 +65,16 @@
 	{min_width}
 	allow_overflow={false}
 >
-	<StatusTracker
-		autoscroll={gradio.autoscroll}
-		i18n={gradio.i18n}
-		{...loading_status}
-		status={pending_upload
-			? "generating"
-			: loading_status?.status || "complete"}
-	/>
+	<div class="status-area">
+		<StatusTracker
+			autoscroll={gradio.autoscroll}
+			i18n={gradio.i18n}
+			{...loading_status}
+			status={pending_upload
+				? "generating"
+				: loading_status?.status || "complete"}
+		/>
+	</div>
 	{#if !interactive}
 		<File
 			on:select={({ detail }) => gradio.dispatch("select", detail)}
@@ -109,3 +111,35 @@
 		</FileUpload>
 	{/if}
 </Block>
+
+<style>
+	.status-area :global(.wrap:not(.hide):not(.generating)) {
+		background: rgba(40, 40, 40, 0.5) !important;
+	}
+
+	.status-area :global(.progress-level-inner) {
+		color: #fff;
+		font-size: var(--text-md);
+		font-weight: 600;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+	}
+
+	.status-area :global(.meta-text),
+	.status-area :global(.meta-text-center) {
+		color: rgba(255, 255, 255, 0.9);
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+	}
+
+	.status-area :global(.progress-bar-wrap) {
+		border-color: rgba(255, 255, 255, 0.3);
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.status-area :global(.loading) {
+		color: #fff;
+	}
+
+	.status-area :global(.eta-bar) {
+		background: rgba(255, 255, 255, 0.1);
+	}
+</style>

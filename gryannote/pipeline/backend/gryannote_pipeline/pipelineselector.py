@@ -1,6 +1,7 @@
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from gradio import Progress
 from gradio.components.base import FormComponent
 from gradio.data_classes import GradioModel
 from gradio.events import Events
@@ -231,12 +232,15 @@ class PipelineSelector(FormComponent):
             return None
         return value.__repr__
 
-    def on_select(self, value: Dict):
+    def on_select(self, value: Dict, progress=Progress()):
         """Update pipeline according to selected value from frontend"""
         pipeline_info = PipelineInfo(**value)
+        progress(0.1, desc="파이프라인 모델 로딩 중...")
         self._pipeline = self._load_pipeline(pipeline_info)
+        progress(0.7, desc="하이퍼파라미터 정보 추출 중...")
         param_types = self._pipeline.parameters(instantiated=False)
         param_values = self._pipeline.parameters(instantiated=True)
+        progress(0.9, desc="설정 구성 중...")
         pipeline_info.param_specs = self._get_param_specs(param_types, param_values)
 
         return pipeline_info

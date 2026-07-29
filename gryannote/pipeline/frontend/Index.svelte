@@ -208,11 +208,13 @@
 	{scale}
 	{min_width}
 >
-	<StatusTracker
-		autoscroll={gradio.autoscroll}
-		i18n={gradio.i18n}
-		{...loading_status}
-	/>
+	<div class="status-area">
+		<StatusTracker
+			autoscroll={gradio.autoscroll}
+			i18n={gradio.i18n}
+			{...loading_status}
+		/>
+	</div>
 
 	{#if visible}
 		{#if show_token_textbox}
@@ -429,5 +431,35 @@
 
 	#dropdown-label{
 		margin-top: 1.5em;
+	}
+
+	.status-area :global(.wrap:not(.hide):not(.generating)) {
+		background: rgba(40, 40, 40, 0.5) !important;
+	}
+
+	.status-area :global(.progress-level-inner) {
+		color: #fff;
+		font-size: var(--text-md);
+		font-weight: 600;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+	}
+
+	.status-area :global(.meta-text),
+	.status-area :global(.meta-text-center) {
+		color: rgba(255, 255, 255, 0.9);
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+	}
+
+	.status-area :global(.progress-bar-wrap) {
+		border-color: rgba(255, 255, 255, 0.3);
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.status-area :global(.loading) {
+		color: #fff;
+	}
+
+	.status-area :global(.eta-bar) {
+		background: rgba(255, 255, 255, 0.1);
 	}
 </style>
