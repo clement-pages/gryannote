@@ -131,7 +131,7 @@ Then, even when `controls` is false, the compiled DOM would be `<video controls=
 	}
 
 	.video-wrapper video {
-		width: 12.5%;
+		width: 25%;
 		height: auto;
 	}
 

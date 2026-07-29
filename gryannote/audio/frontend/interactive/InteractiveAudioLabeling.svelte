@@ -316,7 +316,12 @@
 		{hover_options}
 		interactive
 		on:stop
-		on:play={() => video?.play()}
+		on:play={() => {
+			if(video && waveform){
+				video.currentTime = waveform.getCurrentTime();
+			}
+			video?.play();
+		}}
 		on:pause={() => video?.pause()}
 		on:edit={(e) => dispatch("edit", e.detail)}
 		on:timeupdate={(e) => {

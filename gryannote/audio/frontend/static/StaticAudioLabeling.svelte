@@ -24,6 +24,7 @@
 
 	let show_share_button: boolean = false;
 	let video: HTMLVideoElement | undefined;
+	let waveform: any;
 
 	const dispatch = createEventDispatcher<{
 		change: typeof value;
@@ -81,6 +82,7 @@
 	{/if}
 	<AudioPlayer
 		isDialogOpen={false}
+		bind:waveform
 		value={value}
 		interactive={false}
 		{label}
@@ -91,7 +93,12 @@
 		{timeline_options}
 		{hover_options}
 		on:stop
-		on:play={() => video?.play()}
+		on:play={() => {
+			if(video && waveform){
+				video.currentTime = waveform.getCurrentTime();
+			}
+			video?.play();
+		}}
 		on:pause={() => video?.pause()}
 		on:timeupdate={(e) => {
 			if(video) video.currentTime = e.detail;

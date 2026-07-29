@@ -13,6 +13,11 @@
 	export let height: number | undefined = undefined;
 	export let i18n: I18nFormatter;
 
+	const MAX_PREVIEW_LINES = 200;
+	let fileContents: Map<string, string> = new Map();
+	let loadingUrls: Set<string> = new Set();
+	let fetchedUrls: Set<string> = new Set();
+
 	function splitFilename(filename: string): [string, string] {
 		const last_dot = filename.lastIndexOf(".");
 		if (last_dot === -1) {
@@ -21,13 +26,29 @@
 		return [filename.slice(0, last_dot), filename.slice(last_dot)];
 	}
 
-	function getFileContent(fileUrl: string, id: string) {
+	function fetchFileContent(fileUrl: string): void {
+		if (fetchedUrls.has(fileUrl) || loadingUrls.has(fileUrl)) return;
+		loadingUrls.add(fileUrl);
+		loadingUrls = loadingUrls;
+
 		fetch(fileUrl)
 			.then(response => response.text())
 			.then(content => {
-				document.getElementById(id).innerText = content;
+				const lines = content.split("\n");
+				const truncated = lines.length > MAX_PREVIEW_LINES
+					? lines.slice(0, MAX_PREVIEW_LINES).join("\n") + `\n... (${lines.length - MAX_PREVIEW_LINES} more lines)`
+					: content;
+				fileContents.set(fileUrl, truncated);
+				fileContents = fileContents;
+				fetchedUrls.add(fileUrl);
+				loadingUrls.delete(fileUrl);
+				loadingUrls = loadingUrls;
 			})
-			.catch(error => console.error("Error while fetching file:", error))
+			.catch(error => {
+				console.error("Error while fetching file:", error);
+				loadingUrls.delete(fileUrl);
+				loadingUrls = loadingUrls;
+			});
 	}
 
 	function downloadFile() {
@@ -59,12 +80,26 @@
 
 	$: normalized_files = (Array.isArray(value) ? value : [value]).map((file) => {
 		const [filename_stem, filename_ext] = splitFilename(file.orig_name ?? "");
+		if (file.url && !fetchedUrls.has(file.url)) {
+			fetchFileContent(file.url);
+		}
 		return {
 			...file,
 			filename_stem,
 			filename_ext
 		};
 	});
+
+	let prevValueJson = "";
+	$: {
+		const newJson = JSON.stringify(value);
+		if (prevValueJson && prevValueJson !== newJson) {
+			fileContents = new Map();
+			fetchedUrls = new Set();
+			loadingUrls = new Set();
+		}
+		prevValueJson = newJson;
+	}
 
 	const is_browser = typeof window !== "undefined";
 </script>
@@ -114,10 +149,12 @@
 					</td>
 				</tr>
 				<!-- File content -->
-				<tr class="file-content" id="file-content-{i}">
-					<td>
-						{#if file.url}
-							{getFileContent(file.url, "file-content-" + i.toString())}
+				<tr class="file-content">
+					<td class="file-content-cell">
+						{#if file.url && loadingUrls.has(file.url)}
+							<span class="loading-text">Loading...</span>
+						{:else if file.url && fileContents.has(file.url)}
+							<pre class="rttm-content">{fileContents.get(file.url)}</pre>
 						{/if}
 					</td>
 				</tr>
@@ -189,6 +226,27 @@
 	}
 
 
+
+	.file-content-cell {
+		width: 100%;
+	}
+
+	.rttm-content {
+		white-space: pre-wrap;
+		word-break: break-all;
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		max-height: 400px;
+		overflow-y: auto;
+		margin: 0;
+		padding: var(--size-2);
+	}
+
+	.loading-text {
+		color: var(--neutral-400);
+		font-size: var(--text-sm);
+		padding: var(--size-2);
+	}
 
 	tbody > tr:nth-child(even) {
 		background: var(--block-background-fill);
